@@ -911,7 +911,7 @@ let lastFiltered = [];
 let editMode = false;
 
 // Data version - increment this when data.json is updated to force-refresh localStorage
-const DATA_VERSION = '2026-07-25-abc-v5';
+const DATA_VERSION = '2026-07-25-abc-v6';
 
 // Load data from localStorage or fetch data.json
 async function loadData() {
@@ -1369,58 +1369,85 @@ const EMAILJS_CONFIG = {
   publicKey: ''    // EmailJS Public Key
 };
 
-// ===== Visitor Tracking (CounterAPI - cross-browser, cross-device) =====
-const COUNTER_NS = 'candysama9.github.io';
-const COUNTER_KEY = 'chengdu-physics-huashu';
+// ===== Visitor Tracking (Abacus API - cross-browser, cross-device) =====
+// Docs: https://abacus.jasoncameron.dev/  (supports CORS + JSONP, free, no signup)
+const ABACUS_BASE = 'https://abacus.jasoncameron.dev';
+const ABACUS_NS = 'candysama9_chengdu';
 
 function trackVisit() {
   // Show loading state
   document.getElementById('visitCount').textContent = '...';
   document.getElementById('visitorCount').textContent = '...';
 
-  // 1. Total page views (increments on every visit)
-  fetch('https://counterapi.com/api/' + COUNTER_NS + '/view/' + COUNTER_KEY)
-    .then(r => r.json())
-    .then(data => {
-      if (data && data.value !== undefined) {
-        document.getElementById('visitCount').textContent = data.value;
-      }
-    })
-    .catch(() => {
-      // Fallback to localStorage if API fails
-      let vc = parseInt(localStorage.getItem('huashu_visit_count') || '0') + 1;
-      localStorage.setItem('huashu_visit_count', vc);
-      document.getElementById('visitCount').textContent = vc;
-    });
+  // 1. Total page views - hit (increment) on every visit
+  jsonpRequest(ABACUS_BASE + '/hit/' + ABACUS_NS + '/visits', function(data) {
+    if (data && data.value !== undefined) {
+      document.getElementById('visitCount').textContent = data.value;
+    }
+  }, function() {
+    // Fallback to localStorage if API fails
+    let vc = parseInt(localStorage.getItem('huashu_visit_count') || '0') + 1;
+    localStorage.setItem('huashu_visit_count', vc);
+    document.getElementById('visitCount').textContent = vc;
+  });
 
-  // 2. Unique visitors (increments only for new visitors, uses unique=true)
-  //    Use a localStorage flag to avoid double-counting on same device
-  const uniqueKey = 'huashu_unique_tracked';
-  const isUnique = !localStorage.getItem(uniqueKey);
-  if (isUnique) {
-    localStorage.setItem(uniqueKey, '1');
+  // 2. Unique visitors - only increment on first visit per device/browser
+  //    Use localStorage flag to avoid double-counting on same device
+  const uniqueFlag = 'huashu_unique_tracked_v2';
+  const isNewVisitor = !localStorage.getItem(uniqueFlag);
+  if (isNewVisitor) {
+    localStorage.setItem(uniqueFlag, '1');
   }
 
-  // Fetch unique visitor count (readOnly if already tracked on this device)
-  const uniqueUrl = 'https://counterapi.com/api/' + COUNTER_NS + '/view/' + COUNTER_KEY + '-unique'
-    + (isUnique ? '' : '?readOnly=true');
+  // hit = increment (new visitor), get = read only (returning visitor)
+  const uniqueEndpoint = isNewVisitor ? '/hit/' : '/get/';
+  jsonpRequest(ABACUS_BASE + uniqueEndpoint + ABACUS_NS + '/unique_visitors', function(data) {
+    if (data && data.value !== undefined) {
+      document.getElementById('visitorCount').textContent = data.value;
+    }
+  }, function() {
+    // Fallback
+    let uv = parseInt(localStorage.getItem('huashu_visitor_count') || '0');
+    if (isNewVisitor) {
+      uv += 1;
+      localStorage.setItem('huashu_visitor_count', uv);
+    }
+    document.getElementById('visitorCount').textContent = uv;
+  });
+}
 
-  fetch(uniqueUrl)
-    .then(r => r.json())
-    .then(data => {
-      if (data && data.value !== undefined) {
-        document.getElementById('visitorCount').textContent = data.value;
-      }
-    })
-    .catch(() => {
-      // Fallback
-      let uv = parseInt(localStorage.getItem('huashu_visitor_count') || '0');
-      if (isUnique) {
-        uv += 1;
-        localStorage.setItem('huashu_visitor_count', uv);
-      }
-      document.getElementById('visitorCount').textContent = uv;
-    });
+// JSONP helper - bypasses CORS entirely, works on all browsers
+function jsonpRequest(url, onSuccess, onError) {
+  const callbackName = 'abacus_cb_' + Math.random().toString(36).substr(2, 9);
+  const script = document.createElement('script');
+
+  window[callbackName] = function(data) {
+    delete window[callbackName];
+    document.body.removeChild(script);
+    onSuccess(data);
+  };
+
+  script.onerror = function() {
+    delete window[callbackName];
+    if (script.parentNode) document.body.removeChild(script);
+    // Try fetch as fallback
+    fetch(url)
+      .then(r => r.json())
+      .then(onSuccess)
+      .catch(onError);
+  };
+
+  script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+  document.body.appendChild(script);
+
+  // Timeout fallback after 5 seconds
+  setTimeout(function() {
+    if (window[callbackName]) {
+      delete window[callbackName];
+      if (script.parentNode) document.body.removeChild(script);
+      onError();
+    }
+  }, 5000);
 }
 
 // ===== Feedback Functions =====
