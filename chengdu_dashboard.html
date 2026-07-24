@@ -521,25 +521,44 @@ function renderTrends(){
   const prev=snaps.length>1?snaps[snaps.length-2]:null;
   const dataDate=latest.date;
 
-  // 根据当前筛选状态获取对应维度数据
+  // 班级状态映射：activeStatus("已开课班级") → 快照key("已开课")
+  const statusMap={'已开课班级':'已开课','已开窗班级':'已开窗','已结课班级':'已结课'};
+  const sk=activeStatus&&statusMap[activeStatus]?statusMap[activeStatus]:null;
+  const hasSF=!!sk; // 是否有班级状态筛选
+
+  // 根据当前筛选状态获取对应维度数据（优先跟随班级状态筛选）
   let curData=null,prevData=null,label='';
   if(trendTab==='overall'){
-    curData=latest.overall;prevData=prev?prev.overall:null;label='整体';
+    if(hasSF){
+      curData=latest.by_status&&latest.by_status[sk]?latest.by_status[sk]:null;
+      prevData=prev&&prev.by_status?prev.by_status[sk]:null;
+      label=activeStatus.replace('班级','');
+    }else{
+      curData=latest.overall;prevData=prev?prev.overall:null;label='整体';
+    }
   }else if(trendTab==='subject'){
-    // 取当前学科的快照，若未选具体学科则展示第一个学科
     const subjName=activeTab.startsWith('subject_')?activeTab.replace('subject_',''):'';
-    if(subjName&&latest.by_subject&&latest.by_subject[subjName]){
-      curData=latest.by_subject[subjName];prevData=prev&&prev.by_subject?prev.by_subject[subjName]:null;label=subjName;
-    }else{
-      curData=latest.overall;prevData=prev?prev.overall:null;label='整体';
+    if(subjName){
+      if(hasSF&&latest.by_status_subject&&latest.by_status_subject[sk]&&latest.by_status_subject[sk][subjName]){
+        curData=latest.by_status_subject[sk][subjName];
+        prevData=prev&&prev.by_status_subject&&prev.by_status_subject[sk]?prev.by_status_subject[sk][subjName]:null;
+        label=activeStatus.replace('班级','')+'·'+subjName;
+      }else if(latest.by_subject&&latest.by_subject[subjName]){
+        curData=latest.by_subject[subjName];prevData=prev&&prev.by_subject?prev.by_subject[subjName]:null;label=subjName;
+      }
     }
+    if(!curData){curData=latest.overall;prevData=prev?prev.overall:null;label='整体';}
   }else if(trendTab==='teacher'){
-    // 取当前选中教师的快照
-    if(selectedTeacher&&latest.by_teacher&&latest.by_teacher[selectedTeacher]){
-      curData=latest.by_teacher[selectedTeacher];prevData=prev&&prev.by_teacher?prev.by_teacher[selectedTeacher]:null;label=selectedTeacher+'老师';
-    }else{
-      curData=latest.overall;prevData=prev?prev.overall:null;label='整体';
+    if(selectedTeacher){
+      if(hasSF&&latest.by_status_teacher&&latest.by_status_teacher[sk]&&latest.by_status_teacher[sk][selectedTeacher]){
+        curData=latest.by_status_teacher[sk][selectedTeacher];
+        prevData=prev&&prev.by_status_teacher&&prev.by_status_teacher[sk]?prev.by_status_teacher[sk][selectedTeacher]:null;
+        label=selectedTeacher+'老师·'+activeStatus.replace('班级','');
+      }else if(latest.by_teacher&&latest.by_teacher[selectedTeacher]){
+        curData=latest.by_teacher[selectedTeacher];prevData=prev&&prev.by_teacher?prev.by_teacher[selectedTeacher]:null;label=selectedTeacher+'老师';
+      }
     }
+    if(!curData){curData=latest.overall;prevData=prev?prev.overall:null;label='整体';}
   }
   if(!curData)return '';
 
@@ -565,6 +584,7 @@ function renderTrends(){
         <button class="trend-tab ${trendTab==='overall'?'active':''}" onclick="switchTrendTab('overall')">整体</button>
         <button class="trend-tab ${trendTab==='subject'?'active':''}" onclick="switchTrendTab('subject')">学科维度</button>
         <button class="trend-tab ${trendTab==='teacher'?'active':''}" onclick="switchTrendTab('teacher')">教师维度</button>
+        ${hasSF?`<span style="margin-left:auto;font-size:.68rem;color:var(--accent);align-self:center">📌 已筛选: ${activeStatus.replace('班级','')}</span>`:''}
       </div>
       <div class="trend-grid">
         <div class="trend-card">
