@@ -910,23 +910,34 @@ let searchTerm = '';
 let lastFiltered = [];
 let editMode = false;
 
+// Data version - increment this when data.json is updated to force-refresh localStorage
+const DATA_VERSION = '2026-07-25-abc';
+
 // Load data from localStorage or fetch data.json
 async function loadData() {
-  // Check if there's saved data in localStorage
+  // Check if there's saved data in localStorage AND version matches
+  const savedVersion = localStorage.getItem('huashu_data_version');
   const saved = localStorage.getItem('huashu_data');
-  if (saved) {
+  if (saved && savedVersion === DATA_VERSION) {
     try {
       DATA = JSON.parse(saved);
-      console.log('Data loaded from localStorage');
+      originalData = JSON.parse(JSON.stringify(DATA));
+      console.log('Data loaded from localStorage (v' + DATA_VERSION + ')');
       return;
     } catch(e) {
       console.warn('Failed to parse localStorage data, fetching from file');
     }
   }
 
-  // Fetch from data.json
+  // Version mismatch or no saved data - fetch fresh from data.json
+  if (savedVersion !== DATA_VERSION) {
+    console.log('Data version changed (' + savedVersion + ' -> ' + DATA_VERSION + '), refreshing from data.json');
+    localStorage.removeItem('huashu_data');
+  }
+
+  // Fetch from data.json (with cache-busting to ensure latest version)
   try {
-    const response = await fetch('data.json');
+    const response = await fetch('data.json?v=' + DATA_VERSION);
     if (response.ok) {
       DATA = await response.json();
       originalData = JSON.parse(JSON.stringify(DATA));
@@ -1228,6 +1239,7 @@ function saveEdit(catIdx, itemIdx) {
 
 function saveToLocalStorage() {
   localStorage.setItem('huashu_data', JSON.stringify(DATA));
+  localStorage.setItem('huashu_data_version', DATA_VERSION);
 }
 
 function deleteItem(catIdx, itemIdx) {
@@ -1317,11 +1329,13 @@ function resetData() {
   if (originalData) {
     DATA = JSON.parse(JSON.stringify(originalData));
     localStorage.removeItem('huashu_data');
+    localStorage.removeItem('huashu_data_version');
     buildSidebar();
     renderList();
     showToast('已重置为初始数据');
   } else {
     localStorage.removeItem('huashu_data');
+    localStorage.removeItem('huashu_data_version');
     location.reload();
   }
 }
