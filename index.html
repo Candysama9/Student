@@ -256,18 +256,20 @@ header p {
 }
 
 .qa-card {
-  background: var(--bg2);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--rule);
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.6);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 16px rgba(20,120,100,0.06), inset 0 1px 0 rgba(255,255,255,0.5);
   overflow: hidden;
   transition: all 0.3s;
 }
 
 .qa-card:hover {
-  box-shadow: var(--shadow-hover);
+  box-shadow: 0 8px 32px rgba(20,120,100,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
   transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.8);
 }
 
 .qa-card.open {
@@ -354,7 +356,9 @@ header p {
 /* QA type answer */
 .qa-answer-inner {
   padding: 16px 18px;
-  background: linear-gradient(135deg, var(--accent-light), var(--accent2-light));
+  background: linear-gradient(135deg, rgba(20,120,100,0.06), rgba(232,137,90,0.06));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: var(--radius-sm);
   border-left: 3px solid var(--accent);
   font-size: 14.5px;
@@ -368,7 +372,8 @@ header p {
   border-radius: var(--radius-sm);
   overflow: hidden;
   margin-bottom: 10px;
-  border: 1px solid var(--rule);
+  border: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
 }
 .tier-block:last-child { margin-bottom: 0; }
 
@@ -393,7 +398,9 @@ header p {
 .tier-body {
   position: relative;
   padding: 14px;
-  background: #fff;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
 .tier-body .tier-txt {
@@ -407,26 +414,29 @@ header p {
 
 .tier-copy {
   display: inline-block;
-  background: #fff;
-  border: 1px solid var(--rule);
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.5);
   border-radius: 7px;
   padding: 5px 11px;
   font-size: 12px;
   cursor: pointer;
   color: var(--muted);
-  transition: all 0.2s;
+  transition: all 0.25s;
   white-space: nowrap;
   font-family: inherit;
-  margin-bottom: 8px;
 }
 .tier-copy:hover {
   border-color: var(--accent);
   color: var(--accent);
+  background: rgba(255,255,255,0.7);
+  box-shadow: 0 2px 8px rgba(20,120,100,0.08);
 }
 .tier-copy.done {
-  background: var(--tier-green);
+  background: rgba(39,174,96,0.85);
   color: #fff;
-  border-color: var(--tier-green);
+  border-color: rgba(39,174,96,0.5);
 }
 
 .qa-actions {
@@ -442,14 +452,16 @@ header p {
 
 .qa-actions .copy-btn-qa {
   padding: 6px 14px;
-  border: 1px solid var(--rule);
+  border: 1px solid rgba(255,255,255,0.5);
   border-radius: 8px;
-  background: transparent;
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   font-size: 12px;
   font-family: inherit;
   color: var(--muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -457,12 +469,13 @@ header p {
 .qa-actions .copy-btn-qa:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: var(--accent-light);
+  background: rgba(255,255,255,0.6);
+  box-shadow: 0 2px 8px rgba(20,120,100,0.08);
 }
 .qa-actions .copy-btn-qa.copied {
-  border-color: var(--accent);
+  border-color: rgba(20,120,100,0.4);
   color: var(--accent);
-  background: var(--accent-light);
+  background: rgba(20,120,100,0.1);
 }
 
 .no-results {
@@ -750,24 +763,32 @@ body.edit-mode .copy-btn-qa {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-left: auto;
 }
 .feedback-btn {
   display: flex;
   align-items: center;
   gap: 3px;
-  padding: 3px 10px;
-  border: 1px solid var(--rule);
+  padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,0.5);
   border-radius: 20px;
-  background: transparent;
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   font-size: 12px;
   font-family: inherit;
   color: var(--muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s;
 }
-.feedback-btn:hover { border-color: var(--accent); color: var(--accent); }
-.feedback-btn.active-good { background: #e8f5e9; border-color: #4caf50; color: #2e7d32; font-weight: 500; pointer-events: none; }
-.feedback-btn.active-bad { background: #fff3e0; border-color: #ff9800; color: #e65100; font-weight: 500; pointer-events: none; }
+.feedback-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(255,255,255,0.6);
+  box-shadow: 0 2px 8px rgba(20,120,100,0.08);
+}
+.feedback-btn.active-good { background: rgba(76,175,80,0.15); border-color: rgba(76,175,80,0.5); color: #2e7d32; font-weight: 500; pointer-events: none; backdrop-filter: blur(8px); }
+.feedback-btn.active-bad { background: rgba(255,152,0,0.15); border-color: rgba(255,152,0,0.5); color: #e65100; font-weight: 500; pointer-events: none; backdrop-filter: blur(8px); }
 .tier-actions {
   display: flex;
   justify-content: space-between;
