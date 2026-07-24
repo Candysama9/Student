@@ -991,7 +991,7 @@ let lastFiltered = [];
 let editMode = false;
 
 // Data version - increment this when data.json is updated to force-refresh localStorage
-const DATA_VERSION = '2026-07-25-dashboard-v1';
+const DATA_VERSION = '2026-07-25-dashboard-v2';
 
 // Load data from localStorage or fetch data.json
 async function loadData() {
@@ -1086,7 +1086,8 @@ function buildSidebar() {
       btn.classList.add('active');
       currentCat = btn.dataset.cat;
       if (currentCat === 'dashboard') {
-        window.location.href = 'chengdu_dashboard.html';
+        window.location.replace('chengdu_dashboard.html');
+        return;
       } else {
         hideDashboard();
         renderList();
@@ -1635,22 +1636,8 @@ function hideDashboard() {
 }
 
 async function loadDashboard() {
-  try {
-    const response = await fetch('dashboard.json?v=' + Date.now());
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    dashboardData = await response.json();
-    dashboardLoaded = true;
-    renderDashboard();
-  } catch (err) {
-    console.error('Dashboard load error:', err);
-    document.getElementById('dashboardView').innerHTML = `
-      <div class="dash-empty">
-        <div class="emoji">📊</div>
-        <p>看板数据尚未生成</p>
-        <p class="hint">请从观远BI导出Excel后运行更新脚本</p>
-        <p class="hint" style="margin-top:8px;">操作步骤：观远导出Excel → 终端运行 update_dashboard.sh → 自动部署</p>
-      </div>`;
-  }
+  // 直接跳转到独立看板页面
+  window.location.replace('chengdu_dashboard.html');
 }
 
 function renderDashboard() {

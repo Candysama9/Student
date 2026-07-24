@@ -409,7 +409,8 @@ tbody td.rank .badge{
 <div class="wrap" id="app">
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <p>正在加载成都学校数据...</p>
+    <p id="loadingText">正在加载成都学校数据...</p>
+    <p id="loadingHint" style="font-size:.72rem;color:var(--text-3);margin-top:4px">数据量较大（约3.6MB），请耐心等待</p>
   </div>
 </div>
 
@@ -450,9 +451,28 @@ const METRICS=[
 // ============================================================
 async function loadData(){
   const paths=['chengdu_dashboard.json','./chengdu_dashboard.json'];
+  // 添加超时和进度提示
+  const loadingText=document.getElementById('loadingText');
+  let progressTimer=setTimeout(()=>{
+    if(loadingText)loadingText.textContent='数据仍在加载中，请稍候...';
+  },5000);
+  let slowTimer=setTimeout(()=>{
+    if(loadingText)loadingText.textContent='数据量较大，正在解析...可能需要10-15秒';
+  },15000);
+  
   for(const p of paths){
-    try{const r=await fetch(p);if(r.ok)return await r.json();}catch(e){}
+    try{
+      const r=await fetch(p);
+      if(r.ok){
+        const data=await r.json();
+        clearTimeout(progressTimer);
+        clearTimeout(slowTimer);
+        return data;
+      }
+    }catch(e){}
   }
+  clearTimeout(progressTimer);
+  clearTimeout(slowTimer);
   throw new Error('无法加载数据文件');
 }
 
@@ -1559,8 +1579,12 @@ async function init(){
     render();
   }catch(e){
     document.getElementById('loading').innerHTML=`
-      <p style="color:var(--red)">数据加载失败: ${e.message}</p>
-      <p style="color:var(--text-3);font-size:.78rem">请确保 chengdu_dashboard.json 与本文件在同一目录</p>`;
+      <div style="text-align:center;padding:60px 20px">
+        <p style="color:var(--red);font-size:1rem;font-weight:600">数据加载失败</p>
+        <p style="color:var(--text-2);font-size:.82rem;margin-top:8px">${e.message}</p>
+        <p style="color:var(--text-3);font-size:.72rem;margin-top:12px">请稍后刷新重试，或直接访问：<a href="chengdu_dashboard.json" style="color:var(--brand)">chengdu_dashboard.json</a> 检查数据文件是否存在</p>
+        <button onclick="location.reload()" style="margin-top:16px;padding:8px 24px;border:1px solid var(--brand);border-radius:8px;background:var(--glass);color:var(--brand);cursor:pointer;font-family:var(--font)">重新加载</button>
+      </div>`;
   }
 }
 
