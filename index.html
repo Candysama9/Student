@@ -911,7 +911,7 @@ let lastFiltered = [];
 let editMode = false;
 
 // Data version - increment this when data.json is updated to force-refresh localStorage
-const DATA_VERSION = '2026-07-25-abc-v4';
+const DATA_VERSION = '2026-07-25-abc-v5';
 
 // Load data from localStorage or fetch data.json
 async function loadData() {
@@ -1369,32 +1369,58 @@ const EMAILJS_CONFIG = {
   publicKey: ''    // EmailJS Public Key
 };
 
-// ===== Visitor Tracking =====
-function trackVisit() {
-  const today = new Date().toDateString();
-  // Total visit count
-  let visitCount = parseInt(localStorage.getItem('huashu_visit_count') || '0') + 1;
-  localStorage.setItem('huashu_visit_count', visitCount);
-  document.getElementById('visitCount').textContent = visitCount;
+// ===== Visitor Tracking (CounterAPI - cross-browser, cross-device) =====
+const COUNTER_NS = 'candysama9.github.io';
+const COUNTER_KEY = 'chengdu-physics-huashu';
 
-  // Unique visitor (per device)
-  let visitorId = localStorage.getItem('huashu_visitor_id');
-  if (!visitorId) {
-    visitorId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-    localStorage.setItem('huashu_visitor_id', visitorId);
+function trackVisit() {
+  // Show loading state
+  document.getElementById('visitCount').textContent = '...';
+  document.getElementById('visitorCount').textContent = '...';
+
+  // 1. Total page views (increments on every visit)
+  fetch('https://counterapi.com/api/' + COUNTER_NS + '/view/' + COUNTER_KEY)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.value !== undefined) {
+        document.getElementById('visitCount').textContent = data.value;
+      }
+    })
+    .catch(() => {
+      // Fallback to localStorage if API fails
+      let vc = parseInt(localStorage.getItem('huashu_visit_count') || '0') + 1;
+      localStorage.setItem('huashu_visit_count', vc);
+      document.getElementById('visitCount').textContent = vc;
+    });
+
+  // 2. Unique visitors (increments only for new visitors, uses unique=true)
+  //    Use a localStorage flag to avoid double-counting on same device
+  const uniqueKey = 'huashu_unique_tracked';
+  const isUnique = !localStorage.getItem(uniqueKey);
+  if (isUnique) {
+    localStorage.setItem(uniqueKey, '1');
   }
-  // Track unique visitors count (stored locally, per-device estimate)
-  let visitorCount = parseInt(localStorage.getItem('huashu_visitor_count') || '0');
-  // Increment if first visit today
-  let lastVisitDate = localStorage.getItem('huashu_last_visit_date');
-  if (lastVisitDate !== today) {
-    visitorCount += 1;
-    localStorage.setItem('huashu_visitor_count', visitorCount);
-    localStorage.setItem('huashu_last_visit_date', today);
-  }
-  // Display with a base offset for realism (since localStorage is per-device)
-  const displayBase = parseInt(localStorage.getItem('huashu_visit_base') || '0');
-  document.getElementById('visitorCount').textContent = visitorCount + displayBase;
+
+  // Fetch unique visitor count (readOnly if already tracked on this device)
+  const uniqueUrl = 'https://counterapi.com/api/' + COUNTER_NS + '/view/' + COUNTER_KEY + '-unique'
+    + (isUnique ? '' : '?readOnly=true');
+
+  fetch(uniqueUrl)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.value !== undefined) {
+        document.getElementById('visitorCount').textContent = data.value;
+      }
+    })
+    .catch(() => {
+      // Fallback
+      let uv = parseInt(localStorage.getItem('huashu_visitor_count') || '0');
+      if (isUnique) {
+        uv += 1;
+        localStorage.setItem('huashu_visitor_count', uv);
+      }
+      document.getElementById('visitorCount').textContent = uv;
+    });
 }
 
 // ===== Feedback Functions =====
