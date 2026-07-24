@@ -1086,7 +1086,7 @@ function buildSidebar() {
       btn.classList.add('active');
       currentCat = btn.dataset.cat;
       if (currentCat === 'dashboard') {
-        showDashboard();
+        window.location.href = 'chengdu_dashboard.html';
       } else {
         hideDashboard();
         renderList();

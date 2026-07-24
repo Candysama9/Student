@@ -241,12 +241,34 @@ tbody td.rank .badge{
 .stag-comm-C{background:var(--gray-bg);color:var(--gray);border:1px solid rgba(142,142,147,.2)}
 
 /* Progress bars */
-.bar{display:inline-block;width:50px;height:5px;background:var(--bg-2);border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:5px}
-.bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.bar-wrap{display:flex;align-items:center;gap:6px;min-width:120px;justify-content:flex-start;width:100%}
+.bar{display:flex;width:80px;height:10px;background:rgba(0,0,0,.06);border-radius:5px;overflow:hidden;flex-shrink:0;border:1px solid rgba(0,0,0,.04)}
+.bar-fill{display:block;height:100%;border-radius:4px;transition:width .3s;min-width:2px}
+.bar-val{font-size:.72rem;color:var(--text-1);white-space:nowrap;min-width:42px;text-align:left}
 .bar-fill.green{background:linear-gradient(90deg,var(--green),#30D158)}
 .bar-fill.gold{background:linear-gradient(90deg,var(--gold),#FFB340)}
 .bar-fill.brand{background:linear-gradient(90deg,var(--brand),var(--brand-2))}
 .bar-fill.red{background:linear-gradient(90deg,var(--red),#FF6961)}
+
+/* Tag filter */
+.tag-filter{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.tag-btn{
+  padding:3px 8px;border-radius:6px;border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.5);color:var(--text-2);font-size:.66rem;cursor:pointer;
+  transition:all .15s;font-family:var(--font);font-weight:500;white-space:nowrap;
+}
+.tag-btn:hover{color:var(--text-0)}
+.tag-btn.active.tenure{background:rgba(88,86,214,.1);color:var(--brand-2);border-color:rgba(88,86,214,.3)}
+.tag-btn.active.progress{background:var(--green-bg);color:var(--green);border-color:rgba(52,199,89,.3)}
+.tag-btn.active.absent{background:var(--red-bg);color:var(--red);border-color:rgba(255,59,48,.3)}
+.tag-btn.active.comm{background:var(--gold-bg);color:var(--gold);border-color:rgba(255,149,0,.3)}
+.tag-btn.active.all{background:var(--glass-hi);color:var(--brand);border-color:var(--brand-glow)}
+
+/* Student tags cell */
+.tags-cell{width:200px;max-width:200px;vertical-align:top;white-space:normal;padding:7px 10px 7px 11px !important;border-right:2px solid rgba(0,122,255,.18);overflow:hidden}
+.tags-cell .tag-row{display:flex;flex-wrap:wrap;gap:3px;max-width:100%;overflow:hidden}
+.tags-cell .stag{margin-bottom:2px;font-size:.62rem;padding:1px 5px}
+.name-cell{vertical-align:top;white-space:nowrap;padding:7px 11px 7px 10px !important;min-width:60px;border-left:none}
 
 .teacher-link{color:var(--brand);cursor:pointer;text-decoration:none;font-weight:500}
 .teacher-link:hover{text-decoration:underline}
@@ -335,6 +357,50 @@ tbody td.rank .badge{
 .hidden{display:none!important}
 .info-count{font-size:.72rem;color:var(--text-3)}
 
+/* Daily Trend */
+.trend-section{
+  margin-bottom:16px;border-radius:var(--radius);
+  background:var(--glass);border:1px solid var(--glass-brd);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.trend-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;cursor:pointer;user-select:none;
+}
+.trend-header h3{font-size:.85rem;font-weight:600;color:var(--text-0);display:flex;align-items:center;gap:6px}
+.trend-header .toggle{font-size:.7rem;color:var(--text-3);transition:transform .2s}
+.trend-section.collapsed .toggle{transform:rotate(-90deg)}
+.trend-body{padding:0 16px 14px;max-height:2000px;overflow:hidden;transition:max-height .3s}
+.trend-section.collapsed .trend-body{max-height:0;padding-top:0;padding-bottom:0}
+.trend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px}
+.trend-card{
+  padding:10px 12px;border-radius:var(--radius-sm);
+  background:rgba(255,255,255,.5);border:1px solid var(--glass-brd);
+}
+.trend-card .tc-label{font-size:.68rem;color:var(--text-2);margin-bottom:4px}
+.trend-card .tc-val{font-size:1.2rem;font-weight:700;font-family:var(--mono);color:var(--text-0)}
+.trend-card .tc-change{font-size:.68rem;margin-top:3px;display:flex;align-items:center;gap:3px}
+.trend-card .tc-change.up{color:var(--green)}
+.trend-card .tc-change.down{color:var(--red)}
+.trend-card .tc-change.flat{color:var(--text-3)}
+.trend-card .tc-change .arrow{font-size:.8rem}
+.trend-table{width:100%;font-size:.72rem;border-collapse:collapse;margin-top:6px}
+.trend-table th{padding:5px 8px;text-align:left;color:var(--text-2);font-weight:600;border-bottom:1px solid var(--glass-brd);white-space:nowrap}
+.trend-table td{padding:5px 8px;color:var(--text-1);border-bottom:1px solid rgba(0,0,0,.02);white-space:nowrap}
+.trend-table td.num{text-align:right;font-family:var(--mono)}
+.trend-table .change-up{color:var(--green)}
+.trend-table .change-down{color:var(--red)}
+.trend-table .change-flat{color:var(--text-3)}
+.trend-tabs{display:flex;gap:4px;margin-bottom:8px}
+.trend-tab{
+  padding:4px 10px;border-radius:6px;border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.5);color:var(--text-2);font-size:.7rem;cursor:pointer;
+  font-family:var(--font);font-weight:500;
+}
+.trend-tab.active{background:var(--glass-hi);color:var(--brand);border-color:var(--brand-glow)}
+.trend-nodata{padding:20px;text-align:center;color:var(--text-3);font-size:.78rem}
+
 @media(max-width:1024px){.binned-charts{grid-template-columns:1fr}.chart-grid{grid-template-columns:1fr}}
 @media(max-width:768px){.chart-grid{grid-template-columns:1fr}.header-left h1{font-size:1.2rem}.kpi-row{grid-template-columns:repeat(2,1fr)}}
 </style>
@@ -353,16 +419,20 @@ tbody td.rank .badge{
 // 全局状态
 // ============================================================
 let DASHBOARD=null;
+let DAILY_HISTORY=null;
 let activeTab='teacher';
-let activeStatus='all'; // all, 已开课班级, 已开窗班级, 已结课班级, 未开课班级
+let activeStatus=''; // 初始化为空，启动时自动选择
 let activeGradeFilter='all';
 let selectedTeacher='';
+let activeTagFilter='all'; // 标签筛选
 let sortCol='renewal_rate';
 let sortDir='desc';
 let chartInstances={};
 let teacherSearch='';
 let studentSearch='';
 let dropdownOpen=false;
+let trendTab='overall'; // 趋势标签：overall/subject/teacher
+let trendCollapsed=false; // 趋势面板折叠状态
 
 const METRICS=[
   {key:'deep_chat_quality',name:'深聊质量',max:15,cat:'学情沟通',short:'dcq'},
@@ -386,19 +456,143 @@ async function loadData(){
   throw new Error('无法加载数据文件');
 }
 
+async function loadHistory(){
+  const paths=['daily_history.json','./daily_history.json'];
+  for(const p of paths){
+    try{const r=await fetch(p);if(r.ok)return await r.json();}catch(e){}
+  }
+  return null;
+}
+
+// 计算环比变化
+function calcChange(current, previous){
+  if(previous==null||previous===0)return null;
+  const diff=current-previous;
+  if(Math.abs(diff)<0.05)return {type:'flat',val:diff};
+  return {type:diff>0?'up':'down',val:diff};
+}
+
+function formatChange(chg,suffix='%'){
+  if(!chg)return '<span class="change-flat">—</span>';
+  const sign=chg.val>0?'+':'';
+  const cls=chg.type==='up'?'change-up':chg.type==='down'?'change-down':'change-flat';
+  const arrow=chg.type==='up'?'▲':chg.type==='down'?'▼':'—';
+  return `<span class="${cls}">${arrow} ${sign}${chg.val.toFixed(1)}${suffix}</span>`;
+}
+
+// ============================================================
+// 日数据趋势渲染
+// ============================================================
+function renderTrends(){
+  if(!DAILY_HISTORY||!DAILY_HISTORY.snapshots||DAILY_HISTORY.snapshots.length===0)return '';
+  const snaps=DAILY_HISTORY.snapshots;
+  const latest=snaps[snaps.length-1];
+  const prev=snaps.length>1?snaps[snaps.length-2]:null;
+  const dataDate=latest.date;
+
+  // 根据当前筛选状态获取对应维度数据
+  let curData=null,prevData=null,label='';
+  if(trendTab==='overall'){
+    curData=latest.overall;prevData=prev?prev.overall:null;label='整体';
+  }else if(trendTab==='subject'){
+    // 取当前学科的快照，若未选具体学科则展示第一个学科
+    const subjName=activeTab.startsWith('subject_')?activeTab.replace('subject_',''):'';
+    if(subjName&&latest.by_subject&&latest.by_subject[subjName]){
+      curData=latest.by_subject[subjName];prevData=prev&&prev.by_subject?prev.by_subject[subjName]:null;label=subjName;
+    }else{
+      curData=latest.overall;prevData=prev?prev.overall:null;label='整体';
+    }
+  }else if(trendTab==='teacher'){
+    // 取当前选中教师的快照
+    if(selectedTeacher&&latest.by_teacher&&latest.by_teacher[selectedTeacher]){
+      curData=latest.by_teacher[selectedTeacher];prevData=prev&&prev.by_teacher?prev.by_teacher[selectedTeacher]:null;label=selectedTeacher+'老师';
+    }else{
+      curData=latest.overall;prevData=prev?prev.overall:null;label='整体';
+    }
+  }
+  if(!curData)return '';
+
+  const chgRR=calcChange(curData.renewal_rate,prevData?prevData.renewal_rate:null);
+  const chgScore=calcChange(curData.avg_score,prevData?prevData.avg_score:null);
+  const chgSA=calcChange(curData.sa_pct,prevData?prevData.sa_pct:null);
+
+  // 各项得分环比
+  const metricKeys=[
+    {k:'dcq',n:'深聊质量'},{k:'dcr',n:'深聊轮次'},{k:'svc',n:'服务卡'},
+    {k:'qr',n:'题目回收'},{k:'att',n:'出勤率'},{k:'pp',n:'进步感知'},
+    {k:'cr',n:'课次报告'},{k:'cq',n:'连续在读'}
+  ];
+
+  let html=`
+  <div class="trend-section ${trendCollapsed?'collapsed':''}">
+    <div class="trend-header" onclick="toggleTrend()">
+      <h3>📈 日数据环比趋势 <span style="font-size:.72rem;color:var(--text-3);font-weight:400">数据日期 ${dataDate} · ${label}</span></h3>
+      <span class="toggle">▼</span>
+    </div>
+    <div class="trend-body">
+      <div class="trend-tabs">
+        <button class="trend-tab ${trendTab==='overall'?'active':''}" onclick="switchTrendTab('overall')">整体</button>
+        <button class="trend-tab ${trendTab==='subject'?'active':''}" onclick="switchTrendTab('subject')">学科维度</button>
+        <button class="trend-tab ${trendTab==='teacher'?'active':''}" onclick="switchTrendTab('teacher')">教师维度</button>
+      </div>
+      <div class="trend-grid">
+        <div class="trend-card">
+          <div class="tc-label">续班率</div>
+          <div class="tc-val">${curData.renewal_rate.toFixed(1)}%</div>
+          <div class="tc-change ${chgRR?chgRR.type:'flat'}">${formatChange(chgRR)}</div>
+        </div>
+        <div class="trend-card">
+          <div class="tc-label">平均总分</div>
+          <div class="tc-val">${curData.avg_score.toFixed(1)}</div>
+          <div class="tc-change ${chgScore?chgScore.type:'flat'}">${formatChange(chgScore,'')}</div>
+        </div>
+        <div class="trend-card">
+          <div class="tc-label">SA占比</div>
+          <div class="tc-val">${curData.sa_pct.toFixed(1)}%</div>
+          <div class="tc-change ${chgSA?chgSA.type:'flat'}">${formatChange(chgSA)}</div>
+        </div>
+        <div class="trend-card">
+          <div class="tc-label">学员人次</div>
+          <div class="tc-val">${curData.student_count}</div>
+          <div class="tc-change flat">原班${curData.original_count} · 续班${curData.renewal_count}</div>
+        </div>
+      </div>
+      ${curData.metrics?`
+      <table class="trend-table">
+        <thead><tr><th>指标</th><th style="text-align:right">当日均值</th><th style="text-align:right">环比变化</th></tr></thead>
+        <tbody>
+        ${metricKeys.map(mk=>{
+          const cv=curData.metrics[mk.k]||0;
+          const pv=prevData&&prevData.metrics?prevData.metrics[mk.k]||0:0;
+          const chg=calcChange(cv,pv);
+          return `<tr><td>${mk.n}</td><td class="num">${cv.toFixed(1)}</td><td class="num">${formatChange(chg,'')}</td></tr>`;
+        }).join('')}
+        </tbody>
+      </table>`:''}
+      ${snaps.length>1?`
+      <div style="margin-top:8px;font-size:.68rem;color:var(--text-3)">共 ${snaps.length} 天数据 · 首次记录 ${snaps[0].date} · 最近记录 ${latest.date}</div>
+      `:'<div style="margin-top:8px;font-size:.68rem;color:var(--text-3)">首日数据，暂无环比对比</div>'}
+    </div>
+  </div>`;
+  return html;
+}
+
+function toggleTrend(){trendCollapsed=!trendCollapsed;render();}
+function switchTrendTab(tab){trendTab=tab;render();}
+
 // ============================================================
 // 数据过滤
 // ============================================================
 function getFilteredStudents(){
   if(!DASHBOARD)return[];
-  if(activeStatus==='all')return DASHBOARD.all_students;
+  if(activeStatus==='all'||activeStatus==='')return DASHBOARD.all_students;
   if(activeStatus==='未开课班级')return DASHBOARD.not_started_students||[];
   return DASHBOARD.all_students.filter(s=>s.cs===activeStatus);
 }
 
-function getPhysicsStudents(){
-  let students=DASHBOARD.physics_students;
-  if(activeStatus!=='all'&&activeStatus!=='未开课班级'){
+function getSubjectStudents(subject){
+  let students=DASHBOARD.all_students.filter(s=>s.s===subject);
+  if(activeStatus&&activeStatus!=='all'&&activeStatus!=='未开课班级'){
     students=students.filter(s=>s.cs===activeStatus);
   }
   return students;
@@ -515,7 +709,11 @@ function renderTags(tags){
 function render(){
   const app=document.getElementById('app');
   const students=getFilteredStudents();
-  const physicsStudents=getPhysicsStudents();
+
+  // 获取可用学科列表
+  const subjectSet=new Set();
+  if(DASHBOARD.all_students)DASHBOARD.all_students.forEach(s=>{if(s.s)subjectSet.add(s.s)});
+  const subjects=[...subjectSet].sort();
 
   const ss=DASHBOARD.meta.status_stats;
   const totalAll=DASHBOARD.meta.total_records;
@@ -527,6 +725,7 @@ function render(){
       <div class="sub">学员分层续班潜力得分 · 数据日期 ${DASHBOARD.meta.data_date} · ${DASHBOARD.meta.data_source}</div>
     </div>
     <div class="header-right">
+      <a href="index.html" style="text-decoration:none"><div class="data-badge" style="cursor:pointer">← 话术总库</div></a>
       <div class="data-badge"><span class="dot"></span>数据已加载 · ${DASHBOARD.meta.total_records} 条记录</div>
     </div>
   </div>
@@ -537,7 +736,7 @@ function render(){
     <div class="status-pills">
       <button class="spill ${activeStatus==='all'?'active':''}" onclick="switchStatus('all')">全部 <span class="cnt">${totalAll}</span></button>
       <button class="spill ${activeStatus==='已开课班级'?'active':''}" onclick="switchStatus('已开课班级')">已开课 <span class="cnt">${(ss['已开课班级']||{}).count||0}</span></button>
-      <button class="spill disabled" onclick="void(0)">已开窗 <span class="cnt">${(ss['已开窗班级']||{}).count||0}</span></button>
+      <button class="spill ${(ss['已开窗班级']||{}).count>0?(activeStatus==='已开窗班级'?'active':''):'disabled'}" onclick="${(ss['已开窗班级']||{}).count>0?`switchStatus('已开窗班级')`:'void(0)'}">已开窗 <span class="cnt">${(ss['已开窗班级']||{}).count||0}</span></button>
       <button class="spill ${activeStatus==='已结课班级'?'active':''}" onclick="switchStatus('已结课班级')">已结课 <span class="cnt">${(ss['已结课班级']||{}).count||0}</span></button>
       <button class="spill ${activeStatus==='未开课班级'?'active':''}" onclick="switchStatus('未开课班级')">未开课 <span class="cnt">${(ss['未开课班级']||{}).count||0}</span></button>
     </div>
@@ -546,6 +745,9 @@ function render(){
   <!-- KPI -->
   <div class="kpi-row">${renderKPIs(students)}</div>
   `;
+
+  // 日数据趋势
+  html+=renderTrends();
 
   // 未开课单独页面（不显示分档图表，因为未开课班级不参与续班率计算）
   if(activeStatus==='未开课班级'){
@@ -577,13 +779,16 @@ function render(){
   <div class="tabs">
     <button class="tab ${activeTab==='teacher'?'active':''}" onclick="switchTab('teacher')">教师排名</button>
     <button class="tab ${activeTab==='subject'?'active':''}" onclick="switchTab('subject')">学科组排名</button>
-    <button class="tab ${activeTab==='physics'?'active':''}" onclick="switchTab('physics')">物理学情</button>
+    ${subjects.map(s=>`<button class="tab ${activeTab==='subject_'+s?'active':''}" onclick="switchTab('subject_${s}')">${s}学情</button>`).join('')}
   </div>
   `;
 
   if(activeTab==='teacher')html+=renderTeacherTab(students);
   else if(activeTab==='subject')html+=renderSubjectTab(students);
-  else if(activeTab==='physics')html+=renderPhysicsTab(physicsStudents);
+  else if(activeTab.startsWith('subject_')){
+    const subjName=activeTab.replace('subject_','');
+    html+=renderSubjectStudentTab(subjName,getSubjectStudents(subjName));
+  }
 
   html+=renderRules();
   html+=`<div class="formula-note">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分 · 公式评级与系统评级100%匹配</div>`;
@@ -632,12 +837,12 @@ function renderTeacherTab(students){
     {key:'renewal',label:'续班',sortable:true,cls:'num'},
     {key:'renewal_rate',label:'续班率',sortable:true,cls:'num',render:(v)=>{
       const cls=v>=30?'green':v>=15?'gold':'red';
-      return `<span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v,100)}%"></span></span>${v.toFixed(1)}%`;
+      return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
     }},
     {key:'avg_score',label:'均分',sortable:true,cls:'num',render:(v)=>v.toFixed(1)},
     {key:'sa_pct',label:'SA占比',sortable:true,cls:'num',render:(v)=>{
       const cls=v>=20?'green':v>=10?'gold':'red';
-      return `<span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v,100)}%"></span></span>${v.toFixed(1)}%`;
+      return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
     }},
     {key:'grade_counts.S',label:'S',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-S">${v}</span>`:'-'},
     {key:'grade_counts.A',label:'A',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-A">${v}</span>`:'-'},
@@ -756,9 +961,9 @@ function renderSubjectTab(students){
           <td class="num">${r.total}</td>
           <td class="num">${r.original}</td>
           <td class="num">${r.renewal}</td>
-          <td class="num"><span class="bar"><span class="bar-fill ${rrCls}" style="width:${Math.min(r.renewal_rate,100)}%"></span></span>${r.renewal_rate.toFixed(1)}%</td>
+          <td class="num"><div class="bar-wrap"><span class="bar"><span class="bar-fill ${rrCls}" style="width:${Math.min(r.renewal_rate,100)}%"></span></span><span class="bar-val">${r.renewal_rate.toFixed(1)}%</span></div></td>
           <td class="num">${r.avg_score.toFixed(1)}</td>
-          <td class="num"><span class="bar"><span class="bar-fill ${saCls}" style="width:${Math.min(r.sa_pct,100)}%"></span></span>${r.sa_pct.toFixed(1)}%</td>
+          <td class="num"><div class="bar-wrap"><span class="bar"><span class="bar-fill ${saCls}" style="width:${Math.min(r.sa_pct,100)}%"></span></span><span class="bar-val">${r.sa_pct.toFixed(1)}%</span></div></td>
           <td class="num">${r.grade_counts.S?`<span class="grade grade-S">${r.grade_counts.S}</span>`:'-'}</td>
           <td class="num">${r.grade_counts.A?`<span class="grade grade-A">${r.grade_counts.A}</span>`:'-'}</td>
           <td class="num">${r.grade_counts.B?`<span class="grade grade-B">${r.grade_counts.B}</span>`:'-'}</td>
@@ -772,18 +977,27 @@ function renderSubjectTab(students){
   return html;
 }
 
-function renderPhysicsTab(physicsStudents){
+function renderSubjectStudentTab(subjectName,subjectStudents){
   const teacherMap={};
-  physicsStudents.forEach(s=>{
+  subjectStudents.forEach(s=>{
     if(!teacherMap[s.t])teacherMap[s.t]={name:s.t,count:0,sa:0};
     teacherMap[s.t].count++;
     if(s.sg==='S'||s.sg==='A')teacherMap[s.t].sa++;
   });
   const teachers=Object.values(teacherMap).sort((a,b)=>b.count-a.count);
 
-  let students=physicsStudents;
+  let students=subjectStudents;
   if(selectedTeacher)students=students.filter(s=>s.t===selectedTeacher);
   if(activeGradeFilter!=='all')students=students.filter(s=>s.sg===activeGradeFilter);
+  // 标签筛选（支持按类型或具体标签名筛选）
+  if(activeTagFilter!=='all'){
+    const knownTypes=['tenure','progress','absent','comm'];
+    if(knownTypes.includes(activeTagFilter)){
+      students=students.filter(s=>s.tags&&s.tags.some(t=>t.type===activeTagFilter));
+    }else{
+      students=students.filter(s=>s.tags&&s.tags.some(t=>t.label===activeTagFilter));
+    }
+  }
   if(studentSearch){
     const q=studentSearch.toLowerCase();
     students=students.filter(s=>(s.n&&s.n.toLowerCase().includes(q))||(s.cc&&s.cc.toLowerCase().includes(q)));
@@ -796,7 +1010,6 @@ function renderPhysicsTab(physicsStudents){
 
   // 动态列：如果选了教师，不显示教师列和当天满分；如果两个评级相同只显示一个
   const showTeacherCol=!selectedTeacher;
-  const showFullScoreCol=true; // 保留当天满分列（用户说如果筛选了老师就不展示当天满分）
   const hideFullScore=!!selectedTeacher;
 
   let cols=[
@@ -812,7 +1025,6 @@ function renderPhysicsTab(physicsStudents){
     {key:'ts',label:'总分',cls:'num'},
   );
   if(!hideFullScore)cols.push({key:'fs',label:'当天满分',cls:'num'});
-  // 评级：如果sg===fg，只显示一个
   cols.push({key:'grade',label:'评级'});
   cols.push(
     {key:'dcq',label:'深聊质量',cls:'num'},
@@ -835,17 +1047,33 @@ function renderPhysicsTab(physicsStudents){
         ${selectedTeacher||'全部教师'} <span class="arrow">▼</span>
       </button>
       <div class="dropdown-menu">
-        <div class="dropdown-item ${!selectedTeacher?'selected':''}" onclick="selectTeacher('')">全部教师 (${physicsStudents.length}人)</div>
+        <div class="dropdown-item ${!selectedTeacher?'selected':''}" onclick="selectTeacher('')">全部教师 (${subjectStudents.length}人)</div>
         ${dropdownItems}
       </div>
     </div>
-    <span class="filter-label" style="margin-left:8px">评级筛选</span>
+    <span class="filter-label" style="margin-left:8px">评级</span>
     <div class="grade-filter">
       <button class="grade-btn all ${activeGradeFilter==='all'?'active':''}" onclick="filterGrade('all')">全部</button>
       <button class="grade-btn grade-S ${activeGradeFilter==='S'?'active':''}" onclick="filterGrade('S')">S级</button>
       <button class="grade-btn grade-A ${activeGradeFilter==='A'?'active':''}" onclick="filterGrade('A')">A级</button>
       <button class="grade-btn grade-B ${activeGradeFilter==='B'?'active':''}" onclick="filterGrade('B')">B级</button>
       <button class="grade-btn grade-C ${activeGradeFilter==='C'?'active':''}" onclick="filterGrade('C')">C级</button>
+    </div>
+    <span class="filter-label" style="margin-left:8px">标签</span>
+    <div class="tag-filter">
+      <button class="tag-btn all ${activeTagFilter==='all'?'active':''}" onclick="filterTag('all')">全部</button>
+      <button class="tag-btn tenure ${activeTagFilter==='tenure'?'active':''}" onclick="filterTag('tenure')">老生</button>
+      <button class="tag-btn tenure ${activeTagFilter==='初三曾在读'?'active':''}" onclick="filterTag('初三曾在读')">初三曾在读</button>
+      <button class="tag-btn tenure ${activeTagFilter==='一季老生'?'active':''}" onclick="filterTag('一季老生')">一季老生</button>
+      <button class="tag-btn tenure ${activeTagFilter==='两季老生'?'active':''}" onclick="filterTag('两季老生')">两季老生</button>
+      <button class="tag-btn tenure ${activeTagFilter==='三季老生'?'active':''}" onclick="filterTag('三季老生')">三季老生</button>
+      <button class="tag-btn progress ${activeTagFilter==='progress'?'active':''}" onclick="filterTag('progress')">进步明显</button>
+      <button class="tag-btn absent ${activeTagFilter==='absent'?'active':''}" onclick="filterTag('absent')">缺勤</button>
+      <button class="tag-btn comm ${activeTagFilter==='comm'?'active':''}" onclick="filterTag('comm')">家校沟通</button>
+      <button class="tag-btn comm ${activeTagFilter==='家校沟通S'?'active':''}" onclick="filterTag('家校沟通S')">沟通S</button>
+      <button class="tag-btn comm ${activeTagFilter==='家校沟通A'?'active':''}" onclick="filterTag('家校沟通A')">沟通A</button>
+      <button class="tag-btn comm ${activeTagFilter==='家校沟通B'?'active':''}" onclick="filterTag('家校沟通B')">沟通B</button>
+      <button class="tag-btn comm ${activeTagFilter==='家校沟通C'?'active':''}" onclick="filterTag('家校沟通C')">沟通C</button>
     </div>
     <input class="search-box" type="text" placeholder="搜索学员姓名/班级编码..." value="${studentSearch}" oninput="onStudentSearch(this.value)" style="max-width:200px">
     <span class="info-count">共 ${students.length} 名学员</span>
@@ -860,8 +1088,8 @@ function renderPhysicsTab(physicsStudents){
           ?`<span class="grade grade-${s.sg}">${s.sg}</span>`
           :`${s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:''}${s.fg&&s.fg!==s.sg?`<span class="grade grade-${s.fg}" style="margin-left:2px">${s.fg}</span>`:''}`;
         return `<tr>
-          <td style="max-width:200px">${renderTags(s.tags)}</td>
-          <td style="font-weight:500">${s.n||'-'}</td>
+          <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
+          <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
           ${showTeacherCol?`<td><span class="teacher-link" onclick="selectTeacher('${s.t}')">${s.t}</span></td>`:''}
           <td style="color:var(--text-2);font-size:.72rem">${s.cc||'-'}</td>
           <td style="font-size:.72rem;color:var(--text-2)">${s.cs}</td>
@@ -913,8 +1141,8 @@ function renderNotStartedTab(){
     </tr></thead>
     <tbody>
       ${students.map(s=>`<tr>
-        <td style="max-width:200px">${renderTags(s.tags)}</td>
-        <td style="font-weight:500">${s.n||'-'}</td>
+        <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
+        <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
         <td><span class="teacher-link" onclick="openTeacherDetail('${s.t}')">${s.t}</span></td>
         <td>${s.s}</td>
         <td style="font-size:.72rem;color:var(--text-2)">${s.cc||'-'}</td>
@@ -1247,8 +1475,8 @@ function openTeacherDetail(teacherName){
                 const gh=gs?`<span class="grade grade-${s.sg}">${s.sg}</span>`
                   :`${s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:''}${s.fg&&s.fg!==s.sg?`<span class="grade grade-${s.fg}" style="margin-left:2px">${s.fg}</span>`:''}`;
                 return `<tr>
-                  <td style="max-width:200px">${renderTags(s.tags)}</td>
-                  <td style="font-weight:500">${s.n||'-'}</td>
+                  <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
+                  <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
                   <td>${s.s}</td>
                   <td style="font-size:.7rem;color:var(--text-2)">${s.cc||'-'}</td>
                   <td style="font-size:.72rem;color:var(--text-2)">${s.cs}</td>
@@ -1279,10 +1507,11 @@ function openTeacherDetail(teacherName){
 // ============================================================
 // 交互
 // ============================================================
-function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';render();}
-function switchStatus(status){activeStatus=status;render();}
-function selectTeacher(t){selectedTeacher=t;closeDropdown();render();}
+function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';activeTagFilter='all';if(tab.startsWith('subject_'))trendTab='subject';else trendTab='overall';render();}
+function switchStatus(status){activeStatus=status;selectedTeacher='';activeGradeFilter='all';activeTagFilter='all';trendTab='overall';render();}
+function selectTeacher(t){selectedTeacher=t;closeDropdown();if(t)trendTab='teacher';render();}
 function filterGrade(g){activeGradeFilter=g;render();}
+function filterTag(t){activeTagFilter=t;render();}
 function toggleDropdown(){
   const dd=document.getElementById('teacherDropdown');
   if(dd)dd.classList.toggle('open');
@@ -1318,6 +1547,14 @@ document.addEventListener('click',(e)=>{
 async function init(){
   try{
     DASHBOARD=await loadData();
+    // 并行加载日数据历史（失败不阻塞主看板）
+    try{DAILY_HISTORY=await loadHistory();}catch(e){console.warn('日数据历史加载失败:',e);}
+    // 默认班级状态优先级：已开窗 → 已开课 → 已结课
+    const ss=DASHBOARD.meta.status_stats;
+    if((ss['已开窗班级']||{}).count>0)activeStatus='已开窗班级';
+    else if((ss['已开课班级']||{}).count>0)activeStatus='已开课班级';
+    else if((ss['已结课班级']||{}).count>0)activeStatus='已结课班级';
+    else activeStatus='all';
     document.getElementById('app').innerHTML='';
     render();
   }catch(e){
