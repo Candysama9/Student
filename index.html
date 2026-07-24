@@ -766,49 +766,15 @@ body.edit-mode .copy-btn-qa {
 .feedback-btn:hover { border-color: var(--accent); color: var(--accent); }
 .feedback-btn.active-good { background: #e8f5e9; border-color: #4caf50; color: #2e7d32; font-weight: 500; }
 .feedback-btn.active-bad { background: #fff3e0; border-color: #ff9800; color: #e65100; font-weight: 500; }
-.feedback-form {
-  margin-top: 8px;
-  display: none;
-}
-.feedback-form.show { display: block; }
-.feedback-form textarea {
-  width: 100%;
-  min-height: 56px;
-  padding: 8px 12px;
-  border: 1px solid var(--rule);
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 13px;
-  color: var(--ink);
-  resize: vertical;
-  background: var(--bg);
-  line-height: 1.5;
-}
-.feedback-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
-.feedback-submit {
-  margin-top: 6px;
-  padding: 5px 18px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 12px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.feedback-submit:hover { opacity: 0.85; }
 .feedback-done {
-  margin-top: 6px;
-  padding: 6px 14px;
-  background: #e8f5e9;
-  border: 1px solid #4caf50;
-  border-radius: 8px;
+  margin-left: 4px;
   font-size: 12px;
   color: #2e7d32;
-  display: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: inline-block;
 }
-.feedback-done.show { display: inline-block; }
+.feedback-done.show { opacity: 1; }
 
 /* ===== Visitor Stats ===== */
 .visitor-stats {
@@ -846,7 +812,7 @@ body.edit-mode .copy-btn-qa {
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
 </div>
 
-<button class="admin-fab" onclick="showAdminBar()" title="管理">⚙</button>
+<button class="admin-fab" id="adminFab" onclick="promptAdminPassword()" title="管理" style="display:none;">⚙</button>
 
 <div class="save-toast" id="saveToast">已保存</div>
 
@@ -892,7 +858,7 @@ body.edit-mode .copy-btn-qa {
     </main>
   </div>
 
-  <footer>
+  <footer onclick="handleFooterClick()">
     <p>高一物理家校沟通话术总库 · 课堂反馈话术 + 高频问题话术 · 所有内容均可直接复制发送给家长</p>
   </footer>
 </div>
@@ -1069,14 +1035,10 @@ function renderList() {
                 复制话术
               </button>
               <div class="feedback-bar">
-                <button class="feedback-btn feedback-good" onclick="toggleFeedbackForm(this.closest('.qa-card'),'good')">👍 有用</button>
-                <button class="feedback-btn feedback-bad" onclick="toggleFeedbackForm(this.closest('.qa-card'),'bad')">👎 需改进</button>
+                <button class="feedback-btn feedback-good" onclick="quickFeedback(this,'${item.q}','${item.catName}','good')">👍 有用</button>
+                <button class="feedback-btn feedback-bad" onclick="quickFeedback(this,'${item.q}','${item.catName}','bad')">👎 需改进</button>
+                <span class="feedback-done">✓ 已记录</span>
               </div>
-              <div class="feedback-form">
-                <textarea placeholder="请写下你的建议..."></textarea>
-                <button class="feedback-submit" onclick="submitFeedback(this, ${JSON.stringify(item.q)}, ${JSON.stringify(item.catName)}, 'good')">提交反馈</button>
-              </div>
-              <div class="feedback-done">✓ 感谢反馈！</div>
               <div class="edit-item-bar">
                 <button onclick="saveEdit(${item.catIdx},${item.itemIdx})">保存此条</button>
                 <button class="btn-delete" onclick="deleteItem(${item.catIdx},${item.itemIdx})">删除</button>
@@ -1097,14 +1059,10 @@ function renderList() {
             <button class="tier-copy" data-i="${i}" data-ti="${ti}">复制话术</button>
             <div class="tier-txt">${t.text}</div>
             <div class="feedback-bar">
-              <button class="feedback-btn feedback-good" onclick="toggleFeedbackForm(this.closest('.qa-card'),'good')">👍 有用</button>
-              <button class="feedback-btn feedback-bad" onclick="toggleFeedbackForm(this.closest('.qa-card'),'bad')">👎 需改进</button>
+              <button class="feedback-btn feedback-good" onclick="quickFeedback(this,'${item.q} - ${t.label}','${item.catName}','good')">👍 有用</button>
+              <button class="feedback-btn feedback-bad" onclick="quickFeedback(this,'${item.q} - ${t.label}','${item.catName}','bad')">👎 需改进</button>
+              <span class="feedback-done">✓ 已记录</span>
             </div>
-            <div class="feedback-form">
-              <textarea placeholder="请写下你的建议..."></textarea>
-              <button class="feedback-submit" onclick="submitFeedback(this, ${JSON.stringify(item.q + ' - ' + t.label)}, ${JSON.stringify(item.catName)}, 'good')">提交反馈</button>
-            </div>
-            <div class="feedback-done">✓ 感谢反馈！</div>
             <textarea class="edit-area" data-cat="${item.catIdx}" data-item="${item.itemIdx}" data-tier="${ti}">${t.text}</textarea>
           </div>
         </div>`;
@@ -1171,8 +1129,42 @@ function renderList() {
 }
 
 // Admin functions
-function showAdminBar() {
-  document.getElementById('adminBar').classList.add('visible');
+// Admin password protection
+const ADMIN_PASSWORD = 'cdwl2024'; // Change this to your password
+
+function promptAdminPassword() {
+  // Check if already authenticated in this session
+  if (sessionStorage.getItem('huashu_admin_auth') === 'true') {
+    document.getElementById('adminBar').classList.add('visible');
+    return;
+  }
+  const pwd = prompt('请输入管理模式密码：');
+  if (pwd === ADMIN_PASSWORD) {
+    sessionStorage.setItem('huashu_admin_auth', 'true');
+    document.getElementById('adminBar').classList.add('visible');
+    // Show admin fab permanently for this session
+    document.getElementById('adminFab').style.display = 'flex';
+  } else if (pwd !== null) {
+    alert('密码错误');
+  }
+}
+
+// Secret trigger: triple-click the footer to show admin fab
+let footerClicks = 0;
+let footerTimer = null;
+function handleFooterClick() {
+  footerClicks++;
+  clearTimeout(footerTimer);
+  footerTimer = setTimeout(() => { footerClicks = 0; }, 600);
+  if (footerClicks >= 3) {
+    footerClicks = 0;
+    document.getElementById('adminFab').style.display = 'flex';
+    setTimeout(() => {
+      if (!sessionStorage.getItem('huashu_admin_auth')) {
+        promptAdminPassword();
+      }
+    }, 100);
+  }
 }
 
 function hideAdminBar() {
@@ -1359,43 +1351,22 @@ function trackVisit() {
 }
 
 // ===== Feedback Functions =====
-function toggleFeedbackForm(card, type) {
-  const form = card.querySelector('.feedback-form');
-  const goodBtn = card.querySelector('.feedback-good');
-  const badBtn = card.querySelector('.feedback-bad');
-  const doneMsg = card.querySelector('.feedback-done');
-
-  // Reset states
-  goodBtn.classList.remove('active-good');
-  badBtn.classList.remove('active-bad');
-  doneMsg.classList.remove('show');
-  form.classList.add('show');
-
-  if (type === 'good') {
-    goodBtn.classList.add('active-good');
-    form.querySelector('textarea').placeholder = '这条话术很好用！可以说说哪里好，方便其他老师参考（选填）';
-  } else {
-    badBtn.classList.add('active-bad');
-    form.querySelector('textarea').placeholder = '请写下具体问题或建议，帮助我们改进这条话术';
+function quickFeedback(btn, question, catName, type) {
+  // Prevent duplicate feedback for same item
+  const feedbackKey = 'fb_' + question;
+  if (localStorage.getItem(feedbackKey)) {
+    showToast('您已反馈过这条话术');
+    return;
   }
-}
-
-function submitFeedback(btn, question, catName, type) {
-  const card = btn.closest('.qa-card') || btn.closest('.tier-block')?.closest('.qa-card');
-  const form = btn.closest('.feedback-form');
-  const textarea = form.querySelector('textarea');
-  const comment = textarea.value.trim();
-  const doneMsg = card.querySelector('.feedback-done');
 
   const rating = type === 'good' ? '👍 有用' : '👎 需改进';
   const timestamp = new Date().toLocaleString('zh-CN');
 
-  // Build feedback message
+  // Build feedback data
   const feedbackData = {
     question: question,
     category: catName,
     rating: rating,
-    comment: comment || '（无文字建议）',
     time: timestamp
   };
 
@@ -1403,42 +1374,33 @@ function submitFeedback(btn, question, catName, type) {
   let allFeedback = JSON.parse(localStorage.getItem('huashu_feedback') || '[]');
   allFeedback.push(feedbackData);
   localStorage.setItem('huashu_feedback', JSON.stringify(allFeedback));
+  localStorage.setItem(feedbackKey, '1');
+
+  // Update UI
+  const bar = btn.closest('.feedback-bar');
+  const goodBtn = bar.querySelector('.feedback-good');
+  const badBtn = bar.querySelector('.feedback-bad');
+  const doneMsg = bar.querySelector('.feedback-done');
+
+  goodBtn.style.pointerEvents = 'none';
+  badBtn.style.pointerEvents = 'none';
+
+  if (type === 'good') {
+    goodBtn.classList.add('active-good');
+  } else {
+    badBtn.classList.add('active-bad');
+  }
+  doneMsg.classList.add('show');
 
   // Try EmailJS if configured
-  if (EMAILJS_CONFIG.serviceId && EMAILJS_CONFIG.templateId && EMAILJS_CONFIG.publicKey) {
-    if (typeof emailjs !== 'undefined') {
-      emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
-        question: question,
-        category: catName,
-        rating: rating,
-        comment: comment || '（无文字建议）',
-        time: timestamp
-      }).then(() => {
-        form.classList.remove('show');
-        doneMsg.textContent = '✓ 反馈已发送，感谢！';
-        doneMsg.classList.add('show');
-      }).catch((err) => {
-        console.error('EmailJS error:', err);
-        form.classList.remove('show');
-        doneMsg.textContent = '✓ 反馈已记录（邮件发送失败，已本地保存）';
-        doneMsg.classList.add('show');
-      });
-    }
-  } else {
-    // EmailJS not configured - store locally and show confirmation
-    form.classList.remove('show');
-    doneMsg.textContent = '✓ 感谢反馈！已记录';
-    doneMsg.classList.add('show');
+  if (EMAILJS_CONFIG.serviceId && EMAILJS_CONFIG.templateId && EMAILJS_CONFIG.publicKey && typeof emailjs !== 'undefined') {
+    emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
+      question: question,
+      category: catName,
+      rating: rating,
+      time: timestamp
+    }).catch((err) => { console.error('EmailJS error:', err); });
   }
-
-  // Reset buttons after 2 seconds
-  setTimeout(() => {
-    const goodBtn = card.querySelector('.feedback-good');
-    const badBtn = card.querySelector('.feedback-bad');
-    goodBtn.classList.remove('active-good');
-    badBtn.classList.remove('active-bad');
-    setTimeout(() => doneMsg.classList.remove('show'), 3000);
-  }, 2000);
 }
 
 // Export feedback data (for admin to download)
