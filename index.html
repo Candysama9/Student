@@ -828,6 +828,80 @@ body.edit-mode .copy-btn-qa {
 .visitor-stat .v-icon { font-size: 14px; }
 .visitor-stat .v-num { font-weight: 700; color: var(--accent); font-size: 14px; }
 
+/* ============================================================
+   数据看板样式
+   ============================================================ */
+#dashboardView { display: none; padding: 0; }
+#dashboardView.active { display: block; }
+
+.dash-loading { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 15px; }
+.dash-loading .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--rule); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.dash-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+.dash-meta .source { font-size: 12px; color: var(--muted); }
+.dash-meta .update-time { font-size: 12px; color: var(--muted); background: var(--accent-light); padding: 4px 12px; border-radius: 100px; }
+
+.dash-kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.dash-kpi { background: var(--bg2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--rule); border-radius: var(--radius); padding: 16px 20px; text-align: center; transition: box-shadow 0.2s; }
+.dash-kpi:hover { box-shadow: var(--shadow-hover); }
+.dash-kpi .kpi-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.dash-kpi .kpi-value { font-size: 28px; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; line-height: 1.2; }
+.dash-kpi .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.dash-kpi.kpi-score .kpi-value { color: var(--accent); }
+.dash-kpi.kpi-renewal .kpi-value { color: var(--tier-green); }
+.dash-kpi.kpi-rank .kpi-value { color: var(--accent2); }
+.dash-kpi.kpi-schools .kpi-value { color: var(--muted); }
+
+.dash-section { background: var(--bg2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; }
+.dash-section-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.dash-section-title .icon { font-size: 18px; }
+
+.dash-cat-bars { display: flex; flex-direction: column; gap: 14px; }
+.dash-cat-bar-item { }
+.dash-cat-bar-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.dash-cat-bar-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+.dash-cat-bar-score { font-size: 13px; color: var(--muted); }
+.dash-cat-bar-score .score-val { font-weight: 600; color: var(--ink); }
+.dash-cat-bar-track { height: 10px; background: rgba(0,0,0,0.04); border-radius: 100px; overflow: hidden; }
+.dash-cat-bar-fill { height: 100%; border-radius: 100px; transition: width 0.6s ease; }
+
+.dash-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.dash-metric-item { background: rgba(255,255,255,0.5); border: 1px solid var(--rule); border-radius: var(--radius-sm); padding: 12px 14px; }
+.dash-metric-item .m-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.dash-metric-item .m-name { font-size: 13px; color: var(--ink); font-weight: 500; }
+.dash-metric-item .m-value { font-size: 14px; font-weight: 600; }
+.dash-metric-item .m-track { height: 6px; background: rgba(0,0,0,0.04); border-radius: 100px; overflow: hidden; }
+.dash-metric-item .m-fill { height: 100%; border-radius: 100px; transition: width 0.6s ease; }
+.dash-metric-item .m-cat { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+.dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dash-table th { text-align: left; padding: 8px 12px; color: var(--muted); font-weight: 500; border-bottom: 2px solid var(--rule); font-size: 12px; }
+.dash-table td { padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+.dash-table tr.target-row { background: var(--accent-light); }
+.dash-table tr.target-row td { font-weight: 600; color: var(--accent); }
+.dash-table .rank-cell { width: 36px; text-align: center; font-weight: 600; }
+.dash-table .rank-1 { color: #FFD700; }
+.dash-table .rank-2 { color: #C0C0C0; }
+.dash-table .rank-3 { color: #CD7F32; }
+.dash-table .score-cell { font-family: 'Noto Sans SC', sans-serif; font-weight: 600; }
+.dash-table .rate-cell { font-family: 'Noto Sans SC', sans-serif; }
+.dash-table .rate-high { color: var(--tier-green); }
+.dash-table .rate-mid { color: var(--tier-orange); }
+.dash-table .rate-low { color: var(--tier-red); }
+
+.dash-empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.dash-empty .emoji { font-size: 48px; margin-bottom: 12px; }
+.dash-empty p { font-size: 14px; margin-bottom: 6px; }
+.dash-empty .hint { font-size: 12px; color: var(--muted); }
+
+@media (max-width: 640px) {
+  .dash-kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .dash-kpi .kpi-value { font-size: 22px; }
+  .dash-metrics-grid { grid-template-columns: 1fr; }
+  .dash-section { padding: 16px; }
+}
+
 </style>
 </head>
 <body>
@@ -886,6 +960,12 @@ body.edit-mode .copy-btn-qa {
         <div class="emoji">🔍</div>
         <p>没有找到匹配的话术，换个关键词试试？</p>
       </div>
+      <div id="dashboardView">
+        <div class="dash-loading">
+          <div class="spinner"></div>
+          <p>正在加载数据看板...</p>
+        </div>
+      </div>
     </main>
   </div>
 
@@ -911,7 +991,7 @@ let lastFiltered = [];
 let editMode = false;
 
 // Data version - increment this when data.json is updated to force-refresh localStorage
-const DATA_VERSION = '2026-07-25-abc-v7-rotate';
+const DATA_VERSION = '2026-07-25-dashboard-v1';
 
 // Load data from localStorage or fetch data.json
 async function loadData() {
@@ -997,13 +1077,20 @@ function buildSidebar() {
   DATA.filter(c => !c.id.startsWith('feedback-')).forEach(c => {
     html += `<button class="cat-btn" data-cat="${c.id}"><span class="cat-icon">${c.icon}</span>${c.name}<span class="cat-count">${c.items.length}</span></button>`;
   });
+  html += '<div class="sidebar-label">数据看板</div>';
+  html += `<button class="cat-btn" data-cat="dashboard"><span class="cat-icon">📊</span>成都学校看板<span class="cat-count">→</span></button>`;
   sb.innerHTML = html;
   sb.querySelectorAll('.cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       sb.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentCat = btn.dataset.cat;
-      renderList();
+      if (currentCat === 'dashboard') {
+        showDashboard();
+      } else {
+        hideDashboard();
+        renderList();
+      }
     });
   });
 }
@@ -1519,6 +1606,163 @@ function exportFeedback() {
   a.click();
   URL.revokeObjectURL(url);
   showToast(`已导出 ${feedback.length} 条反馈`);
+}
+
+// ============================================================
+// 数据看板功能
+// ============================================================
+let dashboardData = null;
+let dashboardLoaded = false;
+
+function showDashboard() {
+  document.getElementById('qaList').style.display = 'none';
+  document.getElementById('noResults').style.display = 'none';
+  document.getElementById('contentTitle').textContent = '📊 成都学校数据看板';
+  document.getElementById('contentDesc').textContent = '观远BI学员分层续班潜力得分 · 每日更新';
+  const dv = document.getElementById('dashboardView');
+  dv.classList.add('active');
+
+  if (!dashboardLoaded) {
+    loadDashboard();
+  } else {
+    renderDashboard();
+  }
+}
+
+function hideDashboard() {
+  document.getElementById('qaList').style.display = '';
+  document.getElementById('dashboardView').classList.remove('active');
+}
+
+async function loadDashboard() {
+  try {
+    const response = await fetch('dashboard.json?v=' + Date.now());
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    dashboardData = await response.json();
+    dashboardLoaded = true;
+    renderDashboard();
+  } catch (err) {
+    console.error('Dashboard load error:', err);
+    document.getElementById('dashboardView').innerHTML = `
+      <div class="dash-empty">
+        <div class="emoji">📊</div>
+        <p>看板数据尚未生成</p>
+        <p class="hint">请从观远BI导出Excel后运行更新脚本</p>
+        <p class="hint" style="margin-top:8px;">操作步骤：观远导出Excel → 终端运行 update_dashboard.sh → 自动部署</p>
+      </div>`;
+  }
+}
+
+function renderDashboard() {
+  if (!dashboardData) return;
+  const d = dashboardData;
+  const s = d.summary || {};
+  const isSample = d.meta && d.meta.is_sample;
+  const hasData = s.total_score > 0 || (d.comparison && d.comparison.length > 0);
+
+  let html = '';
+
+  // Meta bar
+  html += '<div class="dash-meta">';
+  html += `<span class="source">📁 ${d.meta?.data_source || '观远BI'}</span>`;
+  html += `<span class="update-time">🕐 ${d.meta?.generated_at || '未知'}</span>`;
+  html += '</div>';
+
+  if (!hasData) {
+    html += `
+      <div class="dash-empty">
+        <div class="emoji">📋</div>
+        <p>等待数据导入</p>
+        <p class="hint">从观远BI导出Excel后，运行以下命令更新看板：</p>
+        <p class="hint" style="margin-top:8px;font-family:monospace;background:rgba(0,0,0,0.04);padding:8px 12px;border-radius:6px;display:inline-block;">
+          ./update_dashboard.sh ~/Downloads/导出的Excel文件.xlsx
+        </p>
+      </div>`;
+    document.getElementById('dashboardView').innerHTML = html;
+    return;
+  }
+
+  // KPI cards
+  const rankText = s.score_rank ? `${s.score_rank}/${s.total_schools}` : '—';
+  const renewalRankText = s.renewal_rank ? `${s.renewal_rank}/${s.total_schools}` : '—';
+  html += '<div class="dash-kpi-row">';
+  html += `<div class="dash-kpi kpi-score"><div class="kpi-label">总分</div><div class="kpi-value">${s.total_score || 0}</div><div class="kpi-sub">/ ${s.total_max || 100}</div></div>`;
+  html += `<div class="dash-kpi kpi-renewal"><div class="kpi-label">续班率</div><div class="kpi-value">${s.renewal_rate || 0}%</div><div class="kpi-sub">排名 ${renewalRankText}</div></div>`;
+  html += `<div class="dash-kpi kpi-rank"><div class="kpi-label">总分排名</div><div class="kpi-value">${rankText}</div><div class="kpi-sub">共 ${s.total_schools || 0} 所学校</div></div>`;
+  if (s.sa_score) {
+    html += `<div class="dash-kpi kpi-schools"><div class="kpi-label">SA得分</div><div class="kpi-value">${s.sa_score}</div><div class="kpi-sub">SA评估</div></div>`;
+  }
+  html += '</div>';
+
+  // Category breakdown
+  if (d.categories && d.categories.length > 0) {
+    html += '<div class="dash-section">';
+    html += '<div class="dash-section-title"><span class="icon">📊</span>三大维度得分</div>';
+    html += '<div class="dash-cat-bars">';
+    d.categories.forEach(cat => {
+      html += `
+        <div class="dash-cat-bar-item">
+          <div class="dash-cat-bar-header">
+            <span class="dash-cat-bar-name">${cat.name}</span>
+            <span class="dash-cat-bar-score"><span class="score-val">${cat.score}</span> / ${cat.max}</span>
+          </div>
+          <div class="dash-cat-bar-track">
+            <div class="dash-cat-bar-fill" style="width:${cat.percentage}%;background:${cat.color};"></div>
+          </div>
+        </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // Individual metrics
+  if (d.metrics && d.metrics.length > 0) {
+    html += '<div class="dash-section">';
+    html += '<div class="dash-section-title"><span class="icon">📋</span>细分指标详情</div>';
+    html += '<div class="dash-metrics-grid">';
+    d.metrics.forEach(m => {
+      const color = d.categories?.find(c => c.name === m.category)?.color || 'var(--accent)';
+      html += `
+        <div class="dash-metric-item">
+          <div class="m-header">
+            <span class="m-name">${m.name}</span>
+            <span class="m-value" style="color:${color};">${m.value}/${m.max}</span>
+          </div>
+          <div class="m-track">
+            <div class="m-fill" style="width:${m.percentage}%;background:${color};"></div>
+          </div>
+          <div class="m-cat">${m.category}</div>
+        </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // School comparison table
+  if (d.comparison && d.comparison.length > 0) {
+    html += '<div class="dash-section">';
+    html += '<div class="dash-section-title"><span class="icon">🏆</span>全校排名对比</div>';
+    html += '<table class="dash-table"><thead><tr>';
+    html += '<th>排名</th><th>学校</th><th>总分</th><th>续班率</th>';
+    html += '</tr></thead><tbody>';
+    d.comparison.forEach(c => {
+      const rankClass = c.rank <= 3 ? `rank-${c.rank}` : '';
+      const rateClass = c.renewal_rate >= 80 ? 'rate-high' : (c.renewal_rate >= 60 ? 'rate-mid' : 'rate-low');
+      const targetClass = c.is_target ? 'target-row' : '';
+      html += `
+        <tr class="${targetClass}">
+          <td class="rank-cell ${rankClass}">${c.rank}</td>
+          <td>${c.name}</td>
+          <td class="score-cell">${c.total_score}</td>
+          <td class="rate-cell ${rateClass}">${c.renewal_rate}%</td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+
+  if (isSample) {
+    html += '<div style="text-align:center;padding:12px;font-size:12px;color:var(--muted);">⚠ 以上为示例数据，请运行更新脚本导入真实数据</div>';
+  }
+
+  document.getElementById('dashboardView').innerHTML = html;
 }
 
 
