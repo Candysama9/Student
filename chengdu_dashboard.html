@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>成都学校数据看板 · 学员分层续班潜力</title>
 <style>
 @font-face{font-family:'FZDaBiaoSong';src:local('方正大标宋简体'),local('FZDaBiaoSongJianTi'),local('FZDBSJW--GB1-0')}
@@ -450,7 +453,8 @@ const METRICS=[
 // 数据加载
 // ============================================================
 async function loadData(){
-  const paths=['chengdu_dashboard.json','./chengdu_dashboard.json'];
+  const ver=Date.now();
+  const paths=[`chengdu_dashboard.json?v=${ver}`,`./chengdu_dashboard.json?v=${ver}`];
   // 添加超时和进度提示
   const loadingText=document.getElementById('loadingText');
   let progressTimer=setTimeout(()=>{
@@ -460,26 +464,33 @@ async function loadData(){
     if(loadingText)loadingText.textContent='数据量较大，正在解析...可能需要10-15秒';
   },15000);
   
+  // 60秒超时
+  const controller=new AbortController();
+  const timeoutId=setTimeout(()=>controller.abort(),60000);
+  
   for(const p of paths){
     try{
-      const r=await fetch(p);
+      const r=await fetch(p,{cache:'no-store',signal:controller.signal});
       if(r.ok){
         const data=await r.json();
         clearTimeout(progressTimer);
         clearTimeout(slowTimer);
+        clearTimeout(timeoutId);
         return data;
       }
     }catch(e){}
   }
   clearTimeout(progressTimer);
   clearTimeout(slowTimer);
-  throw new Error('无法加载数据文件');
+  clearTimeout(timeoutId);
+  throw new Error('无法加载数据文件，请检查网络后刷新重试');
 }
 
 async function loadHistory(){
-  const paths=['daily_history.json','./daily_history.json'];
+  const ver=Date.now();
+  const paths=[`daily_history.json?v=${ver}`,`./daily_history.json?v=${ver}`];
   for(const p of paths){
-    try{const r=await fetch(p);if(r.ok)return await r.json();}catch(e){}
+    try{const r=await fetch(p,{cache:'no-store'});if(r.ok)return await r.json();}catch(e){}
   }
   return null;
 }
@@ -1138,46 +1149,50 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
 
 function renderNotStartedTab(){
   const students=getNotStartedStudents();
+  // 按教师聚合
   const teacherMap={};
   students.forEach(s=>{
-    if(!teacherMap[s.t])teacherMap[s.t]={name:s.t,count:0};
+    if(!teacherMap[s.t])teacherMap[s.t]={name:s.t,subject:s.s,count:0,classes:new Set(),startDate:s.sd,endDate:s.ed};
     teacherMap[s.t].count++;
+    if(s.cc)teacherMap[s.t].classes.add(s.cc);
   });
   const teachers=Object.values(teacherMap).sort((a,b)=>b.count-a.count);
+
+  // 按学科聚合
+  const subjectMap={};
+  students.forEach(s=>{
+    if(!subjectMap[s.s])subjectMap[s.s]={name:s.s,count:0,teachers:new Set()};
+    subjectMap[s.s].count++;
+    if(s.t)subjectMap[s.s].teachers.add(s.t);
+  });
+  const subjects=Object.values(subjectMap).sort((a,b)=>b.count-a.count);
 
   return `
   <div class="tabs">
     <button class="tab active">未开课班级</button>
   </div>
   <div class="filter-bar">
-    <span class="info-count">共 ${students.length} 名学员 · ${teachers.length} 位教师 · 未开课班级不参与续班率计算</span>
+    <span class="info-count">共 ${students.length} 名学员 · ${teachers.length} 位教师 · ${subjects.length} 个学科 · 未开课班级不参与续班率计算</span>
   </div>
+
+  <!-- 学科汇总卡片 -->
+  <div class="kpi-row" style="margin-bottom:16px">
+    ${subjects.map(sub=>`<div class="kpi"><div class="label">${sub.name}</div><div class="val brand">${sub.count}</div><div class="sub">${sub.teachers.size} 位教师</div></div>`).join('')}
+  </div>
+
+  <!-- 教师汇总表（不含学员明细和标签） -->
   <div class="table-wrap"><div class="table-scroll"><table>
     <thead><tr>
-      <th>标签</th><th>学员姓名</th><th>教师</th><th>科目</th><th>班级编码</th>
-      <th>开课日期</th><th>结课日期</th><th>总分</th><th>系统评级</th>
-      <th>深聊质量</th><th>深聊轮次</th><th>服务卡</th><th>题目回收</th>
-      <th>出勤率</th><th>进步感知</th><th>课次报告</th><th>连续在读</th>
+      <th>教师姓名</th><th>科目</th><th>学员人数</th><th>班级数量</th><th>开课日期</th><th>结课日期</th>
     </tr></thead>
     <tbody>
-      ${students.map(s=>`<tr>
-        <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
-        <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
-        <td><span class="teacher-link" onclick="openTeacherDetail('${s.t}')">${s.t}</span></td>
-        <td>${s.s}</td>
-        <td style="font-size:.72rem;color:var(--text-2)">${s.cc||'-'}</td>
-        <td style="font-size:.72rem;color:var(--text-2)">${s.sd||'-'}</td>
-        <td style="font-size:.72rem;color:var(--text-2)">${s.ed||'-'}</td>
-        <td class="num">${s.ts!=null?s.ts.toFixed(1):'-'}</td>
-        <td>${s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:'-'}</td>
-        <td class="num">${s.dcq?s.dcq.toFixed(1):'-'}</td>
-        <td class="num">${s.dcr?s.dcr.toFixed(1):'-'}</td>
-        <td class="num">${s.svc?s.svc.toFixed(1):'-'}</td>
-        <td class="num">${s.qr?s.qr.toFixed(1):'-'}</td>
-        <td class="num">${s.att?s.att.toFixed(1):'-'}</td>
-        <td class="num">${s.pp?s.pp.toFixed(1):'-'}</td>
-        <td class="num">${s.cr?s.cr.toFixed(1):'-'}</td>
-        <td class="num">${s.cq?s.cq.toFixed(1):'-'}</td>
+      ${teachers.map(t=>`<tr>
+        <td><span class="teacher-link" onclick="openTeacherDetail('${t.name}')">${t.name}</span></td>
+        <td>${t.subject||'-'}</td>
+        <td class="num">${t.count}</td>
+        <td class="num">${t.classes.size}</td>
+        <td style="font-size:.72rem;color:var(--text-2)">${t.startDate||'-'}</td>
+        <td style="font-size:.72rem;color:var(--text-2)">${t.endDate||'-'}</td>
       </tr>`).join('')}
     </tbody>
   </table></div></div>
