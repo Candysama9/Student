@@ -392,7 +392,7 @@ header p {
 
 .tier-body {
   position: relative;
-  padding: 14px 50px 14px 14px;
+  padding: 14px;
   background: #fff;
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
@@ -402,12 +402,11 @@ header p {
   white-space: pre-wrap;
   word-break: break-word;
   color: #2d3e54;
+  margin-bottom: 8px;
 }
 
 .tier-copy {
-  position: absolute;
-  top: 12px;
-  right: 12px;
+  display: inline-block;
   background: #fff;
   border: 1px solid var(--rule);
   border-radius: 7px;
@@ -418,6 +417,7 @@ header p {
   transition: all 0.2s;
   white-space: nowrap;
   font-family: inherit;
+  margin-bottom: 8px;
 }
 .tier-copy:hover {
   border-color: var(--accent);
@@ -431,11 +431,16 @@ header p {
 
 .qa-actions {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--rule);
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.qa-actions button {
+.qa-actions .copy-btn-qa {
   padding: 6px 14px;
   border: 1px solid var(--rule);
   border-radius: 8px;
@@ -449,12 +454,12 @@ header p {
   align-items: center;
   gap: 5px;
 }
-.qa-actions button:hover {
+.qa-actions .copy-btn-qa:hover {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-light);
 }
-.qa-actions button.copied {
+.qa-actions .copy-btn-qa.copied {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-light);
@@ -518,7 +523,7 @@ footer p {
   .qa-question { padding: 14px 16px; }
   .qa-answer { padding: 0 16px 16px; }
   .tier-body { padding: 14px; }
-  .tier-copy { position: static; margin-bottom: 8px; }
+  .tier-actions { flex-direction: column; align-items: flex-start; }
 }
 
 .ph-note {
@@ -745,15 +750,12 @@ body.edit-mode .copy-btn-qa {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--rule);
 }
 .feedback-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
+  gap: 3px;
+  padding: 3px 10px;
   border: 1px solid var(--rule);
   border-radius: 20px;
   background: transparent;
@@ -764,8 +766,16 @@ body.edit-mode .copy-btn-qa {
   transition: all 0.2s;
 }
 .feedback-btn:hover { border-color: var(--accent); color: var(--accent); }
-.feedback-btn.active-good { background: #e8f5e9; border-color: #4caf50; color: #2e7d32; font-weight: 500; }
-.feedback-btn.active-bad { background: #fff3e0; border-color: #ff9800; color: #e65100; font-weight: 500; }
+.feedback-btn.active-good { background: #e8f5e9; border-color: #4caf50; color: #2e7d32; font-weight: 500; pointer-events: none; }
+.feedback-btn.active-bad { background: #fff3e0; border-color: #ff9800; color: #e65100; font-weight: 500; pointer-events: none; }
+.tier-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
 .feedback-done {
   margin-left: 4px;
   font-size: 12px;
@@ -1056,12 +1066,14 @@ function renderList() {
             <span class="th-tip">${t.tip}</span>
           </div>
           <div class="tier-body">
-            <button class="tier-copy" data-i="${i}" data-ti="${ti}">复制话术</button>
             <div class="tier-txt">${t.text}</div>
-            <div class="feedback-bar">
-              <button class="feedback-btn feedback-good" onclick="quickFeedback(this,'${item.q} - ${t.label}','${item.catName}','good')">👍 有用</button>
-              <button class="feedback-btn feedback-bad" onclick="quickFeedback(this,'${item.q} - ${t.label}','${item.catName}','bad')">👎 需改进</button>
-              <span class="feedback-done">✓ 已记录</span>
+            <div class="tier-actions">
+              <button class="tier-copy" data-i="${i}" data-ti="${ti}">复制话术</button>
+              <div class="feedback-bar">
+                <button class="feedback-btn feedback-good" onclick="quickFeedback(this,'${item.q} - ${t.label}','${item.catName}','good')">👍 有用</button>
+                <button class="feedback-btn feedback-bad" onclick="quickFeedback(this,'${item.q} - ${t.label}','${item.catName}','bad')">👎 需改进</button>
+                <span class="feedback-done">✓ 已记录</span>
+              </div>
             </div>
             <textarea class="edit-area" data-cat="${item.catIdx}" data-item="${item.itemIdx}" data-tier="${ti}">${t.text}</textarea>
           </div>
