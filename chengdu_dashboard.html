@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>成都学校数据看板 · 学员分层续班潜力</title>
+<style>
+@font-face{font-family:'FZDaBiaoSong';src:local('方正大标宋简体'),local('FZDaBiaoSongJianTi'),local('FZDBSJW--GB1-0')}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-0:#f5f7fa;--bg-1:#ffffff;--bg-2:#eef2f7;
+  --glass:rgba(255,255,255,.72);--glass-brd:rgba(0,0,0,.06);
+  --glass-hi:rgba(0,122,255,.06);
+  --text-0:#1a1a2e;--text-1:#3d3d5c;--text-2:#6e6e80;--text-3:#9e9eaf;
+  --brand:#007AFF;--brand-2:#5856D6;--brand-glow:rgba(0,122,255,.18);
+  --accent:#00C7BE;--accent-2:#30D5C8;
+  --green:#34C759;--green-bg:rgba(52,199,89,.1);
+  --gold:#FF9500;--gold-bg:rgba(255,149,0,.1);
+  --blue:#007AFF;--blue-bg:rgba(0,122,255,.08);
+  --red:#FF3B30;--red-bg:rgba(255,59,48,.08);
+  --gray:#8E8E93;--gray-bg:rgba(142,142,147,.1);
+  --radius:14px;--radius-sm:10px;--radius-lg:18px;
+  --shadow:0 2px 20px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.08);
+  --font:'FZDaBiaoSong','方正大标宋简体',-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif;
+  --mono:'FZDaBiaoSong','方正大标宋简体',"SF Mono","PingFang SC",monospace;
+}
+html{font-size:14px;scroll-behavior:smooth}
+body{
+  font-family:var(--font);background:var(--bg-0);color:var(--text-0);
+  min-height:100vh;overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 0%,rgba(0,122,255,.04),transparent),
+    radial-gradient(ellipse 50% 30% at 85% 100%,rgba(88,86,214,.03),transparent),
+    var(--bg-0);
+}
+
+.wrap{max-width:1680px;margin:0 auto;padding:16px 24px 60px}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.header-left h1{font-size:1.5rem;font-weight:700;color:var(--text-0)}
+.header-left .sub{font-size:.78rem;color:var(--text-2);margin-top:3px}
+.header-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.data-badge{
+  padding:5px 12px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-brd);
+  font-size:.72rem;color:var(--text-1);display:flex;align-items:center;gap:6px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.data-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Status Filter (top) */
+.status-bar{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;
+  padding:10px 16px;border-radius:var(--radius);
+  background:var(--glass);border:1px solid var(--glass-brd);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:var(--shadow);
+}
+.status-bar .label{font-size:.8rem;color:var(--text-2);font-weight:600;white-space:nowrap}
+.status-pills{display:flex;gap:6px;flex-wrap:wrap}
+.spill{
+  padding:6px 16px;border-radius:999px;border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.5);color:var(--text-1);font-size:.78rem;cursor:pointer;
+  transition:all .2s;font-family:var(--font);font-weight:500;
+  display:flex;align-items:center;gap:4px;
+}
+.spill:hover{border-color:var(--brand-glow);background:rgba(255,255,255,.8)}
+.spill.active{
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff;border-color:transparent;box-shadow:0 2px 8px var(--brand-glow);
+}
+.spill .cnt{font-size:.68rem;opacity:.75;font-weight:400}
+.spill.disabled{opacity:.4;cursor:not-allowed}
+.spill.disabled:hover{border-color:var(--glass-brd);background:rgba(255,255,255,.5)}
+
+/* KPI Cards */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}
+.kpi{
+  background:var(--glass);border:1px solid var(--glass-brd);
+  border-radius:var(--radius);padding:14px 16px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  transition:transform .2s,box-shadow .2s;
+}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.kpi .label{font-size:.68rem;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi .val{font-size:1.7rem;font-weight:700;font-family:var(--mono);color:var(--text-0)}
+.kpi .val.brand{color:var(--brand)}
+.kpi .val.green{color:var(--green)}
+.kpi .val.gold{color:var(--gold)}
+.kpi .val.accent{color:var(--accent)}
+.kpi .sub{font-size:.68rem;color:var(--text-3);margin-top:2px}
+
+/* Binned Charts */
+.binned-charts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.binned-card{
+  background:var(--glass);border:1px solid var(--glass-brd);
+  border-radius:var(--radius);padding:14px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:var(--shadow);
+}
+.binned-card h4{font-size:.82rem;font-weight:600;margin-bottom:8px;color:var(--text-0)}
+.binned-card .chart-box{position:relative;height:220px}
+
+/* Tabs */
+.tabs{
+  display:flex;gap:4px;margin-bottom:16px;
+  background:var(--glass);border:1px solid var(--glass-brd);
+  border-radius:var(--radius);padding:4px;width:fit-content;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:var(--shadow);
+}
+.tab{
+  padding:7px 18px;border-radius:var(--radius-sm);border:none;
+  background:transparent;color:var(--text-2);font-size:.82rem;font-weight:500;
+  cursor:pointer;transition:all .2s;font-family:var(--font);
+}
+.tab:hover{color:var(--text-0);background:var(--glass-hi)}
+.tab.active{
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff;box-shadow:0 2px 8px var(--brand-glow);
+}
+
+/* Filter Bar */
+.filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.filter-label{font-size:.78rem;color:var(--text-2);font-weight:600}
+.pill-group{display:flex;gap:5px}
+.pill{
+  padding:5px 12px;border-radius:999px;border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.5);color:var(--text-1);font-size:.75rem;cursor:pointer;
+  transition:all .2s;font-family:var(--font);font-weight:500;
+}
+.pill:hover{border-color:var(--brand-glow)}
+.pill.active{
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff;border-color:transparent;
+}
+.pill .cnt{font-size:.65rem;opacity:.7;margin-left:3px}
+.search-box{
+  flex:1;min-width:180px;max-width:280px;
+  padding:6px 12px;border-radius:999px;border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.6);color:var(--text-0);font-size:.78rem;
+  font-family:var(--font);
+}
+.search-box:focus{outline:none;border-color:var(--brand-glow);box-shadow:0 0 0 3px var(--brand-glow)}
+.search-box::placeholder{color:var(--text-3)}
+
+/* Dropdown */
+.dropdown{
+  position:relative;display:inline-block;
+}
+.dropdown-btn{
+  padding:6px 14px;border-radius:999px;border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.6);color:var(--text-1);font-size:.78rem;cursor:pointer;
+  font-family:var(--font);font-weight:500;display:flex;align-items:center;gap:6px;
+  transition:all .2s;
+}
+.dropdown-btn:hover{border-color:var(--brand-glow)}
+.dropdown-btn .arrow{font-size:.6rem;transition:transform .2s}
+.dropdown.open .dropdown-btn .arrow{transform:rotate(180deg)}
+.dropdown-menu{
+  position:absolute;top:100%;left:0;margin-top:4px;
+  background:var(--bg-1);border:1px solid var(--glass-brd);
+  border-radius:var(--radius);box-shadow:var(--shadow-lg);
+  max-height:320px;overflow-y:auto;min-width:200px;z-index:50;
+  display:none;
+}
+.dropdown.open .dropdown-menu{display:block}
+.dropdown-item{
+  padding:7px 14px;font-size:.78rem;cursor:pointer;color:var(--text-1);
+  transition:background .15s;font-family:var(--font);
+}
+.dropdown-item:hover{background:var(--glass-hi)}
+.dropdown-item.selected{color:var(--brand);font-weight:600}
+
+/* Table */
+.table-wrap{
+  background:var(--glass);border:1px solid var(--glass-brd);
+  border-radius:var(--radius-lg);overflow:hidden;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:var(--shadow);
+}
+.table-scroll{overflow-x:auto;max-height:68vh;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+thead{position:sticky;top:0;z-index:10}
+thead th{
+  background:rgba(255,255,255,.9);backdrop-filter:blur(12px);
+  padding:9px 11px;text-align:left;font-weight:600;color:var(--text-1);
+  white-space:nowrap;border-bottom:1px solid var(--glass-brd);
+  cursor:pointer;user-select:none;transition:color .15s;
+}
+thead th:hover{color:var(--brand)}
+thead th .sort-i{font-size:.58rem;opacity:.4;margin-left:2px}
+thead th.sorted .sort-i{opacity:1;color:var(--brand)}
+thead th.sorted{color:var(--brand)}
+thead tr.grp-row th{
+  padding:4px 8px;font-size:.66rem;font-weight:600;text-align:center;
+  border-bottom:1px solid var(--glass-brd);
+}
+thead tr.grp-row th.g-basic{background:rgba(0,122,255,.06);color:var(--brand)}
+thead tr.grp-row th.g-count{background:rgba(0,199,190,.06);color:var(--accent)}
+thead tr.grp-row th.g-key{background:rgba(52,199,89,.06);color:var(--green)}
+thead tr.grp-row th.g-grade{background:rgba(255,149,0,.06);color:var(--gold)}
+thead tr.grp-row th.g-comm{background:rgba(88,86,214,.06);color:var(--brand-2)}
+thead tr.grp-row th.g-traj{background:rgba(0,122,255,.04);color:var(--brand)}
+thead tr.grp-row th.g-stick{background:rgba(48,213,200,.06);color:var(--accent)}
+tbody tr{border-bottom:1px solid rgba(0,0,0,.03);transition:background .15s}
+tbody tr:hover{background:rgba(0,122,255,.03)}
+tbody td{padding:7px 11px;white-space:nowrap;color:var(--text-1)}
+tbody td.num{font-family:var(--mono);text-align:right}
+tbody td.rank{font-weight:600;color:var(--text-0)}
+tbody td.rank .badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;font-size:.68rem;
+}
+.rank-1 .badge{background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff}
+.rank-2 .badge{background:linear-gradient(135deg,#C0C0C0,#A8A8A8);color:#fff}
+.rank-3 .badge{background:linear-gradient(135deg,#CD7F32,#B87333);color:#fff}
+.rank-other .badge{background:var(--bg-2);color:var(--text-2)}
+
+/* Grade badges */
+.grade{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:6px;font-size:.68rem;font-weight:600;padding:0 4px}
+.grade-S{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(255,149,0,.25)}
+.grade-A{background:var(--green-bg);color:var(--green);border:1px solid rgba(52,199,89,.25)}
+.grade-B{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(0,122,255,.2)}
+.grade-C{background:var(--gray-bg);color:var(--gray);border:1px solid rgba(142,142,147,.2)}
+
+/* Student tags */
+.stag{display:inline-flex;align-items:center;font-size:.65rem;font-weight:500;padding:1px 6px;border-radius:4px;margin-right:3px;white-space:nowrap}
+.stag-tenure{background:rgba(88,86,214,.1);color:var(--brand-2);border:1px solid rgba(88,86,214,.2)}
+.stag-progress{background:rgba(52,199,89,.1);color:var(--green);border:1px solid rgba(52,199,89,.2)}
+.stag-absent{background:rgba(255,59,48,.08);color:var(--red);border:1px solid rgba(255,59,48,.2)}
+.stag-comm-S{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(255,149,0,.25)}
+.stag-comm-A{background:var(--green-bg);color:var(--green);border:1px solid rgba(52,199,89,.25)}
+.stag-comm-B{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(0,122,255,.2)}
+.stag-comm-C{background:var(--gray-bg);color:var(--gray);border:1px solid rgba(142,142,147,.2)}
+
+/* Progress bars */
+.bar{display:inline-block;width:50px;height:5px;background:var(--bg-2);border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:5px}
+.bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.bar-fill.green{background:linear-gradient(90deg,var(--green),#30D158)}
+.bar-fill.gold{background:linear-gradient(90deg,var(--gold),#FFB340)}
+.bar-fill.brand{background:linear-gradient(90deg,var(--brand),var(--brand-2))}
+.bar-fill.red{background:linear-gradient(90deg,var(--red),#FF6961)}
+
+.teacher-link{color:var(--brand);cursor:pointer;text-decoration:none;font-weight:500}
+.teacher-link:hover{text-decoration:underline}
+
+/* Modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.25);backdrop-filter:blur(8px);
+  z-index:100;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:var(--bg-1);border:1px solid var(--glass-brd);
+  border-radius:var(--radius-lg);width:100%;max-width:1200px;
+  max-height:85vh;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:var(--shadow-lg);
+}
+.modal-header{
+  padding:14px 20px;border-bottom:1px solid var(--glass-brd);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-header h3{font-size:1rem;font-weight:600}
+.modal-header .close{
+  width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--bg-2);color:var(--text-1);cursor:pointer;
+  font-size:1.1rem;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.modal-header .close:hover{background:var(--red-bg);color:var(--red)}
+.modal-body{overflow:auto;padding:0}
+
+/* Charts */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.chart-card{
+  background:var(--glass);border:1px solid var(--glass-brd);
+  border-radius:var(--radius);padding:14px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:var(--shadow);
+}
+.chart-card h4{font-size:.82rem;font-weight:600;margin-bottom:8px;color:var(--text-0)}
+.chart-card .chart-box{position:relative;height:240px}
+
+/* Grade filter */
+.grade-filter{display:flex;gap:5px;align-items:center}
+.grade-btn{
+  padding:4px 10px;border-radius:8px;border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,.5);color:var(--text-2);font-size:.7rem;cursor:pointer;
+  transition:all .15s;font-family:var(--font);font-weight:500;
+}
+.grade-btn:hover{color:var(--text-0)}
+.grade-btn.active.grade-S{background:var(--gold-bg);color:var(--gold);border-color:rgba(255,149,0,.3)}
+.grade-btn.active.grade-A{background:var(--green-bg);color:var(--green);border-color:rgba(52,199,89,.3)}
+.grade-btn.active.grade-B{background:var(--blue-bg);color:var(--blue);border-color:rgba(0,122,255,.25)}
+.grade-btn.active.grade-C{background:var(--gray-bg);color:var(--gray);border-color:rgba(142,142,147,.25)}
+.grade-btn.active.all{background:var(--glass-hi);color:var(--brand);border-color:var(--brand-glow)}
+
+/* Rules section */
+.rules-section{
+  background:var(--glass);border:1px solid var(--glass-brd);
+  border-radius:var(--radius);padding:16px;margin-top:16px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:var(--shadow);
+}
+.rules-section h3{font-size:.9rem;font-weight:600;margin-bottom:10px;color:var(--text-0)}
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.rule-card{
+  padding:10px 12px;border-radius:var(--radius-sm);
+  background:rgba(255,255,255,.5);border:1px solid var(--glass-brd);
+}
+.rule-card .rule-title{font-size:.76rem;font-weight:600;color:var(--text-0);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.rule-card .rule-title .pts{font-size:.68rem;color:var(--text-3);font-weight:400}
+.rule-card .rule-desc{font-size:.7rem;color:var(--text-2);line-height:1.5}
+.rule-card.comm{border-left:3px solid var(--brand-2)}
+.rule-card.traj{border-left:3px solid var(--brand)}
+.rule-card.stick{border-left:3px solid var(--accent)}
+
+/* Loading */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--glass-brd);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:var(--text-2);font-size:.82rem}
+
+/* Misc */
+.exclude-note{font-size:.7rem;color:var(--text-3);margin-left:auto;padding:3px 10px;background:rgba(255,255,255,.5);border:1px solid var(--glass-brd);border-radius:999px;white-space:nowrap}
+.formula-note{font-size:.7rem;color:var(--text-3);margin-top:10px;padding:8px 12px;background:rgba(255,255,255,.5);border-radius:var(--radius-sm);border:1px solid var(--glass-brd)}
+.empty-msg{text-align:center;padding:40px;color:var(--text-3);font-size:.82rem}
+.hidden{display:none!important}
+.info-count{font-size:.72rem;color:var(--text-3)}
+
+@media(max-width:1024px){.binned-charts{grid-template-columns:1fr}.chart-grid{grid-template-columns:1fr}}
+@media(max-width:768px){.chart-grid{grid-template-columns:1fr}.header-left h1{font-size:1.2rem}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>正在加载成都学校数据...</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// ============================================================
+// 全局状态
+// ============================================================
+let DASHBOARD=null;
+let activeTab='teacher';
+let activeStatus='all'; // all, 已开课班级, 已开窗班级, 已结课班级, 未开课班级
+let activeGradeFilter='all';
+let selectedTeacher='';
+let sortCol='renewal_rate';
+let sortDir='desc';
+let chartInstances={};
+let teacherSearch='';
+let studentSearch='';
+let dropdownOpen=false;
+
+const METRICS=[
+  {key:'deep_chat_quality',name:'深聊质量',max:15,cat:'学情沟通',short:'dcq'},
+  {key:'deep_chat_rounds',name:'深聊轮次',max:40,cat:'学情沟通',short:'dcr'},
+  {key:'service_card',name:'服务卡得分',max:10,cat:'学情沟通',short:'svc'},
+  {key:'question_recovery',name:'题目回收率',max:5,cat:'学习轨迹',short:'qr'},
+  {key:'attendance',name:'出勤率',max:5,cat:'学习轨迹',short:'att'},
+  {key:'progress_perception',name:'进步感知',max:5,cat:'学习轨迹',short:'pp'},
+  {key:'class_report',name:'课次报告发送',max:10,cat:'学习轨迹',short:'cr'},
+  {key:'consecutive_quarters',name:'连续在读季度',max:10,cat:'学员黏性',short:'cq'},
+];
+
+// ============================================================
+// 数据加载
+// ============================================================
+async function loadData(){
+  const paths=['chengdu_dashboard.json','./chengdu_dashboard.json'];
+  for(const p of paths){
+    try{const r=await fetch(p);if(r.ok)return await r.json();}catch(e){}
+  }
+  throw new Error('无法加载数据文件');
+}
+
+// ============================================================
+// 数据过滤
+// ============================================================
+function getFilteredStudents(){
+  if(!DASHBOARD)return[];
+  if(activeStatus==='all')return DASHBOARD.all_students;
+  if(activeStatus==='未开课班级')return DASHBOARD.not_started_students||[];
+  return DASHBOARD.all_students.filter(s=>s.cs===activeStatus);
+}
+
+function getPhysicsStudents(){
+  let students=DASHBOARD.physics_students;
+  if(activeStatus!=='all'&&activeStatus!=='未开课班级'){
+    students=students.filter(s=>s.cs===activeStatus);
+  }
+  return students;
+}
+
+function getNotStartedStudents(){
+  return DASHBOARD.not_started_students||[];
+}
+
+// ============================================================
+// 聚合
+// ============================================================
+function aggregateTeachers(students){
+  const map={};
+  for(const s of students){
+    if(!s.t)continue;
+    if(!map[s.t]){
+      map[s.t]={teacher:s.t,subjects:new Set(),total:0,original:0,renewal:0,
+        scores:[],grades_sys:[],grades_formula:[],metrics:{},metric_cnt:{},statuses:new Set()};
+      for(const m of METRICS){map[s.t].metrics[m.short]=0;map[s.t].metric_cnt[m.short]=0;}
+    }
+    const t=map[s.t];
+    t.subjects.add(s.s);t.total++;t.statuses.add(s.cs);
+    if(s.io==='是')t.original++;
+    if(s.ir==='是')t.renewal++;
+    if(s.ts!=null)t.scores.push(s.ts);
+    if(s.sg)t.grades_sys.push(s.sg);
+    if(s.fg)t.grades_formula.push(s.fg);
+    for(const m of METRICS){t.metrics[m.short]+=s[m.short]||0;t.metric_cnt[m.short]++;}
+  }
+  const tenureMap={};
+  if(DASHBOARD.teachers)for(const t of DASHBOARD.teachers)tenureMap[t.teacher]=t.tenure;
+  const result=[];
+  for(const t of Object.values(map)){
+    const avg=t.scores.length?t.scores.reduce((a,b)=>a+b,0)/t.scores.length:0;
+    const rr=t.original?t.renewal/t.original*100:0;
+    const saSys=t.grades_sys.filter(g=>g==='S'||g==='A').length;
+    const saPctSys=t.grades_sys.length?saSys/t.grades_sys.length*100:0;
+    const gcSys={S:0,A:0,B:0,C:0};t.grades_sys.forEach(g=>{if(gcSys[g]!=null)gcSys[g]++});
+    const gcFormula={S:0,A:0,B:0,C:0};t.grades_formula.forEach(g=>{if(gcFormula[g]!=null)gcFormula[g]++});
+    const metricsAvg={};
+    for(const m of METRICS)metricsAvg[m.short]=t.metric_cnt[m.short]?Math.round(t.metrics[m.short]/t.metric_cnt[m.short]*10)/10:0;
+    result.push({teacher:t.teacher,subjects:[...t.subjects].join('|'),
+      subject_main:t.subjects.size===1?[...t.subjects][0]:'多科目',
+      tenure:tenureMap[t.teacher]||'',total:t.total,original:t.original,renewal:t.renewal,
+      renewal_rate:Math.round(rr*10)/10,avg_score:Math.round(avg*10)/10,
+      sa_pct:Math.round(saPctSys*10)/10,grade_counts:gcSys,grade_counts_formula:gcFormula,metrics:metricsAvg});
+  }
+  return result;
+}
+
+function aggregateSubjects(students){
+  const map={};
+  for(const s of students){
+    if(!s.s)continue;
+    if(!map[s.s]){
+      map[s.s]={subject:s.s,total:0,original:0,renewal:0,scores:[],grades_sys:[],grades_formula:[],
+        teachers:new Set(),metrics:{},metric_cnt:{}};
+      for(const m of METRICS){map[s.s].metrics[m.short]=0;map[s.s].metric_cnt[m.short]=0;}
+    }
+    const t=map[s.s];t.total++;t.teachers.add(s.t);
+    if(s.io==='是')t.original++;if(s.ir==='是')t.renewal++;
+    if(s.ts!=null)t.scores.push(s.ts);
+    if(s.sg)t.grades_sys.push(s.sg);if(s.fg)t.grades_formula.push(s.fg);
+    for(const m of METRICS){t.metrics[m.short]+=s[m.short]||0;t.metric_cnt[m.short]++;}
+  }
+  const result=[];
+  for(const t of Object.values(map)){
+    const avg=t.scores.length?t.scores.reduce((a,b)=>a+b,0)/t.scores.length:0;
+    const rr=t.original?t.renewal/t.original*100:0;
+    const saSys=t.grades_sys.filter(g=>g==='S'||g==='A').length;
+    const saPctSys=t.grades_sys.length?saSys/t.grades_sys.length*100:0;
+    const gcSys={S:0,A:0,B:0,C:0};t.grades_sys.forEach(g=>{if(gcSys[g]!=null)gcSys[g]++});
+    const gcFormula={S:0,A:0,B:0,C:0};t.grades_formula.forEach(g=>{if(gcFormula[g]!=null)gcFormula[g]++});
+    const metricsAvg={};
+    for(const m of METRICS)metricsAvg[m.short]=t.metric_cnt[m.short]?Math.round(t.metrics[m.short]/t.metric_cnt[m.short]*10)/10:0;
+    result.push({subject:t.subject,teacher_count:t.teachers.size,total:t.total,original:t.original,renewal:t.renewal,
+      renewal_rate:Math.round(rr*10)/10,avg_score:Math.round(avg*10)/10,sa_pct:Math.round(saPctSys*10)/10,
+      grade_counts:gcSys,grade_counts_formula:gcFormula,metrics:metricsAvg});
+  }
+  return result;
+}
+
+// ============================================================
+// 排序
+// ============================================================
+function sortData(data,col,dir){
+  return data.sort((a,b)=>{
+    let va=col.includes('.')?col.split('.').reduce((o,k)=>o?.[k],a):a[col];
+    let vb=col.includes('.')?col.split('.').reduce((o,k)=>o?.[k],b):b[col];
+    if(typeof va==='string'){va=va||'';vb=vb||'';return dir==='asc'?va.localeCompare(vb):vb.localeCompare(va);}
+    va=va||0;vb=vb||0;return dir==='asc'?va-vb:vb-va;
+  });
+}
+
+// ============================================================
+// 标签渲染
+// ============================================================
+function renderTags(tags){
+  if(!tags||!tags.length)return '';
+  return tags.map(t=>{
+    let cls='stag';
+    if(t.type==='tenure')cls='stag stag-tenure';
+    else if(t.type==='progress')cls='stag stag-progress';
+    else if(t.type==='absent')cls='stag stag-absent';
+    else if(t.type==='comm')cls=`stag stag-comm-${t.label.replace('家校沟通','')}`;
+    return `<span class="${cls}">${t.label}</span>`;
+  }).join('');
+}
+
+// ============================================================
+// 渲染主函数
+// ============================================================
+function render(){
+  const app=document.getElementById('app');
+  const students=getFilteredStudents();
+  const physicsStudents=getPhysicsStudents();
+
+  const ss=DASHBOARD.meta.status_stats;
+  const totalAll=DASHBOARD.meta.total_records;
+
+  let html=`
+  <div class="header">
+    <div class="header-left">
+      <h1>成都学校数据看板</h1>
+      <div class="sub">学员分层续班潜力得分 · 数据日期 ${DASHBOARD.meta.data_date} · ${DASHBOARD.meta.data_source}</div>
+    </div>
+    <div class="header-right">
+      <div class="data-badge"><span class="dot"></span>数据已加载 · ${DASHBOARD.meta.total_records} 条记录</div>
+    </div>
+  </div>
+
+  <!-- Status Filter (Top) -->
+  <div class="status-bar">
+    <span class="label">班级状态</span>
+    <div class="status-pills">
+      <button class="spill ${activeStatus==='all'?'active':''}" onclick="switchStatus('all')">全部 <span class="cnt">${totalAll}</span></button>
+      <button class="spill ${activeStatus==='已开课班级'?'active':''}" onclick="switchStatus('已开课班级')">已开课 <span class="cnt">${(ss['已开课班级']||{}).count||0}</span></button>
+      <button class="spill disabled" onclick="void(0)">已开窗 <span class="cnt">${(ss['已开窗班级']||{}).count||0}</span></button>
+      <button class="spill ${activeStatus==='已结课班级'?'active':''}" onclick="switchStatus('已结课班级')">已结课 <span class="cnt">${(ss['已结课班级']||{}).count||0}</span></button>
+      <button class="spill ${activeStatus==='未开课班级'?'active':''}" onclick="switchStatus('未开课班级')">未开课 <span class="cnt">${(ss['未开课班级']||{}).count||0}</span></button>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-row">${renderKPIs(students)}</div>
+  `;
+
+  // 未开课单独页面（不显示分档图表，因为未开课班级不参与续班率计算）
+  if(activeStatus==='未开课班级'){
+    html+=renderNotStartedTab();
+    app.innerHTML=html;
+    return;
+  }
+
+  // 分档图表（仅非未开课页面显示）
+  html+=`
+  <div class="binned-charts">
+    <div class="binned-card">
+      <h4>总分-续班率分档</h4>
+      <div class="chart-box"><canvas id="chart-score-rr"></canvas></div>
+    </div>
+    <div class="binned-card">
+      <h4>深聊质量-续班率分档</h4>
+      <div class="chart-box"><canvas id="chart-dcq-rr"></canvas></div>
+    </div>
+    <div class="binned-card">
+      <h4>深聊轮次-续班率分档</h4>
+      <div class="chart-box"><canvas id="chart-dcr-rr"></canvas></div>
+    </div>
+  </div>
+  `;
+
+  html+=`
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab ${activeTab==='teacher'?'active':''}" onclick="switchTab('teacher')">教师排名</button>
+    <button class="tab ${activeTab==='subject'?'active':''}" onclick="switchTab('subject')">学科组排名</button>
+    <button class="tab ${activeTab==='physics'?'active':''}" onclick="switchTab('physics')">物理学情</button>
+  </div>
+  `;
+
+  if(activeTab==='teacher')html+=renderTeacherTab(students);
+  else if(activeTab==='subject')html+=renderSubjectTab(students);
+  else if(activeTab==='physics')html+=renderPhysicsTab(physicsStudents);
+
+  html+=renderRules();
+  html+=`<div class="formula-note">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分 · 公式评级与系统评级100%匹配</div>`;
+
+  app.innerHTML=html;
+  renderCharts(students);
+  renderBinnedCharts(students);
+}
+
+function renderKPIs(students){
+  const orig=students.filter(s=>s.io==='是').length;
+  const ren=students.filter(s=>s.ir==='是').length;
+  const rr=orig?ren/orig*100:0;
+  const scores=students.filter(s=>s.ts!=null).map(s=>s.ts);
+  const avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;
+  const grades=students.filter(s=>s.sg);
+  const sa=grades.filter(s=>s.sg==='S'||s.sg==='A').length;
+  const saPct=grades.length?sa/grades.length*100:0;
+  const teachers=new Set(students.map(s=>s.t)).size;
+
+  return `
+    <div class="kpi"><div class="label">入口教师人数</div><div class="val brand">${teachers}</div><div class="sub">人</div></div>
+    <div class="kpi"><div class="label">学员人次</div><div class="val accent">${students.length}</div><div class="sub">原班 ${orig} · 续班 ${ren}</div></div>
+    <div class="kpi"><div class="label">续班率</div><div class="val ${rr>=30?'green':rr>=15?'gold':'brand'}">${rr.toFixed(1)}%</div><div class="sub">续班${ren}/原班${orig}</div></div>
+    <div class="kpi"><div class="label">平均总分</div><div class="val brand">${avg.toFixed(1)}</div><div class="sub">满分100</div></div>
+    <div class="kpi"><div class="label">SA占比</div><div class="val ${saPct>=20?'green':saPct>=10?'gold':'brand'}">${saPct.toFixed(1)}%</div><div class="sub">S+A ${sa}人 / ${grades.length}人</div></div>
+    <div class="kpi"><div class="label">S级学员</div><div class="val gold">${grades.filter(s=>s.sg==='S').length}</div><div class="sub">A级 ${grades.filter(s=>s.sg==='A').length}人</div></div>
+  `;
+}
+
+function renderTeacherTab(students){
+  let data=aggregateTeachers(students);
+  if(teacherSearch){
+    const q=teacherSearch.toLowerCase();
+    data=data.filter(t=>t.teacher.toLowerCase().includes(q)||t.subject_main.toLowerCase().includes(q));
+  }
+  data=sortData(data,sortCol,sortDir);
+
+  const cols=[
+    {key:'rank',label:'#',sortable:false},
+    {key:'teacher',label:'教师',sortable:true},
+    {key:'subject_main',label:'科目',sortable:true},
+    {key:'tenure',label:'司龄',sortable:true},
+    {key:'total',label:'人次',sortable:true,cls:'num'},
+    {key:'original',label:'原班',sortable:true,cls:'num'},
+    {key:'renewal',label:'续班',sortable:true,cls:'num'},
+    {key:'renewal_rate',label:'续班率',sortable:true,cls:'num',render:(v)=>{
+      const cls=v>=30?'green':v>=15?'gold':'red';
+      return `<span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v,100)}%"></span></span>${v.toFixed(1)}%`;
+    }},
+    {key:'avg_score',label:'均分',sortable:true,cls:'num',render:(v)=>v.toFixed(1)},
+    {key:'sa_pct',label:'SA占比',sortable:true,cls:'num',render:(v)=>{
+      const cls=v>=20?'green':v>=10?'gold':'red';
+      return `<span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v,100)}%"></span></span>${v.toFixed(1)}%`;
+    }},
+    {key:'grade_counts.S',label:'S',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-S">${v}</span>`:'-'},
+    {key:'grade_counts.A',label:'A',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-A">${v}</span>`:'-'},
+    {key:'grade_counts.B',label:'B',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-B">${v}</span>`:'-'},
+    {key:'grade_counts.C',label:'C',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-C">${v}</span>`:'-'},
+  ];
+  for(const m of METRICS){
+    cols.push({key:`metrics.${m.short}`,label:m.name,sortable:true,cls:'num',render:(v)=>v?v.toFixed(1):'-',tip:`${m.cat} · 满分${m.max}分`});
+  }
+
+  let html=`
+  <div class="filter-bar">
+    <span class="filter-label">教师搜索</span>
+    <input class="search-box" type="text" placeholder="输入教师姓名或科目..." value="${teacherSearch}" oninput="onTeacherSearch(this.value)">
+    <span class="info-count" style="margin-left:auto">共 ${data.length} 位教师 · 默认按续班率降序</span>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card"><h4>教师续班率 TOP 10</h4><div class="chart-box"><canvas id="chart-teacher-rr"></canvas></div></div>
+    <div class="chart-card"><h4>教师平均分 TOP 10</h4><div class="chart-box"><canvas id="chart-teacher-score"></canvas></div></div>
+  </div>
+
+  <div class="table-wrap"><div class="table-scroll"><table>
+    <thead>
+    <tr class="grp-row">
+      <th class="g-basic" colspan="4">基本信息</th>
+      <th class="g-count" colspan="3">学员人次</th>
+      <th class="g-key" colspan="3">核心指标</th>
+      <th class="g-grade" colspan="4">SABC分布</th>
+      <th class="g-comm" colspan="3">学情沟通</th>
+      <th class="g-traj" colspan="4">学习轨迹</th>
+      <th class="g-stick" colspan="1">黏性</th>
+    </tr>
+    <tr>
+      ${cols.map(c=>`<th class="${sortCol===c.key?'sorted':''}" onclick="${c.sortable?`sortBy('${c.key}')`:''}" ${c.tip?`class="tooltip" data-tip="${c.tip}"`:''}>${c.label}${c.sortable?`<span class="sort-i">${sortCol===c.key?(sortDir==='asc'?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('')}
+    </tr>
+    </thead>
+    <tbody>
+      ${data.map((r,i)=>{
+        const rc=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+        return `<tr>
+          <td class="rank ${rc}"><span class="badge">${i+1}</span></td>
+          <td><span class="teacher-link" onclick="openTeacherDetail('${r.teacher}')">${r.teacher}</span></td>
+          <td>${r.subject_main}</td>
+          <td style="color:var(--text-2)">${r.tenure||'-'}</td>
+          <td class="num">${r.total}</td>
+          <td class="num">${r.original}</td>
+          <td class="num">${r.renewal}</td>
+          <td class="num">${cols[7].render(r.renewal_rate)}</td>
+          <td class="num">${cols[8].render(r.avg_score)}</td>
+          <td class="num">${cols[9].render(r.sa_pct)}</td>
+          <td class="num">${cols[10].render(r.grade_counts.S)}</td>
+          <td class="num">${cols[11].render(r.grade_counts.A)}</td>
+          <td class="num">${cols[12].render(r.grade_counts.B)}</td>
+          <td class="num">${cols[13].render(r.grade_counts.C)}</td>
+          ${METRICS.map(m=>`<td class="num">${r.metrics[m.short]?r.metrics[m.short].toFixed(1):'-'}</td>`).join('')}
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div></div>`;
+
+  return html;
+}
+
+function renderSubjectTab(students){
+  let data=aggregateSubjects(students);
+  data=sortData(data,sortCol==='teacher'||sortCol==='subject_main'||sortCol==='tenure'?'renewal_rate':sortCol,sortDir);
+
+  const cols=[
+    {key:'rank',label:'#',sortable:false},
+    {key:'subject',label:'学科',sortable:true},
+    {key:'teacher_count',label:'教师数',sortable:true,cls:'num'},
+    {key:'total',label:'人次',sortable:true,cls:'num'},
+    {key:'original',label:'原班',sortable:true,cls:'num'},
+    {key:'renewal',label:'续班',sortable:true,cls:'num'},
+    {key:'renewal_rate',label:'续班率',sortable:true,cls:'num'},
+    {key:'avg_score',label:'均分',sortable:true,cls:'num'},
+    {key:'sa_pct',label:'SA占比',sortable:true,cls:'num'},
+    {key:'grade_counts.S',label:'S',sortable:true,cls:'num'},
+    {key:'grade_counts.A',label:'A',sortable:true,cls:'num'},
+    {key:'grade_counts.B',label:'B',sortable:true,cls:'num'},
+    {key:'grade_counts.C',label:'C',sortable:true,cls:'num'},
+  ];
+  for(const m of METRICS)cols.push({key:`metrics.${m.short}`,label:m.name,sortable:true,cls:'num',tip:`${m.cat} · 满分${m.max}分`});
+
+  let html=`
+  <div class="chart-grid">
+    <div class="chart-card"><h4>各学科续班率对比</h4><div class="chart-box"><canvas id="chart-subj-rr"></canvas></div></div>
+    <div class="chart-card"><h4>各学科SA占比对比</h4><div class="chart-box"><canvas id="chart-subj-sa"></canvas></div></div>
+  </div>
+
+  <div class="table-wrap"><div class="table-scroll"><table>
+    <thead>
+    <tr class="grp-row">
+      <th class="g-basic" colspan="3">基本信息</th>
+      <th class="g-count" colspan="3">学员人次</th>
+      <th class="g-key" colspan="3">核心指标</th>
+      <th class="g-grade" colspan="4">SABC分布</th>
+      <th class="g-comm" colspan="3">学情沟通</th>
+      <th class="g-traj" colspan="4">学习轨迹</th>
+      <th class="g-stick" colspan="1">黏性</th>
+    </tr>
+    <tr>
+      ${cols.map(c=>`<th class="${sortCol===c.key?'sorted':''}" onclick="${c.sortable?`sortBy('${c.key}')`:''}" ${c.tip?`class="tooltip" data-tip="${c.tip}"`:''}>${c.label}${c.sortable?`<span class="sort-i">${sortCol===c.key?(sortDir==='asc'?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('')}
+    </tr>
+    </thead>
+    <tbody>
+      ${data.map((r,i)=>{
+        const rc=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+        const rrCls=r.renewal_rate>=30?'green':r.renewal_rate>=15?'gold':'red';
+        const saCls=r.sa_pct>=20?'green':r.sa_pct>=10?'gold':'red';
+        return `<tr>
+          <td class="rank ${rc}"><span class="badge">${i+1}</span></td>
+          <td style="font-weight:600">${r.subject}</td>
+          <td class="num">${r.teacher_count}</td>
+          <td class="num">${r.total}</td>
+          <td class="num">${r.original}</td>
+          <td class="num">${r.renewal}</td>
+          <td class="num"><span class="bar"><span class="bar-fill ${rrCls}" style="width:${Math.min(r.renewal_rate,100)}%"></span></span>${r.renewal_rate.toFixed(1)}%</td>
+          <td class="num">${r.avg_score.toFixed(1)}</td>
+          <td class="num"><span class="bar"><span class="bar-fill ${saCls}" style="width:${Math.min(r.sa_pct,100)}%"></span></span>${r.sa_pct.toFixed(1)}%</td>
+          <td class="num">${r.grade_counts.S?`<span class="grade grade-S">${r.grade_counts.S}</span>`:'-'}</td>
+          <td class="num">${r.grade_counts.A?`<span class="grade grade-A">${r.grade_counts.A}</span>`:'-'}</td>
+          <td class="num">${r.grade_counts.B?`<span class="grade grade-B">${r.grade_counts.B}</span>`:'-'}</td>
+          <td class="num">${r.grade_counts.C?`<span class="grade grade-C">${r.grade_counts.C}</span>`:'-'}</td>
+          ${METRICS.map(m=>`<td class="num">${r.metrics[m.short]?r.metrics[m.short].toFixed(1):'-'}</td>`).join('')}
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div></div>`;
+
+  return html;
+}
+
+function renderPhysicsTab(physicsStudents){
+  const teacherMap={};
+  physicsStudents.forEach(s=>{
+    if(!teacherMap[s.t])teacherMap[s.t]={name:s.t,count:0,sa:0};
+    teacherMap[s.t].count++;
+    if(s.sg==='S'||s.sg==='A')teacherMap[s.t].sa++;
+  });
+  const teachers=Object.values(teacherMap).sort((a,b)=>b.count-a.count);
+
+  let students=physicsStudents;
+  if(selectedTeacher)students=students.filter(s=>s.t===selectedTeacher);
+  if(activeGradeFilter!=='all')students=students.filter(s=>s.sg===activeGradeFilter);
+  if(studentSearch){
+    const q=studentSearch.toLowerCase();
+    students=students.filter(s=>(s.n&&s.n.toLowerCase().includes(q))||(s.cc&&s.cc.toLowerCase().includes(q)));
+  }
+
+  // 教师下拉菜单
+  const dropdownItems=teachers.map(t=>
+    `<div class="dropdown-item ${selectedTeacher===t.name?'selected':''}" onclick="selectTeacher('${t.name}')">${t.name} (${t.count}人 · SA${t.sa})</div>`
+  ).join('');
+
+  // 动态列：如果选了教师，不显示教师列和当天满分；如果两个评级相同只显示一个
+  const showTeacherCol=!selectedTeacher;
+  const showFullScoreCol=true; // 保留当天满分列（用户说如果筛选了老师就不展示当天满分）
+  const hideFullScore=!!selectedTeacher;
+
+  let cols=[
+    {key:'tags',label:'标签'},
+    {key:'n',label:'学员姓名'},
+  ];
+  if(showTeacherCol)cols.push({key:'t',label:'教师'});
+  cols.push(
+    {key:'cc',label:'班级编码'},
+    {key:'cs',label:'班级状态'},
+    {key:'sd',label:'开课日期'},
+    {key:'ed',label:'结课日期'},
+    {key:'ts',label:'总分',cls:'num'},
+  );
+  if(!hideFullScore)cols.push({key:'fs',label:'当天满分',cls:'num'});
+  // 评级：如果sg===fg，只显示一个
+  cols.push({key:'grade',label:'评级'});
+  cols.push(
+    {key:'dcq',label:'深聊质量',cls:'num'},
+    {key:'dcr',label:'深聊轮次',cls:'num'},
+    {key:'svc',label:'服务卡',cls:'num'},
+    {key:'qr',label:'题目回收',cls:'num'},
+    {key:'att',label:'出勤率',cls:'num'},
+    {key:'pp',label:'进步感知',cls:'num'},
+    {key:'cr',label:'课次报告',cls:'num'},
+    {key:'cq',label:'连续在读',cls:'num'},
+    {key:'io',label:'原班'},
+    {key:'ir',label:'续班'},
+  );
+
+  let html=`
+  <div class="filter-bar">
+    <span class="filter-label">教师筛选</span>
+    <div class="dropdown" id="teacherDropdown">
+      <button class="dropdown-btn" onclick="toggleDropdown()">
+        ${selectedTeacher||'全部教师'} <span class="arrow">▼</span>
+      </button>
+      <div class="dropdown-menu">
+        <div class="dropdown-item ${!selectedTeacher?'selected':''}" onclick="selectTeacher('')">全部教师 (${physicsStudents.length}人)</div>
+        ${dropdownItems}
+      </div>
+    </div>
+    <span class="filter-label" style="margin-left:8px">评级筛选</span>
+    <div class="grade-filter">
+      <button class="grade-btn all ${activeGradeFilter==='all'?'active':''}" onclick="filterGrade('all')">全部</button>
+      <button class="grade-btn grade-S ${activeGradeFilter==='S'?'active':''}" onclick="filterGrade('S')">S级</button>
+      <button class="grade-btn grade-A ${activeGradeFilter==='A'?'active':''}" onclick="filterGrade('A')">A级</button>
+      <button class="grade-btn grade-B ${activeGradeFilter==='B'?'active':''}" onclick="filterGrade('B')">B级</button>
+      <button class="grade-btn grade-C ${activeGradeFilter==='C'?'active':''}" onclick="filterGrade('C')">C级</button>
+    </div>
+    <input class="search-box" type="text" placeholder="搜索学员姓名/班级编码..." value="${studentSearch}" oninput="onStudentSearch(this.value)" style="max-width:200px">
+    <span class="info-count">共 ${students.length} 名学员</span>
+  </div>
+
+  <div class="table-wrap"><div class="table-scroll"><table>
+    <thead><tr>${cols.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead>
+    <tbody>
+      ${students.length?students.map(s=>{
+        const gradeSame=s.sg&&s.fg&&s.sg===s.fg;
+        const gradeHtml=gradeSame
+          ?`<span class="grade grade-${s.sg}">${s.sg}</span>`
+          :`${s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:''}${s.fg&&s.fg!==s.sg?`<span class="grade grade-${s.fg}" style="margin-left:2px">${s.fg}</span>`:''}`;
+        return `<tr>
+          <td style="max-width:200px">${renderTags(s.tags)}</td>
+          <td style="font-weight:500">${s.n||'-'}</td>
+          ${showTeacherCol?`<td><span class="teacher-link" onclick="selectTeacher('${s.t}')">${s.t}</span></td>`:''}
+          <td style="color:var(--text-2);font-size:.72rem">${s.cc||'-'}</td>
+          <td style="font-size:.72rem;color:var(--text-2)">${s.cs}</td>
+          <td style="font-size:.72rem;color:var(--text-2)">${s.sd||'-'}</td>
+          <td style="font-size:.72rem;color:var(--text-2)">${s.ed||'-'}</td>
+          <td class="num" style="font-weight:600">${s.ts!=null?s.ts.toFixed(1):'-'}</td>
+          ${!hideFullScore?`<td class="num" style="color:var(--text-2)">${s.fs!=null?s.fs:'-'}</td>`:''}
+          <td>${gradeHtml||'-'}</td>
+          <td class="num">${s.dcq?s.dcq.toFixed(1):'-'}</td>
+          <td class="num">${s.dcr?s.dcr.toFixed(1):'-'}</td>
+          <td class="num">${s.svc?s.svc.toFixed(1):'-'}</td>
+          <td class="num">${s.qr?s.qr.toFixed(1):'-'}</td>
+          <td class="num">${s.att?s.att.toFixed(1):'-'}</td>
+          <td class="num">${s.pp?s.pp.toFixed(1):'-'}</td>
+          <td class="num">${s.cr?s.cr.toFixed(1):'-'}</td>
+          <td class="num">${s.cq?s.cq.toFixed(1):'-'}</td>
+          <td>${s.io==='是'?'<span style="color:var(--green)">✓</span>':'-'}</td>
+          <td>${s.ir==='是'?'<span style="color:var(--green)">✓</span>':'-'}</td>
+        </tr>`;
+      }).join(''):'<tr><td colspan="25" class="empty-msg">请选择教师和评级查看学员明细</td></tr>'}
+    </tbody>
+  </table></div></div>`;
+
+  return html;
+}
+
+function renderNotStartedTab(){
+  const students=getNotStartedStudents();
+  const teacherMap={};
+  students.forEach(s=>{
+    if(!teacherMap[s.t])teacherMap[s.t]={name:s.t,count:0};
+    teacherMap[s.t].count++;
+  });
+  const teachers=Object.values(teacherMap).sort((a,b)=>b.count-a.count);
+
+  return `
+  <div class="tabs">
+    <button class="tab active">未开课班级</button>
+  </div>
+  <div class="filter-bar">
+    <span class="info-count">共 ${students.length} 名学员 · ${teachers.length} 位教师 · 未开课班级不参与续班率计算</span>
+  </div>
+  <div class="table-wrap"><div class="table-scroll"><table>
+    <thead><tr>
+      <th>标签</th><th>学员姓名</th><th>教师</th><th>科目</th><th>班级编码</th>
+      <th>开课日期</th><th>结课日期</th><th>总分</th><th>系统评级</th>
+      <th>深聊质量</th><th>深聊轮次</th><th>服务卡</th><th>题目回收</th>
+      <th>出勤率</th><th>进步感知</th><th>课次报告</th><th>连续在读</th>
+    </tr></thead>
+    <tbody>
+      ${students.map(s=>`<tr>
+        <td style="max-width:200px">${renderTags(s.tags)}</td>
+        <td style="font-weight:500">${s.n||'-'}</td>
+        <td><span class="teacher-link" onclick="openTeacherDetail('${s.t}')">${s.t}</span></td>
+        <td>${s.s}</td>
+        <td style="font-size:.72rem;color:var(--text-2)">${s.cc||'-'}</td>
+        <td style="font-size:.72rem;color:var(--text-2)">${s.sd||'-'}</td>
+        <td style="font-size:.72rem;color:var(--text-2)">${s.ed||'-'}</td>
+        <td class="num">${s.ts!=null?s.ts.toFixed(1):'-'}</td>
+        <td>${s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:'-'}</td>
+        <td class="num">${s.dcq?s.dcq.toFixed(1):'-'}</td>
+        <td class="num">${s.dcr?s.dcr.toFixed(1):'-'}</td>
+        <td class="num">${s.svc?s.svc.toFixed(1):'-'}</td>
+        <td class="num">${s.qr?s.qr.toFixed(1):'-'}</td>
+        <td class="num">${s.att?s.att.toFixed(1):'-'}</td>
+        <td class="num">${s.pp?s.pp.toFixed(1):'-'}</td>
+        <td class="num">${s.cr?s.cr.toFixed(1):'-'}</td>
+        <td class="num">${s.cq?s.cq.toFixed(1):'-'}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div></div>
+  ${renderRules()}`;
+}
+
+function renderRules(){
+  return `
+  <div class="rules-section">
+    <h3>核心指标评分规则</h3>
+    <div class="rules-grid">
+      <div class="rule-card comm">
+        <div class="rule-title">深聊轮次 <span class="pts">满分40分</span></div>
+        <div class="rule-desc">教师/班主任发起深聊，每次双向聊天+1分，2轮话题对话+3分，每天最多3分，累计满分40分</div>
+      </div>
+      <div class="rule-card comm">
+        <div class="rule-title">深聊质量 <span class="pts">满分15分</span></div>
+        <div class="rule-desc">AI质检5项任务（开场沟通/首课/常规课/进步可视化/续班沟通），每项满分3分，50%可选采集率=该项满分</div>
+      </div>
+      <div class="rule-card comm">
+        <div class="rule-title">服务卡完善 <span class="pts">满分10分</span></div>
+        <div class="rule-desc">按用户中心要求填写必填信息比例，线性评分，满分10分</div>
+      </div>
+      <div class="rule-card traj">
+        <div class="rule-title">出勤打卡 <span class="pts">满分5分</span></div>
+        <div class="rule-desc">出勤率 = 出勤课次数 ÷ 应出勤课次数 × 5，实时更新</div>
+      </div>
+      <div class="rule-card traj">
+        <div class="rule-title">题目回收 <span class="pts">满分5分</span></div>
+        <div class="rule-desc">回收率 = 学员答题数 ÷ 教师发题数，满分5分（云课堂发题不计入）</div>
+      </div>
+      <div class="rule-card traj">
+        <div class="rule-title">报告发送 <span class="pts">满分10分</span></div>
+        <div class="rule-desc">课次期间一键发送学习报告，每次2分，满分10分（重复发送不计）</div>
+      </div>
+      <div class="rule-card traj">
+        <div class="rule-title">进步感知 <span class="pts">满分5分</span></div>
+        <div class="rule-desc">任意连续3次课出勤+题目回收，正确率差值较班级均值持续增长 = 5分，否则0分</div>
+      </div>
+      <div class="rule-card stick">
+        <div class="rule-title">连续在读 <span class="pts">满分10分</span></div>
+        <div class="rule-desc">≥3季度=10分，2季度=8分，1季度=6分，仅初三正读=4分，其余0分（取高分，不重复）</div>
+      </div>
+      <div class="rule-card comm">
+        <div class="rule-title">家校沟通SABC <span class="pts">进度满分55分</span></div>
+        <div class="rule-desc">深聊质量+深聊轮次合计，满分=55×课程进度。S≥60%满分, A≥45%, B≥30%, C<30%</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// 图表
+// ============================================================
+function renderCharts(students){
+  Object.values(chartInstances).forEach(c=>{try{c.destroy();}catch(e){}});
+  chartInstances={};
+
+  const textColor='#6e6e80';
+  const gridColor='rgba(0,0,0,.05)';
+  Chart.defaults.color=textColor;
+  Chart.defaults.borderColor=gridColor;
+  Chart.defaults.font.family="'FZDaBiaoSong','方正大标宋简体','PingFang SC',sans-serif";
+
+  if(activeTab==='teacher'){
+    const teachers=aggregateTeachers(students).filter(t=>t.original>0).sort((a,b)=>b.renewal_rate-a.renewal_rate).slice(0,10);
+    const c1=document.getElementById('chart-teacher-rr');
+    if(c1){
+      chartInstances.rr=new Chart(c1,{
+        type:'bar',
+        data:{labels:teachers.map(t=>t.teacher),datasets:[{
+          label:'续班率',data:teachers.map(t=>t.renewal_rate),
+          backgroundColor:t=>{const v=t.raw;return v>=30?'rgba(52,199,89,.7)':v>=15?'rgba(255,149,0,.7)':'rgba(255,59,48,.7)'},
+          borderRadius:6,
+        }]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+          plugins:{legend:{display:false},
+            tooltip:{callbacks:{label:c=>`续班率: ${c.raw.toFixed(1)}%`}},
+            datalabels:{display:false}},
+          scales:{x:{ticks:{callback:v=>v+'%'},grid:{color:gridColor}},y:{grid:{display:false}}},
+          animation:{duration:200}
+        },
+        plugins:[{
+          id:'valLabels',
+          afterDatasetsDraw(chart){
+            const{ctx}=chart;
+            chart.data.datasets[0].data.forEach((v,i)=>{
+              const bar=chart.getDatasetMeta(0).data[i];
+              ctx.save();
+              ctx.fillStyle='#3d3d5c';
+              ctx.font='11px FZDaBiaoSong';
+              ctx.textAlign='left';
+              ctx.fillText(v.toFixed(1)+'%',bar.x+5,bar.y+3);
+              ctx.restore();
+            });
+          }
+        }]
+      });
+    }
+
+    const ts=aggregateTeachers(students).sort((a,b)=>b.avg_score-a.avg_score).slice(0,10);
+    const c2=document.getElementById('chart-teacher-score');
+    if(c2){
+      chartInstances.score=new Chart(c2,{
+        type:'bar',
+        data:{labels:ts.map(t=>t.teacher),datasets:[{
+          label:'平均分',data:ts.map(t=>t.avg_score),
+          backgroundColor:'rgba(0,122,255,.6)',borderRadius:6,
+        }]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+          plugins:{legend:{display:false}},
+          scales:{x:{grid:{color:gridColor}},y:{grid:{display:false}}},
+          animation:{duration:200}
+        },
+        plugins:[{
+          id:'valLabels2',
+          afterDatasetsDraw(chart){
+            const{ctx}=chart;
+            chart.data.datasets[0].data.forEach((v,i)=>{
+              const bar=chart.getDatasetMeta(0).data[i];
+              ctx.save();ctx.fillStyle='#3d3d5c';ctx.font='11px FZDaBiaoSong';ctx.textAlign='left';
+              ctx.fillText(v.toFixed(1),bar.x+5,bar.y+3);ctx.restore();
+            });
+          }
+        }]
+      });
+    }
+  }
+
+  if(activeTab==='subject'){
+    const subjects=aggregateSubjects(students);
+    const labels=subjects.map(s=>s.subject);
+    const c1=document.getElementById('chart-subj-rr');
+    if(c1){
+      chartInstances.subjRr=new Chart(c1,{
+        type:'bar',
+        data:{labels,datasets:[{
+          label:'续班率',data:subjects.map(s=>s.renewal_rate),
+          backgroundColor:['rgba(0,122,255,.6)','rgba(0,199,190,.6)','rgba(52,199,89,.6)','rgba(255,149,0,.6)'],
+          borderRadius:6,
+        }]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`续班率: ${c.raw.toFixed(1)}%`}}},
+          scales:{y:{ticks:{callback:v=>v+'%'},grid:{color:gridColor}},x:{grid:{display:false}}},
+          animation:{duration:200}
+        },
+        plugins:[{
+          id:'subjValLabels',
+          afterDatasetsDraw(chart){
+            const{ctx}=chart;
+            chart.data.datasets[0].data.forEach((v,i)=>{
+              const bar=chart.getDatasetMeta(0).data[i];
+              ctx.save();ctx.fillStyle='#3d3d5c';ctx.font='11px FZDaBiaoSong';ctx.textAlign='center';
+              ctx.fillText(v.toFixed(1)+'%',bar.x,bar.y-8);ctx.restore();
+            });
+          }
+        }]
+      });
+    }
+    const c2=document.getElementById('chart-subj-sa');
+    if(c2){
+      chartInstances.subjSa=new Chart(c2,{
+        type:'bar',
+        data:{labels,datasets:[{
+          label:'SA占比',data:subjects.map(s=>s.sa_pct),
+          backgroundColor:['rgba(88,86,214,.6)','rgba(0,199,190,.6)','rgba(52,199,89,.6)','rgba(255,149,0,.6)'],
+          borderRadius:6,
+        }]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`SA占比: ${c.raw.toFixed(1)}%`}}},
+          scales:{y:{ticks:{callback:v=>v+'%'},grid:{color:gridColor}},x:{grid:{display:false}}},
+          animation:{duration:200}
+        },
+        plugins:[{
+          id:'subjSaValLabels',
+          afterDatasetsDraw(chart){
+            const{ctx}=chart;
+            chart.data.datasets[0].data.forEach((v,i)=>{
+              const bar=chart.getDatasetMeta(0).data[i];
+              ctx.save();ctx.fillStyle='#3d3d5c';ctx.font='11px FZDaBiaoSong';ctx.textAlign='center';
+              ctx.fillText(v.toFixed(1)+'%',bar.x,bar.y-8);ctx.restore();
+            });
+          }
+        }]
+      });
+    }
+  }
+}
+
+function computeBins(students,field,binSize,max){
+  const bins=[];
+  for(let lo=0;lo<max;lo+=binSize){
+    const hi=lo+binSize;
+    const inBin=students.filter(s=>{
+      const v=s[field];
+      return v!=null&&v>=lo&&v<hi;
+    });
+    const orig=inBin.filter(s=>s.io==='是').length;
+    const ren=inBin.filter(s=>s.ir==='是').length;
+    bins.push({
+      label:`${lo}-${hi}分`,
+      count:inBin.length,
+      original:orig,
+      renewal:ren,
+      renewal_rate:orig?Math.round(ren/orig*1000)/10:0
+    });
+  }
+  return bins;
+}
+
+function renderBinnedCharts(students){
+  const textColor='#6e6e80';
+  const gridColor='rgba(0,0,0,.05)';
+
+  // 动态计算分档数据，随状态筛选实时更新
+  const scoreBins=computeBins(students,'ts',10,100);
+  const dcqBins=computeBins(students,'dcq',3,15);
+  const dcrBins=computeBins(students,'dcr',5,45);
+
+  function makeBinnedChart(canvasId,binData,color,label){
+    const c=document.getElementById(canvasId);
+    if(!c)return;
+    chartInstances[canvasId]=new Chart(c,{
+      data:{
+        labels:binData.map(b=>b.label),
+        datasets:[
+          {type:'bar',label:'总人次',data:binData.map(b=>b.count),
+            backgroundColor:color,borderRadius:4,yAxisID:'y'},
+          {type:'line',label:'续班率',data:binData.map(b=>b.renewal_rate),
+            borderColor:'#FF9500',backgroundColor:'rgba(255,149,0,.1)',
+            borderWidth:2,pointRadius:4,pointBackgroundColor:'#FF9500',
+            pointBorderColor:'#fff',pointBorderWidth:1.5,
+            tension:.3,yAxisID:'y1'}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:12}}},
+        scales:{
+          y:{type:'linear',position:'left',grid:{color:gridColor},title:{display:true,text:'人次',font:{size:10}}},
+          y1:{type:'linear',position:'right',grid:{display:false},
+            title:{display:true,text:'续班率',font:{size:10}},
+            ticks:{callback:v=>v+'%'}}
+        },
+        animation:{duration:200}
+      },
+      plugins:[{
+        id:'binValLabels',
+        afterDatasetsDraw(chart){
+          const{ctx}=chart;
+          chart.data.datasets[0].data.forEach((v,i)=>{
+            const bar=chart.getDatasetMeta(0).data[i];
+            ctx.save();ctx.fillStyle='#3d3d5c';ctx.font='10px FZDaBiaoSong';ctx.textAlign='center';
+            ctx.fillText(v,bar.x,bar.y-6);ctx.restore();
+          });
+          chart.data.datasets[1].data.forEach((v,i)=>{
+            const pt=chart.getDatasetMeta(1).data[i];
+            if(pt){
+              ctx.save();ctx.fillStyle='#FF9500';ctx.font='10px FZDaBiaoSong';ctx.textAlign='center';
+              ctx.fillText(v.toFixed(1)+'%',pt.x,pt.y-10);ctx.restore();
+            }
+          });
+        }
+      }]
+    });
+  }
+
+  makeBinnedChart('chart-score-rr',scoreBins,'rgba(0,122,255,.5)');
+  makeBinnedChart('chart-dcq-rr',dcqBins,'rgba(88,86,214,.5)');
+  makeBinnedChart('chart-dcr-rr',dcrBins,'rgba(0,199,190,.5)');
+}
+
+// ============================================================
+// 教师详情弹窗
+// ============================================================
+function openTeacherDetail(teacherName){
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay show';
+  overlay.onclick=(e)=>{if(e.target===overlay)overlay.remove();};
+
+  let students=DASHBOARD.all_students.filter(s=>s.t===teacherName);
+  if(activeStatus!=='all'&&activeStatus!=='未开课班级')students=students.filter(s=>s.cs===activeStatus);
+
+  const orig=students.filter(s=>s.io==='是').length;
+  const ren=students.filter(s=>s.ir==='是').length;
+  const rr=orig?ren/orig*100:0;
+  const scores=students.filter(s=>s.ts!=null).map(s=>s.ts);
+  const avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;
+  const grades=students.filter(s=>s.sg);
+  const sa=grades.filter(s=>s.sg==='S'||s.sg==='A').length;
+
+  overlay.innerHTML=`
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>${teacherName} · 学员明细</h3>
+          <div style="font-size:.72rem;color:var(--text-2);margin-top:3px">
+            人次 ${students.length} · 原班 ${orig} · 续班 ${ren} · 续班率 ${rr.toFixed(1)}% · 均分 ${avg.toFixed(1)} · SA ${sa}人
+          </div>
+        </div>
+        <button class="close" onclick="this.closest('.modal-overlay').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-scroll" style="max-height:60vh">
+          <table>
+            <thead><tr>
+              <th>标签</th><th>学员</th><th>科目</th><th>班级</th><th>状态</th><th>开课</th><th>结课</th>
+              <th>总分</th><th>评级</th>
+              <th>深聊质量</th><th>深聊轮次</th><th>服务卡</th><th>题目回收</th>
+              <th>出勤率</th><th>进步感知</th><th>课次报告</th><th>连续在读</th>
+              <th>原班</th><th>续班</th>
+            </tr></thead>
+            <tbody>
+              ${students.map(s=>{
+                const gs=s.sg&&s.fg&&s.sg===s.fg;
+                const gh=gs?`<span class="grade grade-${s.sg}">${s.sg}</span>`
+                  :`${s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:''}${s.fg&&s.fg!==s.sg?`<span class="grade grade-${s.fg}" style="margin-left:2px">${s.fg}</span>`:''}`;
+                return `<tr>
+                  <td style="max-width:200px">${renderTags(s.tags)}</td>
+                  <td style="font-weight:500">${s.n||'-'}</td>
+                  <td>${s.s}</td>
+                  <td style="font-size:.7rem;color:var(--text-2)">${s.cc||'-'}</td>
+                  <td style="font-size:.72rem;color:var(--text-2)">${s.cs}</td>
+                  <td style="font-size:.72rem;color:var(--text-2)">${s.sd||'-'}</td>
+                  <td style="font-size:.72rem;color:var(--text-2)">${s.ed||'-'}</td>
+                  <td class="num" style="font-weight:600">${s.ts!=null?s.ts.toFixed(1):'-'}</td>
+                  <td>${gh||'-'}</td>
+                  <td class="num">${s.dcq?s.dcq.toFixed(1):'-'}</td>
+                  <td class="num">${s.dcr?s.dcr.toFixed(1):'-'}</td>
+                  <td class="num">${s.svc?s.svc.toFixed(1):'-'}</td>
+                  <td class="num">${s.qr?s.qr.toFixed(1):'-'}</td>
+                  <td class="num">${s.att?s.att.toFixed(1):'-'}</td>
+                  <td class="num">${s.pp?s.pp.toFixed(1):'-'}</td>
+                  <td class="num">${s.cr?s.cr.toFixed(1):'-'}</td>
+                  <td class="num">${s.cq?s.cq.toFixed(1):'-'}</td>
+                  <td>${s.io==='是'?'<span style="color:var(--green)">✓</span>':'-'}</td>
+                  <td>${s.ir==='是'?'<span style="color:var(--green)">✓</span>':'-'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ============================================================
+// 交互
+// ============================================================
+function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';render();}
+function switchStatus(status){activeStatus=status;render();}
+function selectTeacher(t){selectedTeacher=t;closeDropdown();render();}
+function filterGrade(g){activeGradeFilter=g;render();}
+function toggleDropdown(){
+  const dd=document.getElementById('teacherDropdown');
+  if(dd)dd.classList.toggle('open');
+}
+function closeDropdown(){
+  const dd=document.getElementById('teacherDropdown');
+  if(dd)dd.classList.remove('open');
+}
+function onTeacherSearch(v){
+  teacherSearch=v;
+  if(window._st)clearTimeout(window._st);
+  window._st=setTimeout(()=>{render();const i=document.querySelector('.search-box');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},200);
+}
+function onStudentSearch(v){
+  studentSearch=v;
+  if(window._ss)clearTimeout(window._ss);
+  window._ss=setTimeout(()=>{render();const i=document.querySelector('.search-box');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},200);
+}
+function sortBy(col){
+  if(sortCol===col){sortDir=sortDir==='asc'?'desc':'asc';}
+  else{sortCol=col;sortDir='desc';}
+  render();
+}
+
+// 点击外部关闭下拉
+document.addEventListener('click',(e)=>{
+  if(!e.target.closest('.dropdown'))closeDropdown();
+});
+
+// ============================================================
+// 启动
+// ============================================================
+async function init(){
+  try{
+    DASHBOARD=await loadData();
+    document.getElementById('app').innerHTML='';
+    render();
+  }catch(e){
+    document.getElementById('loading').innerHTML=`
+      <p style="color:var(--red)">数据加载失败: ${e.message}</p>
+      <p style="color:var(--text-3);font-size:.78rem">请确保 chengdu_dashboard.json 与本文件在同一目录</p>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
