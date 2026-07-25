@@ -669,6 +669,7 @@ let trendCollapsed=false; // 趋势面板折叠状态
 let activeSubjectFilter=''; // 学科组排名的学科筛选
 let trendSortCol='renewal_rate'; // 趋势对比表排序字段
 let trendSortDir='desc'; // 趋势对比表排序方向
+let trendSubjectFilter=''; // 教师维度日环比的学科筛选
 
 const METRICS=[
   {key:'deep_chat_quality',name:'深聊质量',max:15,cat:'学情沟通',short:'dcq'},
@@ -782,6 +783,8 @@ function formatChange(chg,suffix='%'){
 // 日数据趋势渲染
 // ============================================================
 function renderTrends(){
+  // 未开课状态不显示日环比
+  if(activeStatus==='未开课班级')return '';
   if(!DAILY_HISTORY||!DAILY_HISTORY.snapshots||DAILY_HISTORY.snapshots.length===0)return '';
   const snaps=DAILY_HISTORY.snapshots;
   const latest=snaps[snaps.length-1];
@@ -858,9 +861,29 @@ function renderTrends(){
     // 教师维度：所有教师对比表
     const curTeachers=getDimData(latest,'teacher')||{};
     const prevTeachers=getDimData(prev,'teacher')||{};
-    const teacherNames=Object.keys(curTeachers).filter(k=>curTeachers[k]&&curTeachers[k].student_count>0)
-      .sort((a,b)=>curTeachers[b].renewal_rate-curTeachers[a].renewal_rate);
+
+    // 提取所有学科（从教师数据中）
+    const teacherSubjects=[...new Set(Object.values(curTeachers).map(t=>t.subject).filter(Boolean))].sort();
+
+    // 按学科筛选过滤教师
+    let filteredNames=Object.keys(curTeachers).filter(k=>curTeachers[k]&&curTeachers[k].student_count>0);
+    if(trendSubjectFilter){
+      filteredNames=filteredNames.filter(k=>curTeachers[k].subject===trendSubjectFilter);
+    }
+    const teacherNames=filteredNames.sort((a,b)=>curTeachers[b].renewal_rate-curTeachers[a].renewal_rate);
     if(teacherNames.length===0){html+='<div class="trend-nodata">暂无教师数据</div></div></div>';return html;}
+
+    // 学科筛选栏（已开课/已结课状态下显示，且需多于1个学科）
+    if(hasSF&&teacherSubjects.length>1){
+      html+=`<div class="filter-bar" style="margin:8px 0 10px">
+        <span class="filter-label">学科筛选</span>
+        <div class="pill-group">
+          <button class="pill ${trendSubjectFilter===''?'active':''}" onclick="switchTrendSubject('')">全部</button>
+          ${teacherSubjects.map(s=>`<button class="pill ${trendSubjectFilter===s?'active':''}" onclick="switchTrendSubject('${s}')">${s}</button>`).join('')}
+        </div>
+        <span class="info-count" style="margin-left:auto">${trendSubjectFilter?trendSubjectFilter+'学科 · '+teacherNames.length+'位教师':teacherNames.length+'位教师 · 全部学科'}</span>
+      </div>`;
+    }
 
     html+=renderTrendComparisonTable(teacherNames,curTeachers,prevTeachers,'教师',metricKeys);
     html+=renderTrendFooter(snaps,latest);
@@ -993,6 +1016,7 @@ function renderTrendFooter(snaps,latest){
 
 function toggleTrend(){trendCollapsed=!trendCollapsed;render();}
 function switchTrendTab(tab){trendTab=tab;render();}
+function switchTrendSubject(subject){trendSubjectFilter=subject;render();}
 
 // ============================================================
 // 数据过滤
@@ -2209,8 +2233,8 @@ function openTeacherDetail(teacherName){
 // ============================================================
 // 交互
 // ============================================================
-function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();activeSubjectFilter='';if(tab.startsWith('subject_'))trendTab='subject';else trendTab='overall';render();}
-function switchStatus(status){activeStatus=status;selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();activeSubjectFilter='';trendTab='overall';render();}
+function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();activeSubjectFilter='';trendSubjectFilter='';if(tab.startsWith('subject_'))trendTab='subject';else trendTab='overall';render();}
+function switchStatus(status){activeStatus=status;selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();activeSubjectFilter='';trendSubjectFilter='';trendTab='overall';render();}
 function switchSubjectFilter(subject){activeSubjectFilter=subject;sortCol='renewal_rate';sortDir='desc';render();}
 function selectTeacher(t){selectedTeacher=t;closeDropdown();if(t)trendTab='teacher';render();}
 function filterGrade(g){activeGradeFilter=g;activeTagFilters=new Set();render();}
