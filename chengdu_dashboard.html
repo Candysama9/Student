@@ -191,8 +191,8 @@ body::after{
   box-shadow:var(--shadow);
   transition:transform .3s var(--transition),box-shadow .3s var(--transition),border-color .3s var(--transition);
 }
-.binned-card h4{font-size:.86rem;font-weight:700;margin-bottom:10px;color:var(--text-0)}
-.binned-card .chart-box{position:relative;height:220px}
+.binned-card h4{font-size:.9rem;font-weight:700;margin-bottom:12px;color:var(--text-0);display:flex;align-items:center;gap:6px}
+.binned-card .chart-box{position:relative;height:300px}
 
 /* Tabs */
 .tabs{
@@ -1805,7 +1805,7 @@ function renderBinnedCharts(students){
   const dcqBins=computeBins(students,'dcq',3,15);
   const dcrBins=computeBins(students,'dcr',5,45);
 
-  // iOS 色阶：按续班率返回颜色（绿高/金中/红低），与 renderCharts 的 rrColor 保持一致
+  // iOS 色阶：按续班率返回颜色（绿高/金中/红低）
   const IOS_GREEN='#30D158';
   const IOS_GOLD='#FF9F0A';
   const IOS_RED='#FF453A';
@@ -1816,84 +1816,122 @@ function renderBinnedCharts(students){
     if(v>=8)return '#FF6B6B';
     return IOS_RED;
   }
-  // hex -> rgba 转换，用于柱状图渐变底部
   function hexA(hex,a){
     const h=hex.replace('#','');
     const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
     return `rgba(${r},${g},${b},${a})`;
   }
 
-  function makeBinnedChart(canvasId,binData,color,label){
+  // 三图区分配色：折线+点用不同色系，避免三图一模一样
+  const CHART_THEMES={
+    'chart-score-rr':{lineColor:'#0A84FF',lineBg:'rgba(10,132,255',label:'总分'},
+    'chart-dcq-rr':{lineColor:'#5E5CE6',lineBg:'rgba(94,92,230',label:'深聊质量'},
+    'chart-dcr-rr':{lineColor:'#40CBE0',lineBg:'rgba(64,203,224',label:'深聊轮次'},
+  };
+
+  function makeBinnedChart(canvasId,binData){
     const c=document.getElementById(canvasId);
     if(!c)return;
+    const theme=CHART_THEMES[canvasId]||CHART_THEMES['chart-score-rr'];
+
+    // 自动计算右轴范围：取续班率最大值向上取整到5的倍数，最小给到10%
+    const maxRR=Math.max(...binData.map(b=>b.renewal_rate),0);
+    const y1Max=Math.max(Math.ceil(maxRR/5)*5,10);
+
+    // 过滤掉 count=0 的空分档，避免多余空白
+    const visibleBins=binData.filter(b=>b.count>0);
+
     chartInstances[canvasId]=new Chart(c,{
       data:{
-        labels:binData.map(b=>b.label),
+        labels:visibleBins.map(b=>b.label),
         datasets:[
-          {type:'bar',label:'总人次',data:binData.map(b=>b.count),
-            // 按该分档的续班率着色（iOS 色阶）：绿高/金中/红低
+          {type:'bar',label:'总人次',data:visibleBins.map(b=>b.count),
             backgroundColor:(ctx)=>{
               const idx=ctx.dataIndex;
-              const v=(binData[idx]&&binData[idx].renewal_rate)||0;
+              const v=(visibleBins[idx]&&visibleBins[idx].renewal_rate)||0;
               const c=rrColor(v);
               const chart=ctx.chart;const{chartArea}=chart;
               if(!chartArea)return c;
               const g=chart.ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
               g.addColorStop(0,c);
-              g.addColorStop(1,hexA(c,0.3));
+              g.addColorStop(1,hexA(c,0.25));
               return g;
             },
-            borderRadius:10,borderSkipped:false,yAxisID:'y'},
-          {type:'line',label:'续班率',data:binData.map(b=>b.renewal_rate),
-            borderColor:'#FF9F0A',backgroundColor:(ctx)=>{
+            borderRadius:8,borderSkipped:false,
+            barPercentage:0.7,categoryPercentage:0.8,
+            yAxisID:'y'},
+          {type:'line',label:'续班率',data:visibleBins.map(b=>b.renewal_rate>0?b.renewal_rate:null),
+            borderColor:theme.lineColor,
+            backgroundColor:(ctx)=>{
               const chart=ctx.chart;const{chartArea}=chart;
-              if(!chartArea)return'rgba(255,159,10,.1)';
+              if(!chartArea)return theme.lineBg+',.1)';
               const g=chart.ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
-              g.addColorStop(0,'rgba(255,159,10,.25)');
-              g.addColorStop(1,'rgba(255,159,10,0)');
+              g.addColorStop(0,theme.lineBg+',.25)');
+              g.addColorStop(1,theme.lineBg+',0)');
               return g;
             },
-            borderWidth:3,pointRadius:6,pointBackgroundColor:'#FF9F0A',
-            pointBorderColor:'#fff',pointBorderWidth:2,pointHoverRadius:8,
-            tension:.35,yAxisID:'y1'}
+            borderWidth:3,pointRadius:5,pointBackgroundColor:theme.lineColor,
+            pointBorderColor:'#fff',pointBorderWidth:2,pointHoverRadius:7,
+            tension:.35,yAxisID:'y1',
+            // 零值断开折线：0%的点设为null，避免折线贴着X轴形成误导
+            spanGaps:true}
         ]
       },
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:true,position:'top',labels:{font:{family:CHART_FONT,size:13,weight:'600'},boxWidth:14,usePointStyle:true,pointStyle:'circle'}}},
+        layout:{padding:{top:20}},
+        plugins:{legend:{display:true,position:'top',
+            labels:{font:{family:CHART_FONT,size:12,weight:'600'},boxWidth:12,usePointStyle:true,pointStyle:'circle',padding:12}}},
         scales:{
-          y:{type:'linear',position:'left',grid:{color:gridColor},title:{display:true,text:'人次',font:{family:CHART_FONT,size:13,weight:'700'}},ticks:{font:{family:CHART_FONT,size:12,weight:'600'}}},
+          x:{grid:{display:false},
+            ticks:{font:{family:CHART_FONT,size:11,weight:'500'},maxRotation:45,minRotation:0,autoSkip:false}},
+          y:{type:'linear',position:'left',grid:{color:gridColor},
+            title:{display:true,text:'人次',font:{family:CHART_FONT,size:12,weight:'700'}},
+            ticks:{font:{family:CHART_FONT,size:11,weight:'600'},precision:0},
+            beginAtZero:true},
           y1:{type:'linear',position:'right',grid:{display:false},
-            title:{display:true,text:'续班率',font:{family:CHART_FONT,size:13,weight:'700'}},
-            ticks:{callback:v=>v+'%',font:{family:CHART_FONT,size:12,weight:'600'}}}
+            min:0,max:y1Max,
+            title:{display:true,text:'续班率',font:{family:CHART_FONT,size:12,weight:'700'}},
+            ticks:{callback:v=>v+'%',font:{family:CHART_FONT,size:11,weight:'600'},stepSize:y1Max<=10?2:5}}
         },
-        animation:{duration:500,easing:'easeOutQuart'}
+        animation:{duration:600,easing:'easeOutQuart'}
       },
       plugins:[{
         id:'binValLabels',
         afterDatasetsDraw(chart){
           const{ctx}=chart;
+          // 柱状图顶部数值：间距加大到12px
           chart.data.datasets[0].data.forEach((v,i)=>{
             const bar=chart.getDatasetMeta(0).data[i];
-            ctx.save();ctx.fillStyle='#3d3d5c';ctx.font='600 12px '+CHART_FONT.replace(/'/g,'');ctx.textAlign='center';
+            if(!bar)return;
+            ctx.save();
+            ctx.fillStyle='#3d3d5c';
+            ctx.font='700 12px '+CHART_FONT.replace(/'/g,'');
+            ctx.textAlign='center';
             ctx.shadowColor='rgba(0,0,0,0.15)';ctx.shadowBlur=2;ctx.shadowOffsetY=1;
-            ctx.fillText(v,bar.x,bar.y-7);ctx.restore();
+            ctx.fillText(v,bar.x,bar.y-12);
+            ctx.restore();
           });
+          // 折线点续班率标签：零值不显示，避免堆叠"0.0%"
           chart.data.datasets[1].data.forEach((v,i)=>{
+            if(!v||v<=0)return; // 跳过零值
             const pt=chart.getDatasetMeta(1).data[i];
-            if(pt){
-              ctx.save();ctx.fillStyle='#FF9F0A';ctx.font='700 12px '+CHART_FONT.replace(/'/g,'');ctx.textAlign='center';
-              ctx.shadowColor='rgba(0,0,0,0.15)';ctx.shadowBlur=2;ctx.shadowOffsetY=1;
-              ctx.fillText(v.toFixed(1)+'%',pt.x,pt.y-11);ctx.restore();
-            }
+            if(!pt)return;
+            ctx.save();
+            ctx.fillStyle=theme.lineColor;
+            ctx.font='700 11px '+CHART_FONT.replace(/'/g,'');
+            ctx.textAlign='center';
+            ctx.shadowColor='rgba(0,0,0,0.2)';ctx.shadowBlur=3;ctx.shadowOffsetY=1;
+            ctx.fillText(v.toFixed(1)+'%',pt.x,pt.y-14);
+            ctx.restore();
           });
         }
       }]
     });
   }
 
-  makeBinnedChart('chart-score-rr',scoreBins,'rgba(10,132,255,.6)');
-  makeBinnedChart('chart-dcq-rr',dcqBins,'rgba(94,92,230,.6)');
-  makeBinnedChart('chart-dcr-rr',dcrBins,'rgba(64,203,224,.6)');
+  makeBinnedChart('chart-score-rr',scoreBins);
+  makeBinnedChart('chart-dcq-rr',dcqBins);
+  makeBinnedChart('chart-dcr-rr',dcrBins);
 }
 
 // ============================================================
