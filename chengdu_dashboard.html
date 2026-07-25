@@ -1683,10 +1683,7 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
     <thead><tr>${cols.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead>
     <tbody>
       ${students.length?students.map(s=>{
-        const gradeSame=s.sg&&s.fg&&s.sg===s.fg;
-        const gradeHtml=gradeSame
-          ?`<span class="grade grade-${s.sg}">${s.sg}</span>`
-          :`${s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:''}${s.fg&&s.fg!==s.sg?`<span class="grade grade-${s.fg}" style="margin-left:2px">${s.fg}</span>`:''}`;
+        const gradeHtml=s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:(s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:'-');
         return `<tr>
           <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
           <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
@@ -2347,9 +2344,7 @@ function openTeacherDetail(teacherName){
             </tr></thead>
             <tbody>
               ${students.map(s=>{
-                const gs=s.sg&&s.fg&&s.sg===s.fg;
-                const gh=gs?`<span class="grade grade-${s.sg}">${s.sg}</span>`
-                  :`${s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:''}${s.fg&&s.fg!==s.sg?`<span class="grade grade-${s.fg}" style="margin-left:2px">${s.fg}</span>`:''}`;
+                const gh=s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:(s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:'-');
                 return `<tr>
                   <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
                   <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
