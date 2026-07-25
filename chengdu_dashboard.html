@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>成都学校数据看板 · 学员分层续班潜力</title>
 <style>
-@font-face{font-family:'FZDaBiaoSong';src:local('方正大标宋简体'),local('FZDaBiaoSongJianTi'),local('FZDBSJW--GB1-0')}
+@font-face{font-family:'FZDaBiaoSong';src:local('方正大标宋简体'),local('FZDaBiaoSongJianTi'),local('FZDBSJW--GB1-0'),url('FZDBSJW.TTF') format('truetype');font-display:block}
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg-0:#f0f2f8;--bg-1:#ffffff;--bg-2:#e8edf5;
@@ -667,6 +667,8 @@ let dropdownOpen=false;
 let trendTab='overall'; // 趋势标签：overall/subject/teacher
 let trendCollapsed=false; // 趋势面板折叠状态
 let activeSubjectFilter=''; // 学科组排名的学科筛选
+let trendSortCol='renewal_rate'; // 趋势对比表排序字段
+let trendSortDir='desc'; // 趋势对比表排序方向
 
 const METRICS=[
   {key:'deep_chat_quality',name:'深聊质量',max:15,cat:'学情沟通',short:'dcq'},
@@ -882,20 +884,84 @@ function renderTrendMetricTable(curData,prevData,metricKeys){
   </table>`;
 }
 
+function sortByTrend(col){
+  if(trendSortCol===col){
+    trendSortDir=trendSortDir==='asc'?'desc':'asc';
+  }else{
+    trendSortCol=col;
+    trendSortDir='desc';
+  }
+  render();
+}
+
 function renderTrendComparisonTable(names,curMap,prevMap,dimLabel,metricKeys){
   const hasPrev=Object.keys(prevMap).length>0;
+
+  // 排序字段映射
+  const sortFields=[
+    {key:'student_count',label:'人次'},
+    {key:'renewal_rate',label:'续班率'},
+    {key:'avg_score',label:'均分'},
+    {key:'sa_pct',label:'SA占比'},
+    {key:'renewal_rate_chg',label:'续班率环比'},
+    {key:'avg_score_chg',label:'均分环比'},
+    {key:'dcq',label:'深聊质量'},
+    {key:'dcr',label:'深聊轮次'},
+    {key:'att',label:'出勤率'},
+    {key:'pp',label:'进步感知'},
+  ];
+
+  // 获取排序值
+  function getSortVal(name){
+    const c=curMap[name];if(!c)return 0;
+    const p=prevMap[name];
+    let val;
+    if(trendSortCol==='renewal_rate_chg'){
+      const chg=calcChange(c.renewal_rate,p?p.renewal_rate:null);
+      val=chg?chg.val:0;
+    }else if(trendSortCol==='avg_score_chg'){
+      const chg=calcChange(c.avg_score,p?p.avg_score:null);
+      val=chg?chg.val:0;
+    }else if(trendSortCol==='dcq'||trendSortCol==='dcr'||trendSortCol==='att'||trendSortCol==='pp'){
+      val=c.metrics?(c.metrics[trendSortCol]||0):0;
+    }else{
+      val=c[trendSortCol]||0;
+    }
+    return val;
+  }
+
+  // 排序
+  let sortedNames=[...names];
+  if(trendSortCol==='name'){
+    sortedNames.sort((a,b)=>trendSortDir==='asc'?a.localeCompare(b,'zh'):b.localeCompare(a,'zh'));
+  }else{
+    sortedNames.sort((a,b)=>{
+      const va=getSortVal(a),vb=getSortVal(b);
+      return trendSortDir==='asc'?va-vb:vb-va;
+    });
+  }
+
+  // 排序指示器
+  function sortIndicator(fieldKey){
+    if(trendSortCol!==fieldKey)return '<span class="sort-i" style="opacity:.4">⇅</span>';
+    return `<span class="sort-i" style="opacity:1;color:var(--brand)">${trendSortDir==='asc'?'▲':'▼'}</span>`;
+  }
+
   let html=`<div style="overflow-x:auto"><table class="trend-compare-table">
     <thead><tr>
-      <th>${dimLabel}</th>
-      <th>人次</th>
-      <th>续班率</th>
-      <th>均分</th>
-      <th>SA占比</th>
-      ${hasPrev?'<th>续班率环比</th><th>均分环比</th>':''}
-      <th>深聊质量</th><th>深聊轮次</th><th>出勤率</th><th>进步感知</th>
+      <th style="cursor:pointer" onclick="sortByTrend('name')">${dimLabel}${sortIndicator('name')}</th>
+      <th style="cursor:pointer" onclick="sortByTrend('student_count')">人次${sortIndicator('student_count')}</th>
+      <th style="cursor:pointer" onclick="sortByTrend('renewal_rate')">续班率${sortIndicator('renewal_rate')}</th>
+      <th style="cursor:pointer" onclick="sortByTrend('avg_score')">均分${sortIndicator('avg_score')}</th>
+      <th style="cursor:pointer" onclick="sortByTrend('sa_pct')">SA占比${sortIndicator('sa_pct')}</th>
+      ${hasPrev?`<th style="cursor:pointer" onclick="sortByTrend('renewal_rate_chg')">续班率环比${sortIndicator('renewal_rate_chg')}</th><th style="cursor:pointer" onclick="sortByTrend('avg_score_chg')">均分环比${sortIndicator('avg_score_chg')}</th>`:''}
+      <th style="cursor:pointer" onclick="sortByTrend('dcq')">深聊质量${sortIndicator('dcq')}</th>
+      <th style="cursor:pointer" onclick="sortByTrend('dcr')">深聊轮次${sortIndicator('dcr')}</th>
+      <th style="cursor:pointer" onclick="sortByTrend('att')">出勤率${sortIndicator('att')}</th>
+      <th style="cursor:pointer" onclick="sortByTrend('pp')">进步感知${sortIndicator('pp')}</th>
     </tr></thead>
     <tbody>`;
-  for(const name of names){
+  for(const name of sortedNames){
     const c=curMap[name];if(!c)continue;
     const p=prevMap[name];
     const chgRR=calcChange(c.renewal_rate,p?p.renewal_rate:null);
@@ -2189,6 +2255,14 @@ document.addEventListener('click',(e)=>{
 // ============================================================
 async function init(){
   try{
+    // 等待方正大标宋简体字体加载完成，确保Chart.js渲染时字体已就绪
+    if(document.fonts&&document.fonts.load){
+      try{await Promise.all([
+        document.fonts.load('700 16px "FZDaBiaoSong"'),
+        document.fonts.load('400 14px "FZDaBiaoSong"'),
+        document.fonts.load('600 12px "FZDaBiaoSong"'),
+      ]);await document.fonts.ready;}catch(e){console.warn('字体加载等待跳过:',e);}
+    }
     DASHBOARD=await loadData();
     // 并行加载日数据历史（失败不阻塞主看板）
     try{DAILY_HISTORY=await loadHistory();}catch(e){console.warn('日数据历史加载失败:',e);}
