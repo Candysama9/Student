@@ -1018,6 +1018,93 @@ function toggleTrend(){trendCollapsed=!trendCollapsed;render();}
 function switchTrendTab(tab){trendTab=tab;render();}
 function switchTrendSubject(subject){trendSubjectFilter=subject;render();}
 
+// 导出学情标签页学员数据为CSV
+function exportSubjectStudents(subjectName,selTeacher,gradeFilter,tagFilters){
+  // 获取当前学科的学员
+  let students=getSubjectStudents(subjectName);
+
+  // 应用与当前页面一致的筛选逻辑
+  if(selTeacher)students=students.filter(s=>s.t===selTeacher);
+  if(gradeFilter&&gradeFilter!=='all')students=students.filter(s=>s.sg===gradeFilter);
+  if(tagFilters&&tagFilters.length>0){
+    students=students.filter(s=>{
+      for(const fk of tagFilters){
+        if(studentMatchesTag(s,fk))return true;
+      }
+      return false;
+    });
+  }
+  if(studentSearch){
+    const q=studentSearch.toLowerCase();
+    students=students.filter(s=>(s.n&&s.n.toLowerCase().includes(q))||(s.cc&&s.cc.toLowerCase().includes(q)));
+  }
+
+  if(students.length===0){alert('当前筛选条件下无数据可导出');return;}
+
+  // 构建文件名：学科-教师名-标签1-标签2
+  let nameParts=[subjectName];
+  if(selTeacher)nameParts.push(selTeacher);else nameParts.push('全部教师');
+  if(gradeFilter&&gradeFilter!=='all')nameParts.push(gradeFilter+'级');
+  if(tagFilters&&tagFilters.length>0){
+    for(const fk of tagFilters){
+      const f=TAG_FILTERS.find(t=>t.key===fk);
+      if(f)nameParts.push(f.label);
+    }
+  }
+  const fileName=nameParts.join('-')+'.csv';
+
+  // CSV表头
+  const headers=['标签','学员姓名','教师','班级编码','班级状态','开课日期','结课日期','总分','当天满分','评级',
+    '深聊质量','深聊轮次','服务卡','题目回收','出勤率','进步感知','课次报告','连续在读','原班','续班'];
+
+  // 转义CSV单元格
+  function esc(v){
+    if(v==null)return '';
+    const s=String(v);
+    if(s.includes(',')||s.includes('"')||s.includes('\n'))return '"'+s.replace(/"/g,'""')+'"';
+    return s;
+  }
+
+  // 构建CSV行
+  let csv='\ufeff'+headers.map(esc).join(',')+'\n'; // BOM for Excel
+  for(const s of students){
+    const tagsStr=(s.tags||[]).map(t=>t.label).join('、');
+    const grade=s.fg||s.sg||'';
+    const row=[
+      tagsStr,
+      s.n||'',
+      s.t||'',
+      s.cc||'',
+      s.cs||'',
+      s.sd||'',
+      s.ed||'',
+      s.ts!=null?s.ts.toFixed(1):'',
+      s.fs!=null?s.fs:'',
+      grade,
+      s.dcq!=null?s.dcq.toFixed(1):'',
+      s.dcr!=null?s.dcr.toFixed(1):'',
+      s.svc!=null?s.svc.toFixed(1):'',
+      s.qr!=null?s.qr.toFixed(1):'',
+      s.att!=null?s.att.toFixed(1):'',
+      s.pp!=null?s.pp.toFixed(1):'',
+      s.cr!=null?s.cr.toFixed(1):'',
+      s.cq!=null?s.cq.toFixed(1):'',
+      s.io||'',
+      s.ir||''
+    ];
+    csv+=row.map(esc).join(',')+'\n';
+  }
+
+  // 下载
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=fileName;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ============================================================
 // 数据过滤
 // ============================================================
@@ -1686,6 +1773,7 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
     </div>
     <input class="search-box" type="text" placeholder="搜索学员姓名/班级编码..." value="${studentSearch}" oninput="onStudentSearch(this.value)" style="max-width:200px">
     <span class="info-count">共 ${students.length} 名学员</span>
+    <button class="pill" style="background:var(--brand);color:#fff;border:none;padding:6px 16px;font-size:.78rem;font-weight:600;cursor:pointer;margin-left:auto" onclick="exportSubjectStudents('${subjectName}',${JSON.stringify(selectedTeacher).replace(/"/g,'&quot;')},'${activeGradeFilter}',${JSON.stringify([...activeTagFilters]).map(t=>t.replace(/"/g,'&quot;'))})">导出Excel</button>
   </div>
 
   <div class="table-wrap"><div class="table-scroll"><table>
