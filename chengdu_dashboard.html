@@ -1019,16 +1019,16 @@ function switchTrendTab(tab){trendTab=tab;render();}
 function switchTrendSubject(subject){trendSubjectFilter=subject;render();}
 
 // 导出学情标签页学员数据为CSV
-function exportSubjectStudents(subjectName,selTeacher,gradeFilter,tagFilters){
+function exportSubjectStudents(subjectName){
   // 获取当前学科的学员
   let students=getSubjectStudents(subjectName);
 
-  // 应用与当前页面一致的筛选逻辑
-  if(selTeacher)students=students.filter(s=>s.t===selTeacher);
-  if(gradeFilter&&gradeFilter!=='all')students=students.filter(s=>s.sg===gradeFilter);
-  if(tagFilters&&tagFilters.length>0){
+  // 应用与当前页面一致的筛选逻辑（直接读取全局变量）
+  if(selectedTeacher)students=students.filter(s=>s.t===selectedTeacher);
+  if(activeGradeFilter&&activeGradeFilter!=='all')students=students.filter(s=>s.sg===activeGradeFilter);
+  if(activeTagFilters&&activeTagFilters.size>0){
     students=students.filter(s=>{
-      for(const fk of tagFilters){
+      for(const fk of activeTagFilters){
         if(studentMatchesTag(s,fk))return true;
       }
       return false;
@@ -1043,10 +1043,10 @@ function exportSubjectStudents(subjectName,selTeacher,gradeFilter,tagFilters){
 
   // 构建文件名：学科-教师名-标签1-标签2
   let nameParts=[subjectName];
-  if(selTeacher)nameParts.push(selTeacher);else nameParts.push('全部教师');
-  if(gradeFilter&&gradeFilter!=='all')nameParts.push(gradeFilter+'级');
-  if(tagFilters&&tagFilters.length>0){
-    for(const fk of tagFilters){
+  if(selectedTeacher)nameParts.push(selectedTeacher);else nameParts.push('全部教师');
+  if(activeGradeFilter&&activeGradeFilter!=='all')nameParts.push(activeGradeFilter+'级');
+  if(activeTagFilters&&activeTagFilters.size>0){
+    for(const fk of activeTagFilters){
       const f=TAG_FILTERS.find(t=>t.key===fk);
       if(f)nameParts.push(f.label);
     }
@@ -1773,7 +1773,7 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
     </div>
     <input class="search-box" type="text" placeholder="搜索学员姓名/班级编码..." value="${studentSearch}" oninput="onStudentSearch(this.value)" style="max-width:200px">
     <span class="info-count">共 ${students.length} 名学员</span>
-    <button class="pill" style="background:var(--brand);color:#fff;border:none;padding:6px 16px;font-size:.78rem;font-weight:600;cursor:pointer;margin-left:auto" onclick="exportSubjectStudents('${subjectName}',${JSON.stringify(selectedTeacher).replace(/"/g,'&quot;')},'${activeGradeFilter}',${JSON.stringify([...activeTagFilters]).map(t=>t.replace(/"/g,'&quot;'))})">导出Excel</button>
+    <button class="pill" style="background:var(--brand);color:#fff;border:none;padding:6px 16px;font-size:.78rem;font-weight:600;cursor:pointer;margin-left:auto" onclick="exportSubjectStudents('${subjectName}')">导出Excel</button>
   </div>
 
   <div class="table-wrap"><div class="table-scroll"><table>
