@@ -306,7 +306,7 @@ body::after{
 table{width:100%;border-collapse:collapse;font-size:.78rem}
 thead{position:sticky;top:0;z-index:10}
 thead th{
-  background:rgba(255,255,255,.92);backdrop-filter:var(--liquid-blur);
+  background:rgba(255,255,255,.96);backdrop-filter:var(--liquid-blur);
   padding:10px 12px;text-align:center;font-weight:600;color:var(--text-1);
   white-space:nowrap;border-bottom:1px solid var(--glass-brd);
   cursor:pointer;user-select:none;transition:color .15s,background .15s;
@@ -317,15 +317,15 @@ thead th.sorted .sort-i{opacity:1;color:var(--brand)}
 thead th.sorted{color:var(--brand)}
 thead tr.grp-row th{
   padding:5px 8px;font-size:.66rem;font-weight:700;text-align:center;
-  border-bottom:1px solid var(--glass-brd);
+  border-bottom:1px solid var(--glass-brd);backdrop-filter:none;
 }
-thead tr.grp-row th.g-basic{background:rgba(0,122,255,.22);color:var(--brand)}
-thead tr.grp-row th.g-count{background:rgba(0,199,190,.22);color:var(--accent)}
-thead tr.grp-row th.g-key{background:rgba(52,199,89,.22);color:var(--green)}
-thead tr.grp-row th.g-grade{background:rgba(255,149,0,.22);color:var(--gold)}
-thead tr.grp-row th.g-comm{background:rgba(88,86,214,.22);color:var(--brand-2)}
-thead tr.grp-row th.g-traj{background:rgba(0,122,255,.18);color:var(--brand)}
-thead tr.grp-row th.g-stick{background:rgba(48,213,200,.22);color:var(--accent)}
+thead tr.grp-row th.g-basic{background:rgba(0,122,255,.45);color:#fff}
+thead tr.grp-row th.g-count{background:rgba(0,199,190,.45);color:#fff}
+thead tr.grp-row th.g-key{background:rgba(52,199,89,.45);color:#fff}
+thead tr.grp-row th.g-grade{background:rgba(255,149,0,.45);color:#fff}
+thead tr.grp-row th.g-comm{background:rgba(88,86,214,.45);color:#fff}
+thead tr.grp-row th.g-traj{background:rgba(0,122,255,.4);color:#fff}
+thead tr.grp-row th.g-stick{background:rgba(48,213,200,.45);color:#fff}
 tbody tr{border-bottom:1px solid rgba(0,0,0,.03);transition:background .2s,box-shadow .2s}
 tbody tr:hover{background:rgba(0,122,255,.06);box-shadow:inset 0 0 0 1px rgba(0,122,255,.10)}
 tbody td{padding:8px 12px;white-space:nowrap;color:var(--text-1);text-align:center;vertical-align:middle}
@@ -1230,7 +1230,16 @@ function render(){
   }
 
   html+=renderRules();
+
+  // 统计公式评级与系统评级不一致的数量
+  const gradeMismatches=students.filter(s=>s.fg&&s.sg&&s.fg!==s.sg);
+  const gradeTotal=students.filter(s=>s.fg&&s.sg).length;
+  const mismatchHtml=gradeTotal>0
+    ?`<div class="formula-note" style="color:var(--gold)">评级对比：公式评级与系统评级共 ${gradeTotal} 人有评级，其中 ${gradeMismatches.length} 人不一致（${(gradeMismatches.length/gradeTotal*100).toFixed(1)}%）。当前显示以公式评级为准。</div>`
+    :'';
+
   html+=`<div class="formula-note">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分</div>`;
+  if(mismatchHtml)html+=mismatchHtml;
 
   app.innerHTML=html;
   renderCharts(students);
@@ -1683,7 +1692,7 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
     <thead><tr>${cols.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead>
     <tbody>
       ${students.length?students.map(s=>{
-        const gradeHtml=s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:(s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:'-');
+        const gradeHtml=s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:(s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:'-');
         return `<tr>
           <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
           <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
@@ -2344,7 +2353,7 @@ function openTeacherDetail(teacherName){
             </tr></thead>
             <tbody>
               ${students.map(s=>{
-                const gh=s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:(s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:'-');
+                const gh=s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:(s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:'-');
                 return `<tr>
                   <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
                   <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
