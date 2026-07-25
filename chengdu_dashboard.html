@@ -1054,7 +1054,7 @@ function exportSubjectStudents(subjectName){
   const fileName=nameParts.join('-')+'.csv';
 
   // CSV表头
-  const headers=['标签','学员姓名','教师','班级编码','班级状态','开课日期','结课日期','总分','当天满分','评级',
+  const headers=['标签','学员姓名','教师','班级编码','班级状态','开课日期','结课日期','总分','评级',
     '深聊质量','深聊轮次','服务卡','题目回收','出勤率','进步感知','课次报告','连续在读','原班','续班'];
 
   // 转义CSV单元格
@@ -1079,7 +1079,6 @@ function exportSubjectStudents(subjectName){
       s.sd||'',
       s.ed||'',
       s.ts!=null?s.ts.toFixed(1):'',
-      s.fs!=null?s.fs:'',
       grade,
       s.dcq!=null?s.dcq.toFixed(1):'',
       s.dcr!=null?s.dcr.toFixed(1):'',
@@ -1709,9 +1708,9 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
     `<div class="dropdown-item ${selectedTeacher===t.name?'selected':''}" onclick="selectTeacher('${t.name}')">${t.name} (${t.count}人 · SA${t.sa})</div>`
   ).join('');
 
-  // 动态列：如果选了教师，不显示教师列和当天满分；如果两个评级相同只显示一个
+  // 动态列：选了教师不显示教师列；当天满分直接隐藏；两个评级相同只显示一个
   const showTeacherCol=!selectedTeacher;
-  const hideFullScore=!!selectedTeacher;
+  const hideFullScore=true;
 
   let cols=[
     {key:'tags',label:'标签'},
