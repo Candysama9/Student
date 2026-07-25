@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>成都学校数据看板 · 学员分层续班潜力</title>
 <style>
-@font-face{font-family:'FZDaBiaoSong';src:local('方正大标宋简体'),local('FZDaBiaoSongJianTi'),local('FZDBSJW--GB1-0'),url('FZDBSJW.TTF') format('truetype');font-display:block}
+@font-face{font-family:'FZDaBiaoSong';src:local('方正大标宋简体'),local('FZDaBiaoSongJianTi'),local('FZDBSJW--GB1-0'),url('FZDBSJW.woff') format('woff');font-display:swap}
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg-0:#f0f2f8;--bg-1:#ffffff;--bg-2:#e8edf5;
@@ -2279,14 +2279,6 @@ document.addEventListener('click',(e)=>{
 // ============================================================
 async function init(){
   try{
-    // 等待方正大标宋简体字体加载完成，确保Chart.js渲染时字体已就绪
-    if(document.fonts&&document.fonts.load){
-      try{await Promise.all([
-        document.fonts.load('700 16px "FZDaBiaoSong"'),
-        document.fonts.load('400 14px "FZDaBiaoSong"'),
-        document.fonts.load('600 12px "FZDaBiaoSong"'),
-      ]);await document.fonts.ready;}catch(e){console.warn('字体加载等待跳过:',e);}
-    }
     DASHBOARD=await loadData();
     // 并行加载日数据历史（失败不阻塞主看板）
     try{DAILY_HISTORY=await loadHistory();}catch(e){console.warn('日数据历史加载失败:',e);}
