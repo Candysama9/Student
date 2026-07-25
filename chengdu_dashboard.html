@@ -43,7 +43,7 @@
   --font:'FZDaBiaoSong','方正大标宋简体',-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif;
   --mono:'FZDaBiaoSong','方正大标宋简体',"SF Mono","PingFang SC",monospace;
   /* 图表字体：保留中文易读性 */
-  --chart-font:'Noto Sans SC','PingFang SC',-apple-system,sans-serif;
+  --chart-font:'FZDaBiaoSong','方正大标宋简体','Noto Sans SC','PingFang SC',-apple-system,sans-serif;
 }
 html{font-size:14px;scroll-behavior:smooth}
 body{
@@ -110,15 +110,22 @@ body::after{
 /* Header */
 .header{display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;position:relative}
 .header-left{text-align:center}
-.header-left h1{font-size:1.6rem;font-weight:700;color:var(--text-0);
-  display:inline-block;padding:10px 32px;border-radius:999px;
-  background:var(--liquid-fill);border:var(--liquid-stroke);
+.header-left h1{
+  font-size:2rem;font-weight:900;letter-spacing:-0.5px;
+  display:inline-block;padding:14px 40px;border-radius:999px;
+  background:linear-gradient(120deg,#2b3a5c,#5b8cff 60%,#8a6cff);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  border:var(--liquid-stroke);
   backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
-  box-shadow:var(--shadow),var(--liquid-highlight);position:relative;overflow:hidden}
+  box-shadow:var(--shadow),var(--liquid-highlight);position:relative;overflow:hidden;
+  text-shadow:0 2px 8px rgba(91,140,255,.15)}
+.header-left h1::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:var(--liquid-fill)}
 .header-left h1::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background:var(--liquid-specular);background-size:300% 100%;opacity:.5;
   animation:specularFlow 8s ease-in-out infinite}
-.header-left .sub{font-size:.78rem;color:var(--text-2);margin-top:6px}
+.header-left .sub{font-size:.78rem;color:var(--text-2);margin-top:8px;font-weight:500}
 .header-right{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .data-badge{
   padding:6px 14px;border-radius:999px;
@@ -181,13 +188,14 @@ body::after{
   opacity:.6;
 }
 .kpi:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:rgba(255,255,255,.45)}
-.kpi .label{font-size:.68rem;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.kpi .val{font-size:1.75rem;font-weight:700;font-family:var(--mono);color:var(--text-0);position:relative;z-index:1}
+.kpi{text-align:center}
+.kpi .label{font-size:.68rem;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;text-align:center}
+.kpi .val{font-size:1.75rem;font-weight:700;font-family:var(--mono);color:var(--text-0);position:relative;z-index:1;text-align:center}
 .kpi .val.brand{color:var(--brand)}
 .kpi .val.green{color:var(--green)}
 .kpi .val.gold{color:var(--gold)}
 .kpi .val.accent{color:var(--accent)}
-.kpi .sub{font-size:.68rem;color:var(--text-3);margin-top:2px;position:relative;z-index:1}
+.kpi .sub{font-size:.68rem;color:var(--text-3);margin-top:2px;position:relative;z-index:1;text-align:center}
 
 /* Binned Charts */
 .binned-charts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
@@ -299,7 +307,7 @@ table{width:100%;border-collapse:collapse;font-size:.78rem}
 thead{position:sticky;top:0;z-index:10}
 thead th{
   background:rgba(255,255,255,.92);backdrop-filter:var(--liquid-blur);
-  padding:10px 12px;text-align:left;font-weight:600;color:var(--text-1);
+  padding:10px 12px;text-align:center;font-weight:600;color:var(--text-1);
   white-space:nowrap;border-bottom:1px solid var(--glass-brd);
   cursor:pointer;user-select:none;transition:color .15s,background .15s;
 }
@@ -509,15 +517,15 @@ tbody td.rank .badge{
   transition:transform .25s var(--transition),box-shadow .25s var(--transition);
 }
 .trend-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
-.trend-card .tc-label{font-size:.68rem;color:var(--text-2);margin-bottom:4px}
-.trend-card .tc-val{font-size:1.25rem;font-weight:700;font-family:var(--mono);color:var(--text-0)}
-.trend-card .tc-change{font-size:.68rem;margin-top:3px;display:flex;align-items:center;gap:3px}
+.trend-card .tc-label{font-size:.68rem;color:var(--text-2);margin-bottom:4px;text-align:center}
+.trend-card .tc-val{font-size:1.25rem;font-weight:700;font-family:var(--mono);color:var(--text-0);text-align:center}
+.trend-card .tc-change{font-size:.68rem;margin-top:3px;display:flex;align-items:center;justify-content:center;gap:3px}
 .trend-card .tc-change.up{color:var(--green)}
 .trend-card .tc-change.down{color:var(--red)}
 .trend-card .tc-change.flat{color:var(--text-3)}
 .trend-card .tc-change .arrow{font-size:.8rem}
 .trend-table{width:100%;font-size:.72rem;border-collapse:collapse;margin-top:6px}
-.trend-table th{padding:6px 9px;text-align:left;color:var(--text-2);font-weight:600;border-bottom:1px solid var(--glass-brd);white-space:nowrap}
+.trend-table th{padding:6px 9px;text-align:center;color:var(--text-2);font-weight:600;border-bottom:1px solid var(--glass-brd);white-space:nowrap}
 .trend-table td{padding:6px 9px;color:var(--text-1);border-bottom:1px solid rgba(0,0,0,.02);white-space:nowrap}
 .trend-table td.num{text-align:center;font-family:var(--mono)}
 .trend-table .change-up{color:var(--green)}
@@ -538,7 +546,7 @@ tbody td.rank .badge{
 
 /* Trend Comparison Table */
 .trend-compare-table{width:100%;font-size:.72rem;border-collapse:collapse;margin-top:6px}
-.trend-compare-table th{padding:7px 11px;text-align:left;color:var(--text-2);font-weight:700;border-bottom:2px solid var(--glass-brd);white-space:nowrap;position:sticky;top:0;background:rgba(255,255,255,.75);backdrop-filter:var(--liquid-blur)}
+.trend-compare-table th{padding:7px 11px;text-align:center;color:var(--text-2);font-weight:700;border-bottom:2px solid var(--glass-brd);white-space:nowrap;position:sticky;top:0;background:rgba(255,255,255,.75);backdrop-filter:var(--liquid-blur)}
 .trend-compare-table td{padding:6px 11px;color:var(--text-1);border-bottom:1px solid rgba(0,0,0,.03);white-space:nowrap}
 .trend-compare-table td.num{text-align:center;font-family:var(--mono)}
 .trend-compare-table td.tc-name{font-weight:600;color:var(--text-0);max-width:120px;overflow:hidden;text-overflow:ellipsis}
@@ -658,6 +666,7 @@ let studentSearch='';
 let dropdownOpen=false;
 let trendTab='overall'; // 趋势标签：overall/subject/teacher
 let trendCollapsed=false; // 趋势面板折叠状态
+let activeSubjectFilter=''; // 学科组排名的学科筛选
 
 const METRICS=[
   {key:'deep_chat_quality',name:'深聊质量',max:15,cat:'学情沟通',short:'dcq'},
@@ -1176,12 +1185,12 @@ function renderTeacherTab(students){
     {key:'renewal',label:'续班',sortable:true,cls:'num'},
     {key:'renewal_rate',label:'续班率',sortable:true,cls:'num',render:(v)=>{
       const cls=v>=30?'green':v>=15?'gold':'red';
-      return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
+      return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v/70*100,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
     }},
     {key:'avg_score',label:'均分',sortable:true,cls:'num',render:(v)=>v.toFixed(1)},
     {key:'sa_pct',label:'SA占比',sortable:true,cls:'num',render:(v)=>{
       const cls=v>=20?'green':v>=10?'gold':'red';
-      return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
+      return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v/30*100,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
     }},
     {key:'grade_counts.S',label:'S',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-S">${v}</span>`:'-'},
     {key:'grade_counts.A',label:'A',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-A">${v}</span>`:'-'},
@@ -1247,71 +1256,159 @@ function renderTeacherTab(students){
 }
 
 function renderSubjectTab(students){
-  let data=aggregateSubjects(students);
-  data=sortData(data,sortCol==='teacher'||sortCol==='subject_main'||sortCol==='tenure'?'renewal_rate':sortCol,sortDir);
+  // 获取可用学科列表
+  const subjectSet=new Set();
+  students.forEach(s=>{if(s.s)subjectSet.add(s.s)});
+  const subjects=[...subjectSet].sort();
 
-  const cols=[
-    {key:'rank',label:'#',sortable:false},
-    {key:'subject',label:'学科',sortable:true},
-    {key:'teacher_count',label:'教师数',sortable:true,cls:'num'},
-    {key:'total',label:'人次',sortable:true,cls:'num'},
-    {key:'original',label:'原班',sortable:true,cls:'num'},
-    {key:'renewal',label:'续班',sortable:true,cls:'num'},
-    {key:'renewal_rate',label:'续班率',sortable:true,cls:'num'},
-    {key:'avg_score',label:'均分',sortable:true,cls:'num'},
-    {key:'sa_pct',label:'SA占比',sortable:true,cls:'num'},
-    {key:'grade_counts.S',label:'S',sortable:true,cls:'num'},
-    {key:'grade_counts.A',label:'A',sortable:true,cls:'num'},
-    {key:'grade_counts.B',label:'B',sortable:true,cls:'num'},
-    {key:'grade_counts.C',label:'C',sortable:true,cls:'num'},
-  ];
-  for(const m of METRICS)cols.push({key:`metrics.${m.short}`,label:m.name,sortable:true,cls:'num',tip:`${m.cat} · 满分${m.max}分`});
-
+  // 学科筛选栏
   let html=`
-  <div class="chart-grid">
-    <div class="chart-card"><h4>各学科续班率对比</h4><div class="chart-box"><canvas id="chart-subj-rr"></canvas></div></div>
-    <div class="chart-card"><h4>各学科SA占比对比</h4><div class="chart-box"><canvas id="chart-subj-sa"></canvas></div></div>
-  </div>
+  <div class="filter-bar">
+    <span class="filter-label">学科筛选</span>
+    <div class="pill-group">
+      <button class="pill ${activeSubjectFilter===''?'active':''}" onclick="switchSubjectFilter('')">全部学科</button>
+      ${subjects.map(s=>`<button class="pill ${activeSubjectFilter===s?'active':''}" onclick="switchSubjectFilter('${s}')">${s}</button>`).join('')}
+    </div>
+    <span class="info-count" style="margin-left:auto">${activeSubjectFilter?activeSubjectFilter+'学科组 · 教师排名（按续班率降序）':'4个学科组对比 · 默认按续班率降序'}</span>
+  </div>`;
 
-  <div class="table-wrap"><div class="table-scroll"><table>
-    <thead>
-    <tr class="grp-row">
-      <th class="g-basic" colspan="3">基本信息</th>
-      <th class="g-count" colspan="3">学员人次</th>
-      <th class="g-key" colspan="3">核心指标</th>
-      <th class="g-grade" colspan="4">SABC分布</th>
-      <th class="g-comm" colspan="3">学情沟通</th>
-      <th class="g-traj" colspan="4">学习轨迹</th>
-      <th class="g-stick" colspan="1">黏性</th>
-    </tr>
-    <tr>
-      ${cols.map(c=>`<th class="${sortCol===c.key?'sorted':''}" onclick="${c.sortable?`sortBy('${c.key}')`:''}" ${c.tip?`class="tooltip" data-tip="${c.tip}"`:''}>${c.label}${c.sortable?`<span class="sort-i">${sortCol===c.key?(sortDir==='asc'?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('')}
-    </tr>
-    </thead>
-    <tbody>
-      ${data.map((r,i)=>{
-        const rc=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
-        const rrCls=r.renewal_rate>=30?'green':r.renewal_rate>=15?'gold':'red';
-        const saCls=r.sa_pct>=20?'green':r.sa_pct>=10?'gold':'red';
-        return `<tr>
-          <td class="rank ${rc}"><span class="badge">${i+1}</span></td>
-          <td style="font-weight:600">${r.subject}</td>
-          <td class="num">${r.teacher_count}</td>
-          <td class="num">${r.total}</td>
-          <td class="num">${r.original}</td>
-          <td class="num">${r.renewal}</td>
-          <td class="num"><div class="bar-wrap"><span class="bar"><span class="bar-fill ${rrCls}" style="width:${Math.min(r.renewal_rate,100)}%"></span></span><span class="bar-val">${r.renewal_rate.toFixed(1)}%</span></div></td>
-          <td class="num">${r.avg_score.toFixed(1)}</td>
-          <td class="num"><div class="bar-wrap"><span class="bar"><span class="bar-fill ${saCls}" style="width:${Math.min(r.sa_pct,100)}%"></span></span><span class="bar-val">${r.sa_pct.toFixed(1)}%</span></div></td>
-          <td class="num">${r.grade_counts.S?`<span class="grade grade-S">${r.grade_counts.S}</span>`:'-'}</td>
-          <td class="num">${r.grade_counts.A?`<span class="grade grade-A">${r.grade_counts.A}</span>`:'-'}</td>
-          <td class="num">${r.grade_counts.B?`<span class="grade grade-B">${r.grade_counts.B}</span>`:'-'}</td>
-          <td class="num">${r.grade_counts.C?`<span class="grade grade-C">${r.grade_counts.C}</span>`:'-'}</td>
-          ${METRICS.map(m=>`<td class="num">${r.metrics[m.short]?r.metrics[m.short].toFixed(1):'-'}</td>`).join('')}
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table></div></div>`;
+  if(activeSubjectFilter){
+    // ===== 学科筛选模式：显示该学科教师排名 =====
+    const subjectStudents=students.filter(s=>s.s===activeSubjectFilter);
+    let data=aggregateTeachers(subjectStudents);
+    data=sortData(data,sortCol==='subject'||sortCol==='subject_main'||sortCol==='tenure'?'renewal_rate':sortCol,sortDir);
+
+    const cols=[
+      {key:'rank',label:'#',sortable:false},
+      {key:'teacher',label:'教师',sortable:true},
+      {key:'tenure',label:'司龄',sortable:true},
+      {key:'total',label:'人次',sortable:true,cls:'num'},
+      {key:'original',label:'原班',sortable:true,cls:'num'},
+      {key:'renewal',label:'续班',sortable:true,cls:'num'},
+      {key:'renewal_rate',label:'续班率',sortable:true,cls:'num',render:(v)=>{
+        const cls=v>=30?'green':v>=15?'gold':'red';
+        return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v/70*100,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
+      }},
+      {key:'avg_score',label:'均分',sortable:true,cls:'num',render:(v)=>v.toFixed(1)},
+      {key:'sa_pct',label:'SA占比',sortable:true,cls:'num',render:(v)=>{
+        const cls=v>=20?'green':v>=10?'gold':'red';
+        return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v/30*100,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
+      }},
+      {key:'grade_counts.S',label:'S',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-S">${v}</span>`:'-'},
+      {key:'grade_counts.A',label:'A',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-A">${v}</span>`:'-'},
+      {key:'grade_counts.B',label:'B',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-B">${v}</span>`:'-'},
+      {key:'grade_counts.C',label:'C',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-C">${v}</span>`:'-'},
+    ];
+    for(const m of METRICS){
+      cols.push({key:`metrics.${m.short}`,label:m.name,sortable:true,cls:'num',render:(v)=>v?v.toFixed(1):'-',tip:`${m.cat} · 满分${m.max}分`});
+    }
+
+    html+=`
+    <div class="table-wrap"><div class="table-scroll"><table>
+      <thead>
+      <tr class="grp-row">
+        <th class="g-basic" colspan="3">基本信息</th>
+        <th class="g-count" colspan="3">学员人次</th>
+        <th class="g-key" colspan="3">核心指标</th>
+        <th class="g-grade" colspan="4">SABC分布</th>
+        <th class="g-comm" colspan="3">学情沟通</th>
+        <th class="g-traj" colspan="4">学习轨迹</th>
+        <th class="g-stick" colspan="1">黏性</th>
+      </tr>
+      <tr>
+        ${cols.map(c=>`<th class="${sortCol===c.key?'sorted':''}" onclick="${c.sortable?`sortBy('${c.key}')`:''}" ${c.tip?`class="tooltip" data-tip="${c.tip}"`:''}>${c.label}${c.sortable?`<span class="sort-i">${sortCol===c.key?(sortDir==='asc'?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('')}
+      </tr>
+      </thead>
+      <tbody>
+        ${data.map((r,i)=>{
+          const rc=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+          return `<tr>
+            <td class="rank ${rc}"><span class="badge">${i+1}</span></td>
+            <td><span class="teacher-link" onclick="openTeacherDetail('${r.teacher}')">${r.teacher}</span></td>
+            <td style="color:var(--text-2)">${r.tenure||'-'}</td>
+            <td class="num">${r.total}</td>
+            <td class="num">${r.original}</td>
+            <td class="num">${r.renewal}</td>
+            <td class="num">${cols[6].render(r.renewal_rate)}</td>
+            <td class="num">${cols[7].render(r.avg_score)}</td>
+            <td class="num">${cols[8].render(r.sa_pct)}</td>
+            <td class="num">${cols[9].render(r.grade_counts.S)}</td>
+            <td class="num">${cols[10].render(r.grade_counts.A)}</td>
+            <td class="num">${cols[11].render(r.grade_counts.B)}</td>
+            <td class="num">${cols[12].render(r.grade_counts.C)}</td>
+            ${METRICS.map(m=>`<td class="num">${r.metrics[m.short]?r.metrics[m.short].toFixed(1):'-'}</td>`).join('')}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div></div>`;
+  }else{
+    // ===== 全部学科模式：4个学科组对比 =====
+    let data=aggregateSubjects(students);
+    data=sortData(data,sortCol==='teacher'||sortCol==='subject_main'||sortCol==='tenure'?'renewal_rate':sortCol,sortDir);
+
+    const cols=[
+      {key:'rank',label:'#',sortable:false},
+      {key:'subject',label:'学科',sortable:true},
+      {key:'teacher_count',label:'教师数',sortable:true,cls:'num'},
+      {key:'total',label:'人次',sortable:true,cls:'num'},
+      {key:'original',label:'原班',sortable:true,cls:'num'},
+      {key:'renewal',label:'续班',sortable:true,cls:'num'},
+      {key:'renewal_rate',label:'续班率',sortable:true,cls:'num'},
+      {key:'avg_score',label:'均分',sortable:true,cls:'num'},
+      {key:'sa_pct',label:'SA占比',sortable:true,cls:'num'},
+      {key:'grade_counts.S',label:'S',sortable:true,cls:'num'},
+      {key:'grade_counts.A',label:'A',sortable:true,cls:'num'},
+      {key:'grade_counts.B',label:'B',sortable:true,cls:'num'},
+      {key:'grade_counts.C',label:'C',sortable:true,cls:'num'},
+    ];
+    for(const m of METRICS)cols.push({key:`metrics.${m.short}`,label:m.name,sortable:true,cls:'num',tip:`${m.cat} · 满分${m.max}分`});
+
+    html+=`
+    <div class="chart-grid">
+      <div class="chart-card"><h4>各学科续班率对比</h4><div class="chart-box"><canvas id="chart-subj-rr"></canvas></div></div>
+      <div class="chart-card"><h4>各学科SA占比对比</h4><div class="chart-box"><canvas id="chart-subj-sa"></canvas></div></div>
+    </div>
+
+    <div class="table-wrap"><div class="table-scroll"><table>
+      <thead>
+      <tr class="grp-row">
+        <th class="g-basic" colspan="3">基本信息</th>
+        <th class="g-count" colspan="3">学员人次</th>
+        <th class="g-key" colspan="3">核心指标</th>
+        <th class="g-grade" colspan="4">SABC分布</th>
+        <th class="g-comm" colspan="3">学情沟通</th>
+        <th class="g-traj" colspan="4">学习轨迹</th>
+        <th class="g-stick" colspan="1">黏性</th>
+      </tr>
+      <tr>
+        ${cols.map(c=>`<th class="${sortCol===c.key?'sorted':''}" onclick="${c.sortable?`sortBy('${c.key}')`:''}" ${c.tip?`class="tooltip" data-tip="${c.tip}"`:''}>${c.label}${c.sortable?`<span class="sort-i">${sortCol===c.key?(sortDir==='asc'?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('')}
+      </tr>
+      </thead>
+      <tbody>
+        ${data.map((r,i)=>{
+          const rc=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+          const rrCls=r.renewal_rate>=30?'green':r.renewal_rate>=15?'gold':'red';
+          const saCls=r.sa_pct>=20?'green':r.sa_pct>=10?'gold':'red';
+          return `<tr>
+            <td class="rank ${rc}"><span class="badge">${i+1}</span></td>
+            <td style="font-weight:600">${r.subject}</td>
+            <td class="num">${r.teacher_count}</td>
+            <td class="num">${r.total}</td>
+            <td class="num">${r.original}</td>
+            <td class="num">${r.renewal}</td>
+            <td class="num"><div class="bar-wrap"><span class="bar"><span class="bar-fill ${rrCls}" style="width:${Math.min(r.renewal_rate/70*100,100)}%"></span></span><span class="bar-val">${r.renewal_rate.toFixed(1)}%</span></div></td>
+            <td class="num">${r.avg_score.toFixed(1)}</td>
+            <td class="num"><div class="bar-wrap"><span class="bar"><span class="bar-fill ${saCls}" style="width:${Math.min(r.sa_pct/30*100,100)}%"></span></span><span class="bar-val">${r.sa_pct.toFixed(1)}%</span></div></td>
+            <td class="num">${r.grade_counts.S?`<span class="grade grade-S">${r.grade_counts.S}</span>`:'-'}</td>
+            <td class="num">${r.grade_counts.A?`<span class="grade grade-A">${r.grade_counts.A}</span>`:'-'}</td>
+            <td class="num">${r.grade_counts.B?`<span class="grade grade-B">${r.grade_counts.B}</span>`:'-'}</td>
+            <td class="num">${r.grade_counts.C?`<span class="grade grade-C">${r.grade_counts.C}</span>`:'-'}</td>
+            ${METRICS.map(m=>`<td class="num">${r.metrics[m.short]?r.metrics[m.short].toFixed(1):'-'}</td>`).join('')}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div></div>`;
+  }
 
   return html;
 }
@@ -1576,8 +1673,8 @@ function renderCharts(students){
   const IOS_TEAL='#40CBE0';
   const IOS_PINK='#FF375F';
   const IOS_INDIGO='#3A5BA0';
-  // 图表字体：优先使用 macOS 原生 PingFang SC，渲染最清晰圆润
-  const CHART_FONT="'PingFang SC','Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif";
+  // 图表字体：方正大标宋简体优先
+  const CHART_FONT="'FZDaBiaoSong','方正大标宋简体','PingFang SC','Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif";
   Chart.defaults.color=textColor;
   Chart.defaults.borderColor=gridColor;
   Chart.defaults.font.family=CHART_FONT;
@@ -1697,7 +1794,7 @@ function renderCharts(students){
     }
   }
 
-  if(activeTab==='subject'){
+  if(activeTab==='subject'&&activeSubjectFilter===''){
     const subjects=aggregateSubjects(students);
     const labels=subjects.map(s=>s.subject);
     const c1=document.getElementById('chart-subj-rr');
@@ -1806,7 +1903,7 @@ function computeBins(students,field,binSize,max){
 function renderBinnedCharts(students){
   const textColor='#5a5a6e';
   const gridColor='rgba(0,0,0,.04)';
-  const CHART_FONT="'PingFang SC','Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif";
+  const CHART_FONT="'FZDaBiaoSong','方正大标宋简体','PingFang SC','Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif";
 
   // 动态计算分档数据，随状态筛选实时更新
   const scoreBins=computeBins(students,'ts',10,100);
@@ -1854,6 +1951,7 @@ function renderBinnedCharts(students){
         labels:visibleBins.map(b=>b.label),
         datasets:[
           {type:'bar',label:'总人次',data:visibleBins.map(b=>b.count),
+            order:2,
             backgroundColor:(ctx)=>{
               const idx=ctx.dataIndex;
               const v=(visibleBins[idx]&&visibleBins[idx].renewal_rate)||0;
@@ -1869,6 +1967,7 @@ function renderBinnedCharts(students){
             barPercentage:0.7,categoryPercentage:0.8,
             yAxisID:'y'},
           {type:'line',label:'续班率',data:visibleBins.map(b=>b.renewal_rate>0?b.renewal_rate:null),
+            order:1,
             borderColor:theme.lineColor,
             backgroundColor:(ctx)=>{
               const chart=ctx.chart;const{chartArea}=chart;
@@ -1886,7 +1985,7 @@ function renderBinnedCharts(students){
         ]
       },
       options:{responsive:true,maintainAspectRatio:false,
-        layout:{padding:{top:20}},
+        layout:{padding:{top:24}},
         plugins:{legend:{display:true,position:'top',
             labels:{font:{family:CHART_FONT,size:12,weight:'600'},boxWidth:12,usePointStyle:true,pointStyle:'circle',padding:12}}},
         scales:{
@@ -1907,29 +2006,53 @@ function renderBinnedCharts(students){
         id:'binValLabels',
         afterDatasetsDraw(chart){
           const{ctx}=chart;
-          // 柱状图顶部数值：间距加大到12px
+          // 先收集所有标签位置，检测碰撞
+          const barLabels=[];
+          const lineLabels=[];
+          // 柱状图顶部数值
           chart.data.datasets[0].data.forEach((v,i)=>{
             const bar=chart.getDatasetMeta(0).data[i];
             if(!bar)return;
+            barLabels.push({x:bar.x,y:bar.y-12,val:v,barY:bar.y});
+          });
+          // 折线点续班率标签
+          chart.data.datasets[1].data.forEach((v,i)=>{
+            if(!v||v<=0)return;
+            const pt=chart.getDatasetMeta(1).data[i];
+            if(!pt)return;
+            lineLabels.push({x:pt.x,y:pt.y-14,val:v});
+          });
+          // 检测碰撞：如果柱状图标签和折线标签在同一x位置且y距离小于22px，则柱状图标签移到柱内
+          barLabels.forEach(bl=>{
+            let collision=false;
+            for(const ll of lineLabels){
+              if(Math.abs(bl.x-ll.x)<5&&Math.abs(bl.y-ll.y)<22){
+                collision=true;break;
+              }
+            }
             ctx.save();
             ctx.fillStyle='#3d3d5c';
             ctx.font='700 12px '+CHART_FONT.replace(/'/g,'');
             ctx.textAlign='center';
             ctx.shadowColor='rgba(0,0,0,0.15)';ctx.shadowBlur=2;ctx.shadowOffsetY=1;
-            ctx.fillText(v,bar.x,bar.y-12);
+            if(collision){
+              // 碰撞时：柱状图数值显示在柱内顶部（白色字）
+              ctx.fillStyle='rgba(255,255,255,.95)';
+              ctx.shadowColor='rgba(0,0,0,0.3)';ctx.shadowBlur=3;
+              ctx.fillText(bl.val,bl.x,bl.barY+16);
+            }else{
+              ctx.fillText(bl.val,bl.x,bl.y);
+            }
             ctx.restore();
           });
-          // 折线点续班率标签：零值不显示，避免堆叠"0.0%"
-          chart.data.datasets[1].data.forEach((v,i)=>{
-            if(!v||v<=0)return; // 跳过零值
-            const pt=chart.getDatasetMeta(1).data[i];
-            if(!pt)return;
+          // 折线标签始终显示在点上方
+          lineLabels.forEach(ll=>{
             ctx.save();
             ctx.fillStyle=theme.lineColor;
             ctx.font='700 11px '+CHART_FONT.replace(/'/g,'');
             ctx.textAlign='center';
             ctx.shadowColor='rgba(0,0,0,0.2)';ctx.shadowBlur=3;ctx.shadowOffsetY=1;
-            ctx.fillText(v.toFixed(1)+'%',pt.x,pt.y-14);
+            ctx.fillText(ll.val.toFixed(1)+'%',ll.x,ll.y);
             ctx.restore();
           });
         }
@@ -2020,8 +2143,9 @@ function openTeacherDetail(teacherName){
 // ============================================================
 // 交互
 // ============================================================
-function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();if(tab.startsWith('subject_'))trendTab='subject';else trendTab='overall';render();}
-function switchStatus(status){activeStatus=status;selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();trendTab='overall';render();}
+function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();activeSubjectFilter='';if(tab.startsWith('subject_'))trendTab='subject';else trendTab='overall';render();}
+function switchStatus(status){activeStatus=status;selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();activeSubjectFilter='';trendTab='overall';render();}
+function switchSubjectFilter(subject){activeSubjectFilter=subject;sortCol='renewal_rate';sortDir='desc';render();}
 function selectTeacher(t){selectedTeacher=t;closeDropdown();if(t)trendTab='teacher';render();}
 function filterGrade(g){activeGradeFilter=g;activeTagFilters=new Set();render();}
 // 标签筛选：多选切换。点击"全部"清空所有选中；点击具体标签切换其选中状态。
