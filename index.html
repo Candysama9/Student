@@ -1103,40 +1103,35 @@ updateStats();
 renderList();
 trackVisit();
 
-// ===== Visitor Tracking (Abacus API - cross-browser, cross-device) =====
-const ABACUS_BASE='https://abacus.jasoncameron.dev';
-const ABACUS_NS='candysama9_chengdu';
+// ===== Visitor Tracking (CounterAPI - cross-browser, cross-device) =====
+const COUNTER_NS='candysama9.github.io';
+const COUNTER_KEY='chengdu-physics-huashu';
 
 function trackVisit(){
-  jsonpRequest(ABACUS_BASE+'/hit/'+ABACUS_NS+'/visits',function(data){
-    if(data&&data.value!==undefined)document.getElementById('visitCount').textContent=data.value;
-  },function(){
-    let vc=parseInt(localStorage.getItem('huashu_visit_count')||'0')+1;
-    localStorage.setItem('huashu_visit_count',vc);
-    document.getElementById('visitCount').textContent=vc;
-  });
-  const uniqueFlag='huashu_unique_tracked_v2';
-  const isNew=!localStorage.getItem(uniqueFlag);
-  if(isNew)localStorage.setItem(uniqueFlag,'1');
-  const ep=isNew?'/hit/':'/get/';
-  jsonpRequest(ABACUS_BASE+ep+ABACUS_NS+'/unique_visitors',function(data){
-    if(data&&data.value!==undefined)document.getElementById('visitorCount').textContent=data.value;
-  },function(){
-    let uv=parseInt(localStorage.getItem('huashu_visitor_count')||'0');
-    if(isNew){uv+=1;localStorage.setItem('huashu_visitor_count',uv);}
-    document.getElementById('visitorCount').textContent=uv;
-  });
-}
-
-function jsonpRequest(url,onSuccess,onError){
-  const cb='abacus_cb_'+Math.random().toString(36).substr(2,9);
-  const s=document.createElement('script');
-  window[cb]=function(data){delete window[cb];document.body.removeChild(s);onSuccess(data);};
-  s.onerror=function(){delete window[cb];if(s.parentNode)document.body.removeChild(s);
-    fetch(url).then(r=>r.json()).then(onSuccess).catch(onError);};
-  s.src=url+(url.indexOf('?')>=0?'&':'?')+'callback='+cb;
-  document.body.appendChild(s);
-  setTimeout(function(){if(window[cb]){delete window[cb];if(s.parentNode)document.body.removeChild(s);onError();}},5000);
+  fetch('https://counterapi.com/api/'+COUNTER_NS+'/view/'+COUNTER_KEY)
+    .then(r=>r.json())
+    .then(data=>{
+      if(data&&data.value!==undefined)document.getElementById('visitCount').textContent=data.value;
+    })
+    .catch(()=>{
+      let vc=parseInt(localStorage.getItem('huashu_visit_count')||'0')+1;
+      localStorage.setItem('huashu_visit_count',vc);
+      document.getElementById('visitCount').textContent=vc;
+    });
+  const uniqueKey='huashu_unique_tracked';
+  const isUnique=!localStorage.getItem(uniqueKey);
+  if(isUnique)localStorage.setItem(uniqueKey,'1');
+  const uniqueUrl='https://counterapi.com/api/'+COUNTER_NS+'/view/'+COUNTER_KEY+'-unique'+(isUnique?'':'?readOnly=true');
+  fetch(uniqueUrl)
+    .then(r=>r.json())
+    .then(data=>{
+      if(data&&data.value!==undefined)document.getElementById('visitorCount').textContent=data.value;
+    })
+    .catch(()=>{
+      let uv=parseInt(localStorage.getItem('huashu_visitor_count')||'0');
+      if(isUnique){uv+=1;localStorage.setItem('huashu_visitor_count',uv);}
+      document.getElementById('visitorCount').textContent=uv;
+    });
 }
 
 // ===== Feedback Functions =====

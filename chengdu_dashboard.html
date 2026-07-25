@@ -108,10 +108,18 @@ body::after{
 .wrap{max-width:1680px;margin:0 auto;padding:16px 24px 60px}
 
 /* Header */
-.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
-.header-left h1{font-size:1.5rem;font-weight:700;color:var(--text-0)}
-.header-left .sub{font-size:.78rem;color:var(--text-2);margin-top:3px}
-.header-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.header{display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;position:relative}
+.header-left{text-align:center}
+.header-left h1{font-size:1.6rem;font-weight:700;color:var(--text-0);
+  display:inline-block;padding:10px 32px;border-radius:999px;
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow),var(--liquid-highlight);position:relative;overflow:hidden}
+.header-left h1::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:var(--liquid-specular);background-size:300% 100%;opacity:.5;
+  animation:specularFlow 8s ease-in-out infinite}
+.header-left .sub{font-size:.78rem;color:var(--text-2);margin-top:6px}
+.header-right{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .data-badge{
   padding:6px 14px;border-radius:999px;
   background:var(--liquid-fill);border:var(--liquid-stroke);
@@ -312,8 +320,8 @@ thead tr.grp-row th.g-traj{background:rgba(0,122,255,.05);color:var(--brand)}
 thead tr.grp-row th.g-stick{background:rgba(48,213,200,.08);color:var(--accent)}
 tbody tr{border-bottom:1px solid rgba(0,0,0,.03);transition:background .2s,box-shadow .2s}
 tbody tr:hover{background:rgba(0,122,255,.06);box-shadow:inset 0 0 0 1px rgba(0,122,255,.10)}
-tbody td{padding:8px 12px;white-space:nowrap;color:var(--text-1)}
-tbody td.num{font-family:var(--mono);text-align:right}
+tbody td{padding:8px 12px;white-space:nowrap;color:var(--text-1);text-align:center;vertical-align:middle}
+tbody td.num{font-family:var(--mono);text-align:center}
 tbody td.rank{font-weight:600;color:var(--text-0)}
 tbody td.rank .badge{
   display:inline-flex;align-items:center;justify-content:center;
@@ -511,7 +519,7 @@ tbody td.rank .badge{
 .trend-table{width:100%;font-size:.72rem;border-collapse:collapse;margin-top:6px}
 .trend-table th{padding:6px 9px;text-align:left;color:var(--text-2);font-weight:600;border-bottom:1px solid var(--glass-brd);white-space:nowrap}
 .trend-table td{padding:6px 9px;color:var(--text-1);border-bottom:1px solid rgba(0,0,0,.02);white-space:nowrap}
-.trend-table td.num{text-align:right;font-family:var(--mono)}
+.trend-table td.num{text-align:center;font-family:var(--mono)}
 .trend-table .change-up{color:var(--green)}
 .trend-table .change-down{color:var(--red)}
 .trend-table .change-flat{color:var(--text-3)}
@@ -532,7 +540,7 @@ tbody td.rank .badge{
 .trend-compare-table{width:100%;font-size:.72rem;border-collapse:collapse;margin-top:6px}
 .trend-compare-table th{padding:7px 11px;text-align:left;color:var(--text-2);font-weight:700;border-bottom:2px solid var(--glass-brd);white-space:nowrap;position:sticky;top:0;background:rgba(255,255,255,.75);backdrop-filter:var(--liquid-blur)}
 .trend-compare-table td{padding:6px 11px;color:var(--text-1);border-bottom:1px solid rgba(0,0,0,.03);white-space:nowrap}
-.trend-compare-table td.num{text-align:right;font-family:var(--mono)}
+.trend-compare-table td.num{text-align:center;font-family:var(--mono)}
 .trend-compare-table td.tc-name{font-weight:600;color:var(--text-0);max-width:120px;overflow:hidden;text-overflow:ellipsis}
 .trend-compare-table td.tc-name .tc-subj{display:inline-block;font-size:.6rem;color:var(--text-3);margin-left:4px;padding:1px 5px;background:var(--bg-2);border-radius:4px}
 .trend-compare-table .up{color:var(--green)}
@@ -853,7 +861,7 @@ function renderTrends(){
 
 function renderTrendMetricTable(curData,prevData,metricKeys){
   return `<table class="trend-table">
-    <thead><tr><th>指标</th><th style="text-align:right">当日均值</th><th style="text-align:right">环比变化</th></tr></thead>
+    <thead><tr><th>指标</th><th style="text-align:center">当日均值</th><th style="text-align:center">环比变化</th></tr></thead>
     <tbody>
     ${metricKeys.map(mk=>{
       const cv=curData.metrics[mk.k]||0;
@@ -1053,7 +1061,7 @@ function render(){
   <div class="header">
     <div class="header-left">
       <h1>成都学校数据看板</h1>
-      <div class="sub">学员分层续班潜力得分 · 数据日期 ${DASHBOARD.meta.data_date} · ${DASHBOARD.meta.data_source}</div>
+      <div class="sub">数据日期 ${DASHBOARD.meta.data_date}</div>
     </div>
     <div class="header-right">
       <a href="index.html" class="library-link" title="返回话术总库"><span class="lib-icon">📚</span><span>话术总库</span></a>
@@ -1122,7 +1130,7 @@ function render(){
   }
 
   html+=renderRules();
-  html+=`<div class="formula-note">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分 · 公式评级与系统评级100%匹配</div>`;
+  html+=`<div class="formula-note">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分</div>`;
 
   app.innerHTML=html;
   renderCharts(students);
@@ -1544,7 +1552,7 @@ function renderRules(){
       </div>
       <div class="rule-card comm" style="grid-column:1/-1">
         <div class="rule-title">家校沟通SABC <span class="pts">进度满分55分</span></div>
-        <div class="rule-desc">深聊质量+深聊轮次合计，满分=55×课程进度。S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分 · 公式评级与系统评级100%匹配</div>
+        <div class="rule-desc">深聊质量+深聊轮次合计，满分=55×课程进度。S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分</div>
       </div>
     </div>
   </div>`;
