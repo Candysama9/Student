@@ -2021,7 +2021,7 @@ function renderBinnedCharts(students){
   const CHART_THEMES={
     'chart-score-rr':{lineColor:'#0A84FF',lineBg:'rgba(10,132,255',label:'总分'},
     'chart-dcq-rr':{lineColor:'#5E5CE6',lineBg:'rgba(94,92,230',label:'深聊质量'},
-    'chart-dcr-rr':{lineColor:'#40CBE0',lineBg:'rgba(64,203,224',label:'深聊轮次'},
+    'chart-dcr-rr':{lineColor:'#008B8B',lineBg:'rgba(0,139,139',label:'深聊轮次'},
   };
 
   function makeBinnedChart(canvasId,binData){
@@ -2067,8 +2067,8 @@ function renderBinnedCharts(students){
               g.addColorStop(1,theme.lineBg+',0)');
               return g;
             },
-            borderWidth:3,pointRadius:5,pointBackgroundColor:theme.lineColor,
-            pointBorderColor:'#fff',pointBorderWidth:2,pointHoverRadius:7,
+            borderWidth:4,pointRadius:6,pointBackgroundColor:theme.lineColor,
+            pointBorderColor:'#fff',pointBorderWidth:2.5,pointHoverRadius:8,
             tension:.35,yAxisID:'y1',
             // 零值断开折线：0%的点设为null，避免折线贴着X轴形成误导
             spanGaps:true}
