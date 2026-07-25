@@ -1512,6 +1512,79 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
   });
   const teachers=Object.values(teacherMap).sort((a,b)=>b.count-a.count);
 
+  // ===== 教师排名区域（续班率TOP10 + 均分TOP10 + 详情表）=====
+  const subjTeacherData=aggregateTeachers(subjectStudents);
+  const subjTeacherSorted=sortData(subjTeacherData,sortCol==='teacher'||sortCol==='subject_main'||sortCol==='tenure'?'renewal_rate':sortCol,sortDir);
+
+  const subjCols=[
+    {key:'rank',label:'#',sortable:false},
+    {key:'teacher',label:'教师',sortable:true},
+    {key:'tenure',label:'司龄',sortable:true},
+    {key:'total',label:'人次',sortable:true,cls:'num'},
+    {key:'original',label:'原班',sortable:true,cls:'num'},
+    {key:'renewal',label:'续班',sortable:true,cls:'num'},
+    {key:'renewal_rate',label:'续班率',sortable:true,cls:'num',render:(v)=>{
+      const cls=v>=30?'green':v>=15?'gold':'red';
+      return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v/70*100,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
+    }},
+    {key:'avg_score',label:'均分',sortable:true,cls:'num',render:(v)=>v.toFixed(1)},
+    {key:'sa_pct',label:'SA占比',sortable:true,cls:'num',render:(v)=>{
+      const cls=v>=20?'green':v>=10?'gold':'red';
+      return `<div class="bar-wrap"><span class="bar"><span class="bar-fill ${cls}" style="width:${Math.min(v/30*100,100)}%"></span></span><span class="bar-val">${v.toFixed(1)}%</span></div>`;
+    }},
+    {key:'grade_counts.S',label:'S',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-S">${v}</span>`:'-'},
+    {key:'grade_counts.A',label:'A',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-A">${v}</span>`:'-'},
+    {key:'grade_counts.B',label:'B',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-B">${v}</span>`:'-'},
+    {key:'grade_counts.C',label:'C',sortable:true,cls:'num',render:(v)=>v?`<span class="grade grade-C">${v}</span>`:'-'},
+  ];
+  for(const m of METRICS){
+    subjCols.push({key:`metrics.${m.short}`,label:m.name,sortable:true,cls:'num',render:(v)=>v?v.toFixed(1):'-',tip:`${m.cat} · 满分${m.max}分`});
+  }
+
+  let teacherRankHtml=`
+  <div class="chart-grid">
+    <div class="chart-card"><h4>${subjectName}教师续班率 TOP 10</h4><div class="chart-box"><canvas id="chart-subj-${subjectName}-rr"></canvas></div></div>
+    <div class="chart-card"><h4>${subjectName}教师平均分 TOP 10</h4><div class="chart-box"><canvas id="chart-subj-${subjectName}-score"></canvas></div></div>
+  </div>
+
+  <div class="table-wrap"><div class="table-scroll"><table>
+    <thead>
+    <tr class="grp-row">
+      <th class="g-basic" colspan="3">基本信息</th>
+      <th class="g-count" colspan="3">学员人次</th>
+      <th class="g-key" colspan="3">核心指标</th>
+      <th class="g-grade" colspan="4">SABC分布</th>
+      <th class="g-comm" colspan="3">学情沟通</th>
+      <th class="g-traj" colspan="4">学习轨迹</th>
+      <th class="g-stick" colspan="1">黏性</th>
+    </tr>
+    <tr>
+      ${subjCols.map(c=>`<th class="${sortCol===c.key?'sorted':''}" onclick="${c.sortable?`sortBy('${c.key}')`:''}" ${c.tip?`class="tooltip" data-tip="${c.tip}"`:''}>${c.label}${c.sortable?`<span class="sort-i">${sortCol===c.key?(sortDir==='asc'?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('')}
+    </tr>
+    </thead>
+    <tbody>
+      ${subjTeacherSorted.map((r,i)=>{
+        const rc=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+        return `<tr>
+          <td class="rank ${rc}"><span class="badge">${i+1}</span></td>
+          <td><span class="teacher-link" onclick="openTeacherDetail('${r.teacher}')">${r.teacher}</span></td>
+          <td style="color:var(--text-2)">${r.tenure||'-'}</td>
+          <td class="num">${r.total}</td>
+          <td class="num">${r.original}</td>
+          <td class="num">${r.renewal}</td>
+          <td class="num">${subjCols[6].render(r.renewal_rate)}</td>
+          <td class="num">${subjCols[7].render(r.avg_score)}</td>
+          <td class="num">${subjCols[8].render(r.sa_pct)}</td>
+          <td class="num">${subjCols[9].render(r.grade_counts.S)}</td>
+          <td class="num">${subjCols[10].render(r.grade_counts.A)}</td>
+          <td class="num">${subjCols[11].render(r.grade_counts.B)}</td>
+          <td class="num">${subjCols[12].render(r.grade_counts.C)}</td>
+          ${METRICS.map(m=>`<td class="num">${r.metrics[m.short]?r.metrics[m.short].toFixed(1):'-'}</td>`).join('')}
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div></div>`;
+
   let students=subjectStudents;
   if(selectedTeacher)students=students.filter(s=>s.t===selectedTeacher);
   if(activeGradeFilter!=='all')students=students.filter(s=>s.sg===activeGradeFilter);
@@ -1570,7 +1643,7 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
     {key:'ir',label:'续班'},
   );
 
-  let html=`
+  let html=teacherRankHtml+`
   <div class="filter-bar">
     <span class="filter-label">教师筛选</span>
     <div class="dropdown" id="teacherDropdown">
@@ -1870,6 +1943,81 @@ function renderCharts(students){
         },
         plugins:[{
           id:'valLabels2',
+          afterDatasetsDraw(chart){
+            const{ctx}=chart;
+            chart.data.datasets[0].data.forEach((v,i)=>{
+              const bar=chart.getDatasetMeta(0).data[i];
+              ctx.save();ctx.fillStyle='#3d3d5c';ctx.font='700 12px '+CHART_FONT.replace(/'/g,'');ctx.textAlign='left';
+              ctx.shadowColor='rgba(0,0,0,0.15)';ctx.shadowBlur=2;ctx.shadowOffsetY=1;
+              ctx.fillText(v.toFixed(1),bar.x+5,bar.y+3);ctx.restore();
+            });
+          }
+        }]
+      });
+    }
+  }
+
+  // 学情标签页的教师排名图表
+  if(activeTab.startsWith('subject_')){
+    const subjName=activeTab.replace('subject_','');
+    const subjStudents=students.filter(s=>s.s===subjName);
+    const subjTeachers=aggregateTeachers(subjStudents).filter(t=>t.original>0).sort((a,b)=>b.renewal_rate-a.renewal_rate).slice(0,10);
+    const cRR=document.getElementById('chart-subj-'+subjName+'-rr');
+    if(cRR){
+      chartInstances['subj-'+subjName+'-rr']=new Chart(cRR,{
+        type:'bar',
+        data:{labels:subjTeachers.map(t=>t.teacher),datasets:[{
+          label:'续班率',data:subjTeachers.map(t=>t.renewal_rate),
+          backgroundColor:(ctx)=>{
+            const v=ctx.raw;
+            const c=rrColor(v);
+            const chart=ctx.chart;const{chartArea}=chart;
+            if(!chartArea)return c;
+            return makeGradientH(chart.ctx,chartArea,c+'CC',c);
+          },
+          borderColor:(ctx)=>rrColor(ctx.raw),
+          borderWidth:1,borderRadius:8,borderSkipped:false,
+        }]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`续班率: ${c.raw.toFixed(1)}%`}},datalabels:{display:false}},
+          scales:{x:{ticks:{callback:v=>v+'%',font:{family:CHART_FONT,size:12,weight:'600'}},grid:{color:gridColor}},y:{grid:{display:false},ticks:{font:{family:CHART_FONT,size:12,weight:'600'}}}},
+          animation:{duration:400}
+        },
+        plugins:[{
+          id:'valLabelsSubjRR',
+          afterDatasetsDraw(chart){
+            const{ctx}=chart;
+            chart.data.datasets[0].data.forEach((v,i)=>{
+              const bar=chart.getDatasetMeta(0).data[i];
+              ctx.save();ctx.fillStyle='#3d3d5c';ctx.font='700 12px '+CHART_FONT.replace(/'/g,'');ctx.textAlign='left';
+              ctx.shadowColor='rgba(0,0,0,0.15)';ctx.shadowBlur=2;ctx.shadowOffsetY=1;
+              ctx.fillText(v.toFixed(1)+'%',bar.x+5,bar.y+3);ctx.restore();
+            });
+          }
+        }]
+      });
+    }
+
+    const subjTS=aggregateTeachers(subjStudents).sort((a,b)=>b.avg_score-a.avg_score).slice(0,10);
+    const cScore=document.getElementById('chart-subj-'+subjName+'-score');
+    if(cScore){
+      chartInstances['subj-'+subjName+'-score']=new Chart(cScore,{
+        type:'bar',
+        data:{labels:subjTS.map(t=>t.teacher),datasets:[{
+          label:'平均分',data:subjTS.map(t=>t.avg_score),
+          backgroundColor:(ctx)=>{
+            const chart=ctx.chart;const{chartArea}=chart;
+            return makeGradientH(chart.ctx,chartArea,'rgba(0,122,255,.85)','rgba(88,86,214,.85)');
+          },
+          borderColor:'rgba(0,122,255,.9)',borderWidth:1,borderRadius:8,borderSkipped:false,
+        }]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+          plugins:{legend:{display:false}},
+          scales:{x:{grid:{color:gridColor},ticks:{font:{family:CHART_FONT,size:12,weight:'600'}}},y:{grid:{display:false},ticks:{font:{family:CHART_FONT,size:12,weight:'600'}}}},
+          animation:{duration:400}
+        },
+        plugins:[{
+          id:'valLabelsSubjScore',
           afterDatasetsDraw(chart){
             const{ctx}=chart;
             chart.data.datasets[0].data.forEach((v,i)=>{
