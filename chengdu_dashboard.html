@@ -1194,7 +1194,17 @@ function render(){
     return;
   }
 
-  // 分档图表（仅非未开课页面显示）
+  html+=`
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab ${activeTab==='teacher'?'active':''}" onclick="switchTab('teacher')">教师排名</button>
+    <button class="tab ${activeTab==='subject'?'active':''}" onclick="switchTab('subject')">学科组排名</button>
+    ${subjects.map(s=>`<button class="tab ${activeTab==='subject_'+s?'active':''}" onclick="switchTab('subject_${s}')">${s}学情</button>`).join('')}
+  </div>
+  `;
+
+  // 分档图表（紧跟标签栏下方，跟随学科筛选）
+  const binnedStudents=activeTab.startsWith('subject_')?getSubjectStudents(activeTab.replace('subject_','')):students;
   html+=`
   <div class="binned-charts">
     <div class="binned-card">
@@ -1212,15 +1222,6 @@ function render(){
   </div>
   `;
 
-  html+=`
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab ${activeTab==='teacher'?'active':''}" onclick="switchTab('teacher')">教师排名</button>
-    <button class="tab ${activeTab==='subject'?'active':''}" onclick="switchTab('subject')">学科组排名</button>
-    ${subjects.map(s=>`<button class="tab ${activeTab==='subject_'+s?'active':''}" onclick="switchTab('subject_${s}')">${s}学情</button>`).join('')}
-  </div>
-  `;
-
   if(activeTab==='teacher')html+=renderTeacherTab(students);
   else if(activeTab==='subject')html+=renderSubjectTab(students);
   else if(activeTab.startsWith('subject_')){
@@ -1233,7 +1234,7 @@ function render(){
 
   app.innerHTML=html;
   renderCharts(students);
-  renderBinnedCharts(students);
+  renderBinnedCharts(binnedStudents);
 }
 
 function renderKPIs(students){
