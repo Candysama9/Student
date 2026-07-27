@@ -4,21 +4,6 @@
 - `index.html` - 主页面（话术手册）
 - `data.json` - 话术数据文件
 
-## 部署方法
-
-### 方法一：Netlify（推荐，最简单）
-1. 访问 https://app.netlify.com/drop
-2. 将整个 `online-version` 文件夹拖入页面
-3. 获得一个在线链接，即可分享给老师
-
-### 方法二：GitHub Pages
-1. 在 GitHub 创建一个新仓库
-2. 上传 `index.html` 和 `data.json` 两个文件
-3. 在仓库设置 → Pages 中开启 GitHub Pages
-4. 选择 main 分支即可获得在线链接
-
-### 方法三：本地使用
-直接用浏览器打开 `index.html` 即可（需确保 `data.json` 在同一目录）
 
 ## 维护说明
 
