@@ -1183,7 +1183,7 @@ function onSAFormulaClick(){
     box.id='pinyinVerifyBox';
     box.className='formula-note';
     box.style.cssText='border-color:var(--accent);background:rgba(88,86,214,.05)';
-    box.innerHTML=`<span style="font-size:.72rem;color:var(--accent);font-weight:600;white-space:nowrap">🔑 管理员验证</span><input type="text" id="pinyinInput" placeholder="请输入学校拼音（如 chengdu" autocomplete="off" onkeydown="verifyPinyin(event)"><button class="verify-btn" onclick="confirmPinyin()">验证</button>`;
+    box.innerHTML=`<input type="text" id="pinyinInput" placeholder=" " autocomplete="off" onkeydown="verifyPinyin(event)"><button class="verify-btn" onclick="confirmPinyin()">验证</button>`;
     el.after(box);
     document.getElementById('pinyinInput').focus();
   }
@@ -1202,7 +1202,7 @@ function confirmPinyin(){
     render();
   }else{
     input.value='';
-    input.placeholder='拼音错误，请重新输入';
+    input.placeholder=' ';
     input.style.borderColor='#ff3b30';
     input.focus();
   }
@@ -1212,9 +1212,7 @@ function verifyPinyin(event){
   if(event.key==='Enter')confirmPinyin();
 }
 
-function openAdminLocked(){
-  alert('请先点击3次SA评级公式并输入学校拼音完成验证');
-}
+function openAdminLocked(){}
 
 function openAdminPanel(){
   const active=(DASHBOARD.all_students||[]).filter(s=>s.cs==='已开课班级'||s.cs==='已开窗班级');
@@ -1579,7 +1577,7 @@ function render(){
   if(adminVerified){
     html+=`<div class="admin-footer"><button class="admin-btn" onclick="openAdminPanel()">⚙️ 后台管理 · 下载重点跟进名单</button></div>`;
   }else{
-    html+=`<div class="admin-footer"><button class="admin-btn locked" onclick="openAdminLocked()">🔒 后台管理（需验证）</button></div>`;
+    html+=`<div class="admin-footer"><button class="admin-btn locked" onclick="openAdminLocked()">🔒 后台管理</button></div>`;
   }
 
   app.innerHTML=html;
