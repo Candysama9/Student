@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>成都高一物理 · 家校沟通话术总库（在线版）</title>
+<title>高一物理 · 家校沟通话术总库</title>
 <style>
 
 
@@ -632,6 +632,35 @@ footer p {
   transform: scale(1.1);
 }
 
+.back-fab {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 998;
+  padding: 10px 20px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, #147864, #1a9580);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'FZDaBiaoSong','方正大标宋简体','Noto Sans SC','PingFang SC',sans-serif;
+  box-shadow: 0 4px 16px rgba(20,120,100,0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.back-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(20,120,100,0.4);
+}
+.back-fab:active {
+  transform: translateY(0);
+}
+
 /* Edit mode styles */
 body.edit-mode .tier-txt {
   display: none;
@@ -754,6 +783,8 @@ body.edit-mode .copy-btn-qa {
 
 <button class="admin-fab" onclick="showAdminBar()" title="管理">⚙</button>
 
+<a href="javascript:void(0)" class="back-fab" onclick="goBackToDashboard()" title="返回数据看板">← 返回看板</a>
+
 <div class="save-toast" id="saveToast">已保存</div>
 
 <div class="wrapper">
@@ -802,6 +833,18 @@ body.edit-mode .copy-btn-qa {
 <div class="toast" id="toast">已复制到剪贴板</div>
 
 <script>
+// 返回数据看板：优先使用浏览历史返回，无历史时根据 referrer 猜测目标看板
+function goBackToDashboard(){
+  if(document.referrer && document.referrer.includes('_dashboard.html')){
+    history.back();
+  } else if(history.length > 1){
+    history.back();
+  } else {
+    // 无历史记录时的兜底
+    location.href = 'chengdu_dashboard.html';
+  }
+}
+
 const TIERS_META = [
   {"key": "high", "name": "优秀档", "range": "正确率 ≥ 80%", "color": "#27AE60", "tip": "表扬扎实掌握，给拓展提升方向"},
   {"key": "mid", "name": "进步档", "range": "正确率 50% ~ 80%", "color": "#F2994A", "tip": "肯定努力，点明薄弱，给复习建议"},
