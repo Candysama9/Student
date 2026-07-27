@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>杭州学校数据看板 · 学员分层续班潜力</title>
+<style>
+@font-face{font-family:'FZDaBiaoSong';src:local('方正大标宋简体'),local('FZDaBiaoSongJianTi'),local('FZDBSJW--GB1-0'),url('FZDBSJW.woff') format('woff');font-display:swap}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-0:#f0f2f8;--bg-1:#ffffff;--bg-2:#e8edf5;
+  /* Liquid Glass 三层结构：玻璃效果层 / 半透明填充层 / 阴影层 */
+  --glass:rgba(255,255,255,.45);--glass-brd:rgba(255,255,255,.3);
+  --glass-fill:rgba(255,255,255,.35);
+  --glass-hi:rgba(0,122,255,.08);
+  --glass-shadow:rgba(0,0,0,.04);
+  --liquid-blur:blur(36px) saturate(220%);   /* 玻璃效果层：更强模糊+饱和度，智能吸取下层颜色 */
+  --liquid-blur-sm:blur(20px) saturate(180%);
+  --liquid-blur-lg:blur(52px) saturate(250%);
+  --liquid-fill:rgba(255,255,255,.22);       /* 半透明填充层：更低透明度，壁纸颜色更易透出 */
+  --liquid-ripple:radial-gradient(circle,rgba(255,255,255,.4) 0%,transparent 60%); /* 鼠标追踪镜面高光层 */
+  --liquid-fill-strong:rgba(255,255,255,.4);
+  --liquid-stroke:1px solid rgba(255,255,255,.4);
+  --liquid-highlight:inset 0 1px 1px rgba(255,255,255,.7),inset 0 -1px 1px rgba(255,255,255,.15); /* 高光内描边：上亮下暗，模拟真实玻璃折射 */
+  --liquid-specular:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.25) 48%,rgba(255,255,255,.08) 52%,transparent 65%); /* 流光高光层 */
+  --text-0:#1a1a2e;--text-1:#3d3d5c;--text-2:#6e6e80;--text-3:#9e9eaf;
+  --brand:#007AFF;--brand-2:#5856D6;--brand-glow:rgba(0,122,255,.22);
+  --accent:#00C7BE;--accent-2:#30D5C8;--accent-light:rgba(0,199,190,.1);
+  --green:#34C759;--green-bg:rgba(52,199,89,.12);
+  --gold:#FF9500;--gold-bg:rgba(255,149,0,.12);
+  --blue:#007AFF;--blue-bg:rgba(0,122,255,.10);
+  --red:#FF3B30;--red-bg:rgba(255,59,48,.10);
+  --gray:#8E8E93;--gray-bg:rgba(142,142,147,.12);
+  /* iOS Liquid Glass 大圆角：更大更圆润 */
+  --radius:24px;--radius-sm:18px;--radius-lg:32px;--radius-xl:42px;--radius-2xl:52px;
+  --shadow:0 4px 24px rgba(0,0,0,.08),0 0 0 1px rgba(255,255,255,.15) inset,var(--liquid-highlight);
+  --shadow-lg:0 20px 56px rgba(0,0,0,.16),0 0 0 1px rgba(255,255,255,.22) inset,var(--liquid-highlight);
+  --shadow-glow:0 8px 28px rgba(0,122,255,.18);
+  --transition:cubic-bezier(.4,0,.2,1);
+  --font:'FZDaBiaoSong','方正大标宋简体',-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif;
+  --mono:'FZDaBiaoSong','方正大标宋简体',"SF Mono","PingFang SC",monospace;
+  /* 图表字体：保留中文易读性 */
+  --chart-font:'FZDaBiaoSong','方正大标宋简体','Noto Sans SC','PingFang SC',-apple-system,sans-serif;
+}
+html{font-size:14px;scroll-behavior:smooth}
+body{
+  font-family:var(--font);background:var(--bg-0);color:var(--text-0);
+  min-height:100vh;overflow-x:hidden;
+}
+/* iOS Liquid Glass 动态渐变流动壁纸：更鲜艳的色彩，玻璃会智能吸取 */
+body::before{
+  content:'';position:fixed;inset:-10%;z-index:-1;
+  background:
+    radial-gradient(ellipse 60% 50% at 12% 8%,rgba(0,122,255,.25),transparent 60%),
+    radial-gradient(ellipse 50% 40% at 88% 22%,rgba(88,86,214,.22),transparent 60%),
+    radial-gradient(ellipse 60% 45% at 50% 100%,rgba(0,199,190,.20),transparent 60%),
+    radial-gradient(ellipse 45% 35% at 80% 80%,rgba(255,149,0,.15),transparent 60%),
+    radial-gradient(ellipse 40% 30% at 18% 75%,rgba(52,199,89,.15),transparent 60%),
+    radial-gradient(ellipse 35% 25% at 65% 45%,rgba(255,94,138,.12),transparent 60%),
+    linear-gradient(135deg,#eef2fb 0%,#f5f0fa 50%,#eaf6f4 100%);
+  background-size:200% 200%,220% 220%,200% 200%,220% 220%,200% 200%,200% 200%,100% 100%;
+  animation:liquidFlow 18s ease-in-out infinite alternate;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 50%,rgba(255,255,255,.06) 100%);
+}
+@keyframes liquidFlow{
+  0%{background-position:0% 0%,100% 0%,50% 100%,100% 100%,0% 100%,30% 50%,0 0}
+  50%{background-position:30% 20%,70% 30%,60% 80%,80% 70%,20% 80%,50% 30%,0 0}
+  100%{background-position:60% 40%,40% 60%,40% 60%,60% 40%,40% 60%,70% 70%,0 0}
+}
+
+/* Liquid Glass 流光高光层：在玻璃容器上添加移动的镜面反射 */
+.kpi,.metric-card,.rules-section,.notice-bar{
+  position:relative;
+}
+.kpi::after,.metric-card::after,.rules-section::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;
+  background:var(--liquid-specular);
+  background-size:300% 100%;
+  opacity:0;transition:opacity .5s var(--transition);
+  animation:specularFlow 8s ease-in-out infinite;
+}
+.kpi:hover::after,.metric-card:hover::after,.rules-section:hover::after{
+  opacity:1;animation-duration:3s;
+}
+@keyframes specularFlow{
+  0%,100%{background-position:0% 0%}
+  50%{background-position:100% 0%}
+}
+
+/* iOS Liquid Glass 鼠标追踪镜面高光：::before 跟随光标的径向高光，模拟真实玻璃折射 */
+.kpi,.metric-card{
+  --mx:50%;--my:50%;
+}
+.kpi::before,.metric-card::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;
+  background:radial-gradient(circle 180px at var(--mx) var(--my),rgba(255,255,255,.35) 0%,rgba(255,255,255,.08) 35%,transparent 60%);
+  opacity:0;transition:opacity .4s var(--transition);
+  mix-blend-mode:screen;
+}
+.kpi:hover::before,.metric-card:hover::before{opacity:1}
+
+.wrap{max-width:1680px;margin:0 auto;padding:16px 24px 60px}
+
+/* Notice Bar (top) */
+.notice-bar{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;
+  padding:12px 20px;border-radius:var(--radius);
+  background:linear-gradient(135deg,rgba(0,199,190,.14),rgba(48,213,200,.07));
+  border:1px solid rgba(0,199,190,.28);
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow);
+  color:var(--text-1);font-size:.84rem;font-weight:500;
+}
+.notice-bar .notice-icon{font-size:1.05rem;flex-shrink:0}
+.notice-bar .notice-text{flex:1}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;position:relative}
+.header-left{text-align:center}
+.header-left h1{
+  font-size:2rem;font-weight:900;letter-spacing:-0.5px;
+  display:inline-block;padding:14px 40px;border-radius:999px;
+  background:linear-gradient(120deg,#2b3a5c,#5b8cff 60%,#8a6cff);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  border:var(--liquid-stroke);
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow),var(--liquid-highlight);position:relative;overflow:hidden;
+  text-shadow:0 2px 8px rgba(91,140,255,.15)}
+.header-left h1::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:var(--liquid-fill)}
+.header-left h1::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:var(--liquid-specular);background-size:300% 100%;opacity:.5;
+  animation:specularFlow 8s ease-in-out infinite}
+.header-left .sub{font-size:.78rem;color:var(--text-2);margin-top:8px;font-weight:500}
+.header-right{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.data-badge{
+  padding:6px 14px;border-radius:999px;
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  font-size:.72rem;color:var(--text-1);display:flex;align-items:center;gap:6px;
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:0 2px 12px rgba(0,0,0,.06),var(--liquid-highlight);
+  transition:all .3s var(--transition);
+}
+.data-badge:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.10),var(--liquid-highlight)}
+.data-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Back link */
+.back-link{
+  padding:8px 18px;border-radius:999px;font-size:.78rem;font-weight:600;
+  text-decoration:none;color:var(--text-1);font-family:var(--font);
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:0 2px 12px rgba(0,0,0,.06),var(--liquid-highlight);
+  transition:all .3s var(--transition);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
+}
+.back-link:hover{transform:translateY(-1px);color:var(--brand);border-color:var(--brand-glow);box-shadow:0 6px 20px rgba(0,0,0,.10),var(--liquid-highlight)}
+
+/* KPI Cards */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+.kpi{
+  position:relative;overflow:hidden;
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  border-radius:var(--radius);padding:16px 18px;
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow);
+  transition:transform .3s var(--transition),box-shadow .3s var(--transition),border-color .3s var(--transition);
+}
+.kpi::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(circle at 30% 0%,rgba(255,255,255,.5),transparent 60%);
+  opacity:.6;
+}
+.kpi:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:rgba(255,255,255,.45)}
+.kpi{text-align:center}
+.kpi .label{font-size:.68rem;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;text-align:center}
+.kpi .val{font-size:1.75rem;font-weight:700;font-family:var(--mono);color:var(--text-0);position:relative;z-index:1;text-align:center}
+.kpi .val.brand{color:var(--brand)}
+.kpi .val.green{color:var(--green)}
+.kpi .val.gold{color:var(--gold)}
+.kpi .val.accent{color:var(--accent)}
+.kpi .sub{font-size:.68rem;color:var(--text-3);margin-top:2px;position:relative;z-index:1;text-align:center}
+
+/* Metric Section (8 metrics with progress bars) */
+.metric-section{margin-bottom:20px}
+.metric-section h3{font-size:.95rem;font-weight:700;margin-bottom:12px;color:var(--text-0)}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.metric-card{
+  position:relative;overflow:hidden;
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  border-radius:var(--radius);padding:16px 18px;
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow);
+  transition:transform .35s var(--transition),box-shadow .35s var(--transition),border-color .35s var(--transition);
+}
+.metric-card:hover{transform:translateY(-4px) scale(1.01);box-shadow:var(--shadow-lg),0 0 24px var(--brand-glow);border-color:rgba(255,255,255,.5)}
+.mc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;position:relative;z-index:1;gap:8px}
+.mc-name{font-size:.84rem;font-weight:700;color:var(--text-0);white-space:nowrap}
+.mc-cat{font-size:.62rem;color:var(--text-3);padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.5);border:1px solid var(--glass-brd);white-space:nowrap;flex-shrink:0}
+.mc-val{font-size:1.6rem;font-weight:700;font-family:var(--mono);color:var(--text-0);margin-bottom:10px;position:relative;z-index:1;line-height:1.2}
+.mc-max{font-size:.9rem;color:var(--text-3);font-weight:500}
+.mc-bar{width:100%;height:10px;background:rgba(0,0,0,.06);border-radius:5px;overflow:hidden;border:1px solid rgba(0,0,0,.04);position:relative;z-index:1}
+.mc-bar-fill{display:block;height:100%;border-radius:4px;transition:width .8s var(--transition);min-width:2px}
+.mc-bar-fill.green{background:linear-gradient(90deg,#34C759,#30D158)}
+.mc-bar-fill.gold{background:linear-gradient(90deg,#FF9500,#FFB340)}
+.mc-bar-fill.brand{background:linear-gradient(90deg,#007AFF,#5856D6)}
+.mc-bar-fill.red{background:linear-gradient(90deg,#FF3B30,#FF6961)}
+.mc-pct{font-size:.72rem;color:var(--text-2);margin-top:6px;text-align:right;position:relative;z-index:1;font-family:var(--mono)}
+
+/* Rules section */
+.rules-section{
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  border-radius:var(--radius);padding:18px;margin-top:16px;
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow);
+}
+.rules-section h3{font-size:.95rem;font-weight:700;margin-bottom:12px;color:var(--text-0)}
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.rule-card{
+  padding:12px 14px;border-radius:var(--radius-sm);
+  background:rgba(255,255,255,.55);border:1px solid var(--glass-brd);
+  backdrop-filter:var(--liquid-blur-sm);-webkit-backdrop-filter:var(--liquid-blur-sm);
+  transition:all .25s var(--transition);
+}
+.rule-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.08);background:rgba(255,255,255,.7)}
+.rule-card .rule-title{font-size:.78rem;font-weight:700;color:var(--text-0);margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.rule-card .rule-title .pts{font-size:.68rem;color:var(--text-3);font-weight:500}
+.rule-card .rule-desc{font-size:.72rem;color:var(--text-2);line-height:1.6}
+.rule-card.comm{border-left:4px solid var(--brand-2)}
+.rule-card.traj{border-left:4px solid var(--brand)}
+.rule-card.stick{border-left:4px solid var(--accent)}
+
+/* Rules Category Headers */
+.rules-cat-header{font-size:.86rem;font-weight:700;margin:14px 0 8px;padding:8px 14px;border-radius:var(--radius-sm);display:flex;align-items:center;gap:8px}
+.rules-cat-header .cat-pts{font-size:.7rem;font-weight:600;padding:2px 10px;border-radius:999px}
+.rules-cat-header.stick{background:linear-gradient(135deg,rgba(0,199,190,.14),rgba(48,213,200,.08));color:var(--accent)}
+.rules-cat-header.stick .cat-pts{background:rgba(0,199,190,.18);color:var(--accent)}
+.rules-cat-header.traj{background:linear-gradient(135deg,rgba(0,122,255,.10),rgba(88,86,214,.05));color:var(--brand)}
+.rules-cat-header.traj .cat-pts{background:rgba(0,122,255,.14);color:var(--brand)}
+.rules-cat-header.comm{background:linear-gradient(135deg,rgba(88,86,214,.10),rgba(0,122,255,.05));color:var(--brand-2)}
+.rules-cat-header.comm .cat-pts{background:rgba(88,86,214,.14);color:var(--brand-2)}
+.rules-grid{margin-bottom:6px}
+
+/* 话术总库 醒目跳转按钮 — 更大更醒目，液态玻璃质感 */
+.library-link{
+  position:relative;overflow:hidden;text-decoration:none;display:inline-flex;
+  padding:14px 28px;border-radius:999px;font-size:.95rem;font-weight:800;
+  font-family:var(--font);color:#fff;align-items:center;gap:8px;
+  background:linear-gradient(135deg,#FF9500 0%,#FF6B35 50%,#FF3B30 100%);
+  background-size:200% 200%;box-shadow:0 6px 22px rgba(255,149,0,.4),inset 0 1px 2px rgba(255,255,255,.5);
+  transition:all .35s var(--transition);animation:libShine 4s ease-in-out infinite,libFloat 3s ease-in-out infinite;
+  letter-spacing:.3px;
+}
+@keyframes libShine{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes libFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.library-link::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.5) 50%,transparent 70%);
+  background-size:200% 100%;background-position:200% 0;transition:background-position .6s var(--transition);
+}
+.library-link::after{
+  content:'';position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,149,0,.3),rgba(255,59,48,.3));
+  filter:blur(12px);opacity:.6;z-index:-1;
+}
+.library-link:hover{transform:translateY(-3px) scale(1.06);box-shadow:0 12px 32px rgba(255,149,0,.5),inset 0 1px 2px rgba(255,255,255,.6)}
+.library-link:hover::before{background-position:-200% 0}
+.library-link:active{transform:translateY(-1px) scale(1.02)}
+.library-link .lib-icon{font-size:1.15rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
+
+/* Loading */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--glass-brd);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:var(--text-2);font-size:.82rem}
+
+/* Misc */
+.formula-note{font-size:.7rem;color:var(--text-3);margin-top:10px;padding:8px 12px;background:rgba(255,255,255,.5);border-radius:var(--radius-sm);border:1px solid var(--glass-brd)}
+.contact-footer{text-align:center;padding:16px 0 28px;margin-top:8px;color:var(--text-3);font-size:.76rem}
+.contact-footer a{color:var(--brand);text-decoration:none}
+
+/* Liquid Glass hover effects — 更强形变+发光+涟漪 */
+.kpi,.metric-card,.rules-section,.notice-bar{
+  transition:transform .35s var(--transition),box-shadow .35s var(--transition),border-color .35s var(--transition);
+}
+
+@media(max-width:768px){.metric-grid{grid-template-columns:repeat(2,1fr)}.header-left h1{font-size:1.2rem;padding:10px 20px}.kpi-row{grid-template-columns:repeat(2,1fr)}.header{flex-direction:column;gap:10px}.header-right{position:static;transform:none;justify-content:center;width:100%}}
+@media(max-width:1024px) and (min-width:769px){.header-right{position:static;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p id="loadingText">正在加载杭州学校数据...</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// ============================================================
+// 城市配置
+// ============================================================
+const CITY_NAME='杭州';
+const CITY_PINYIN='hangzhou';
+
+// 八项指标定义（与成都看板保持一致）
+const METRICS=[
+  {key:'dcq',name:'深聊质量',max:15,cat:'学情沟通'},
+  {key:'dcr',name:'深聊轮次',max:40,cat:'学情沟通'},
+  {key:'svc',name:'服务卡',max:10,cat:'学情沟通'},
+  {key:'qr',name:'题目回收',max:5,cat:'学习轨迹'},
+  {key:'att',name:'出勤率',max:5,cat:'学习轨迹'},
+  {key:'pp',name:'进步感知',max:5,cat:'学习轨迹'},
+  {key:'cr',name:'课次报告',max:10,cat:'学习轨迹'},
+  {key:'cq',name:'连续在读',max:10,cat:'学员黏性'},
+];
+
+let DASHBOARD=null;
+
+// ============================================================
+// 数据加载
+// ============================================================
+async function loadData(){
+  const ver=Date.now();
+  const paths=[`${CITY_PINYIN}_dashboard.json?v=${ver}`,`./${CITY_PINYIN}_dashboard.json?v=${ver}`];
+  const loadingText=document.getElementById('loadingText');
+  let progressTimer=setTimeout(()=>{
+    if(loadingText)loadingText.textContent='数据仍在加载中，请稍候...';
+  },5000);
+
+  const controller=new AbortController();
+  const timeoutId=setTimeout(()=>controller.abort(),60000);
+
+  for(const p of paths){
+    try{
+      const r=await fetch(p,{cache:'no-store',signal:controller.signal});
+      if(r.ok){
+        const data=await r.json();
+        clearTimeout(progressTimer);
+        clearTimeout(timeoutId);
+        return data;
+      }
+    }catch(e){}
+  }
+  clearTimeout(progressTimer);
+  clearTimeout(timeoutId);
+  throw new Error('无法加载数据文件，请检查网络后刷新重试');
+}
+
+// ============================================================
+// 渲染
+// ============================================================
+function render(){
+  const app=document.getElementById('app');
+  const s=DASHBOARD.summary;
+  const m=DASHBOARD.metrics_avg;
+  const meta=DASHBOARD.meta;
+
+  // KPI 颜色阈值
+  const rr=s.total_renewal_rate;
+  const rrCls=rr>=30?'green':rr>=15?'gold':'brand';
+  const saPct=s.sa_pct;
+  const saCls=saPct>=20?'green':saPct>=10?'gold':'brand';
+  const saRR=s.sa_renewal_rate;
+  const saRRCls=saRR>=30?'green':saRR>=15?'gold':'brand';
+  const avgScore=s.avg_total_score;
+  const avgCls=avgScore>=40?'green':avgScore>=25?'gold':'brand';
+
+  // 八项指标卡片
+  const metricCards=METRICS.map(mt=>{
+    const val=m[mt.key]||0;
+    const pct=mt.max?val/mt.max*100:0;
+    const cls=pct>=60?'green':pct>=30?'gold':'red';
+    return `<div class="metric-card">
+      <div class="mc-head">
+        <span class="mc-name">${mt.name}</span>
+        <span class="mc-cat">${mt.cat}</span>
+      </div>
+      <div class="mc-val">${val.toFixed(2)}<span class="mc-max">/${mt.max}</span></div>
+      <div class="mc-bar"><span class="mc-bar-fill ${cls}" style="width:0%"></span></div>
+      <div class="mc-pct">${pct.toFixed(1)}% 满分折算</div>
+    </div>`;
+  }).join('');
+
+  let html=`
+  <!-- Notice Bar -->
+  <div class="notice-bar">
+    <span class="notice-icon">ℹ️</span>
+    <span class="notice-text">杭州为汇总数据，暂无教师/学科/学员明细</span>
+  </div>
+
+  <div class="header">
+    <div class="header-left">
+      <h1>杭州学校数据看板</h1>
+      <div class="sub">数据日期 ${meta.data_date} · 学员分层续班潜力</div>
+    </div>
+    <div class="header-right">
+      <a href="index.html" class="back-link" title="返回首页">← 返回首页</a>
+      <a href="${CITY_PINYIN}_scripts.html" class="library-link" title="话术总库"><span class="lib-icon">📚</span><span>话术总库</span></a>
+      <div class="data-badge"><span class="dot"></span>数据已加载 · ${meta.total_records.toLocaleString()} 条记录</div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-row">
+    <div class="kpi"><div class="label">总人次</div><div class="val accent">${s.total_original.toLocaleString()}</div><div class="sub">原班 ${s.total_original.toLocaleString()} · 续班 ${s.total_renewal.toLocaleString()}</div></div>
+    <div class="kpi"><div class="label">续班率</div><div class="val ${rrCls}">${rr.toFixed(1)}%</div><div class="sub">续班${s.total_renewal.toLocaleString()}/原班${s.total_original.toLocaleString()}</div></div>
+    <div class="kpi"><div class="label">平均总分</div><div class="val ${avgCls}">${avgScore.toFixed(2)}</div><div class="sub">满分100</div></div>
+    <div class="kpi"><div class="label">SA占比</div><div class="val ${saCls}">${saPct.toFixed(1)}%</div><div class="sub">S+A学员占比</div></div>
+    <div class="kpi"><div class="label">SA学员续班率</div><div class="val ${saRRCls}">${saRR.toFixed(1)}%</div><div class="sub">SA评级学员续班率</div></div>
+    <div class="kpi"><div class="label">学情沟通均分</div><div class="val accent">${s.comm_score.toFixed(2)}</div><div class="sub">满分${s.comm_max}</div></div>
+  </div>
+
+  <!-- 八项指标 -->
+  <div class="metric-section">
+    <h3>八项指标均分 <span style="font-size:.68rem;color:var(--text-3);font-weight:400">按满分折算进度</span></h3>
+    <div class="metric-grid">${metricCards}</div>
+  </div>
+
+  ${renderRules()}
+
+  <div class="formula-note" id="saFormulaRow">SA评级公式：进度比例 = max(0, min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0))，未开课进度比例为0 → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分。当前显示以系统评分为准。</div>
+
+  <div class="contact-footer">如有问题，钉钉联系 <a href="mailto:zhurongcheng@xdf.cn">zhurongcheng@xdf.cn</a></div>
+  `;
+
+  app.innerHTML=html;
+
+  // 进度条动画：延迟一帧后填充
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.mc-bar-fill').forEach((el,i)=>{
+      const mt=METRICS[i];
+      const val=m[mt.key]||0;
+      const pct=mt.max?val/mt.max*100:0;
+      setTimeout(()=>{el.style.width=Math.min(pct,100)+'%';},i*60);
+    });
+  });
+}
+
+function renderRules(){
+  return `
+  <div class="rules-section">
+    <h3>核心指标评分规则 <span style="font-size:.68rem;color:var(--text-3);font-weight:400">总分100分</span></h3>
+    <div class="rules-cat-header stick">学员黏性 <span class="cat-pts">10分</span></div>
+    <div class="rules-grid">
+      <div class="rule-card stick">
+        <div class="rule-title">连续在读 <span class="pts">满分10分</span></div>
+        <div class="rule-desc">同一学员，满足九年级常规体系同科目春季学期在读且在九年级常规体系同科目连续在读≥3季度为10分，连续在读2季度为8分，1季度为6分，只要九年级常规体系在读过，为4分，其余为0分，赋分规则从高至低，不重复赋分</div>
+      </div>
+    </div>
+    <div class="rules-cat-header traj">学习轨迹 <span class="cat-pts">25分</span></div>
+    <div class="rules-grid">
+      <div class="rule-card traj">
+        <div class="rule-title">出勤打卡 <span class="pts">满分5分</span></div>
+        <div class="rule-desc">按照到课率计算分数，到课率=实际出勤次数/应出勤次数，根据课程进度实时更新，得分为到课率×5，满分为5分</div>
+      </div>
+      <div class="rule-card traj">
+        <div class="rule-title">题目回收 <span class="pts">满分5分</span></div>
+        <div class="rule-desc">对于学员的回收数据进行赋分，最终得分=学员作答题目数/教师该班级总发送数×5，满分为5分，通过云教室答题卡发送的题目不计入统计</div>
+      </div>
+      <div class="rule-card traj">
+        <div class="rule-title">报告发送 <span class="pts">满分10分</span></div>
+        <div class="rule-desc">在班级行课期间，使用工作台一键发送学情报告（课次报告）（下载后发送不计入数据）每成功发送一次记2分，同一课次报告若重复发送不重复计分，最高为10分</div>
+      </div>
+      <div class="rule-card traj">
+        <div class="rule-title">进步感知 <span class="pts">满分5分</span></div>
+        <div class="rule-desc">学员在一个班级任意连续三课次出勤，且该课次回收题目总正确率，与班级平均正确率的差值连续增长，计5分，其余情况计0分，最高为5分，不重复赋分</div>
+      </div>
+    </div>
+    <div class="rules-cat-header comm">学情沟通 <span class="cat-pts">65分</span></div>
+    <div class="rules-grid">
+      <div class="rule-card comm">
+        <div class="rule-title">深聊轮次 <span class="pts">满分40分</span></div>
+        <div class="rule-desc">1、行课中老师主动深聊次数（完成双聊+1分，若完成双聊且有2轮该话题对话+3分；每一自然日最多3分，最多计30分）2、行课中家长主动深聊次数（完成双聊+1分，若完成双聊且有2轮该话题对话，+3分，每一自然日最多3分，最多计30分）两项分数相加，最高为40分，若超过40分，记为40分</div>
+      </div>
+      <div class="rule-card comm">
+        <div class="rule-title">深聊质量 <span class="pts">满分15分</span></div>
+        <div class="rule-desc">对教师整个班级与家长的AI质检结果进行赋分，共5项任务（开班沟通、首课沟通、常规行课沟通、进步可视化沟通、续费沟通）对于全部可选收集项及告知项触达比例赋分。在命中50%全部可选收集项及告知项时得满分，不足50%，按照比例赋分，单项目质检最高分为3分，共5个质检项目，最高为15分</div>
+      </div>
+      <div class="rule-card comm">
+        <div class="rule-title">服务卡完善 <span class="pts">满分10分</span></div>
+        <div class="rule-desc">对于必填信息，按照必填项最终用户中心填写比例进行线性赋分，满分为10分</div>
+      </div>
+      <div class="rule-card comm" style="grid-column:1/-1">
+        <div class="rule-title">家校沟通SABC <span class="pts">进度满分55分</span></div>
+        <div class="rule-desc">深聊质量+深聊轮次合计，满分=55×课程进度。S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+async function init(){
+  try{
+    DASHBOARD=await loadData();
+    document.getElementById('app').innerHTML='';
+    render();
+  }catch(e){
+    document.getElementById('loading').innerHTML=`
+      <div style="text-align:center;padding:60px 20px">
+        <p style="color:var(--red);font-size:1rem;font-weight:600">数据加载失败</p>
+        <p style="color:var(--text-2);font-size:.82rem;margin-top:8px">${e.message}</p>
+        <p style="color:var(--text-3);font-size:.72rem;margin-top:12px">请稍后刷新重试，或直接访问：<a href="${CITY_PINYIN}_dashboard.json" style="color:var(--brand)">${CITY_PINYIN}_dashboard.json</a> 检查数据文件是否存在</p>
+        <button onclick="location.reload()" style="margin-top:16px;padding:8px 24px;border:1px solid var(--brand);border-radius:8px;background:var(--glass);color:var(--brand);cursor:pointer;font-family:var(--font)">重新加载</button>
+      </div>`;
+  }
+}
+
+// iOS Liquid Glass 鼠标追踪镜面高光：实时更新 --mx/--my 自定义属性
+(function(){
+  document.addEventListener('mousemove',function(e){
+    const el=e.target.closest('.kpi,.metric-card');
+    if(!el)return;
+    const r=el.getBoundingClientRect();
+    const mx=((e.clientX-r.left)/r.width*100).toFixed(1);
+    const my=((e.clientY-r.top)/r.height*100).toFixed(1);
+    el.style.setProperty('--mx',mx+'%');
+    el.style.setProperty('--my',my+'%');
+  },{passive:true});
+})();
+
+init();
+</script>
+</body>
+</html>

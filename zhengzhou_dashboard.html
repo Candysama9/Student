@@ -632,6 +632,9 @@ tbody td.rank .badge{
 
 /* 后台管理按钮 */
 .admin-footer{text-align:center;padding:32px 0 24px;margin-top:16px;}
+.contact-footer{text-align:center;padding:16px 0 28px;margin-top:8px;color:var(--text-3);font-size:.76rem}
+.period-bar{margin-bottom:0!important;border-bottom:none!important;border-radius:var(--radius-lg) var(--radius-lg) 0 0!important}
+.contact-footer a{color:var(--brand);text-decoration:none}
 .admin-btn{position:relative;overflow:hidden;display:inline-flex;padding:10px 28px;border-radius:999px;font-size:.82rem;font-weight:700;font-family:var(--font);color:#fff;align-items:center;gap:6px;background:linear-gradient(135deg,#5856D6 0%,#4240C0 100%);box-shadow:0 4px 14px rgba(88,86,214,.35),inset 0 1px 2px rgba(255,255,255,.4);transition:all .3s var(--transition);cursor:pointer;border:none;letter-spacing:.3px}
 .admin-btn:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 8px 24px rgba(88,86,214,.45),inset 0 1px 2px rgba(255,255,255,.5)}
 .admin-btn:active{transform:translateY(-1px) scale(1.02)}
@@ -711,6 +714,8 @@ let activeGradeFilter='all';
 let selectedTeacher='';
 let activeTagFilters=new Set(); // 标签筛选（多选）：空集合表示"全部"
 let keyFollowFilter=false; // 重点跟进筛选：未续班且评级为B或C
+let activePeriod='all'; // 期数筛选
+let periodClusters=[]; // 期数聚类结果
 let sortCol='renewal_rate';
 let sortDir='desc';
 let chartInstances={};
@@ -863,7 +868,8 @@ function renderTrends(){
     if(hasSF){
       const crossKey='by_status_'+dimKey;
       if(snap[crossKey]&&snap[crossKey][sk])return snap[crossKey][sk];
-      if(snap.by_status&&snap.by_status[sk]&&dimKey==='overall')return snap.by_status[sk];
+      if(dimKey==='overall'&&snap.by_status&&snap.by_status[sk])return snap.by_status[sk];
+      return null;
     }
     if(dimKey==='overall')return snap.overall;
     return snap['by_'+dimKey]||null;
@@ -967,6 +973,7 @@ function sortByTrend(col){
     trendSortCol=col;
     trendSortDir='desc';
   }
+  if(DASHBOARD.all_students)periodClusters=computePeriods(DASHBOARD.all_students);
   render();
 }
 
@@ -1363,13 +1370,18 @@ async function downloadFollowUpLists(){
 // ============================================================
 function getFilteredStudents(){
   if(!DASHBOARD)return[];
-  if(activeStatus==='all'||activeStatus==='')return DASHBOARD.all_students;
-  if(activeStatus==='未开课班级')return DASHBOARD.not_started_students||[];
-  return DASHBOARD.all_students.filter(s=>s.cs===activeStatus);
+  let pool=applyPeriodFilter(DASHBOARD.all_students||[]);
+  if(activeStatus==='all'||activeStatus==='')return pool;
+  if(activeStatus==='未开课班级'){
+    let nsp=applyPeriodFilter(DASHBOARD.not_started_students||[]);
+    return nsp;
+  }
+  return pool.filter(s=>s.cs===activeStatus);
 }
 
 function getSubjectStudents(subject){
-  let students=DASHBOARD.all_students.filter(s=>s.s===subject);
+  let pool=applyPeriodFilter(DASHBOARD.all_students||[]);
+  let students=pool.filter(s=>s.s===subject);
   if(activeStatus&&activeStatus!=='all'&&activeStatus!=='未开课班级'){
     students=students.filter(s=>s.cs===activeStatus);
   }
@@ -1377,7 +1389,7 @@ function getSubjectStudents(subject){
 }
 
 function getNotStartedStudents(){
-  return DASHBOARD.not_started_students||[];
+  return applyPeriodFilter(DASHBOARD.not_started_students||[]);
 }
 
 // ============================================================
@@ -1484,6 +1496,39 @@ function renderTags(tags){
 // ============================================================
 // 渲染主函数
 // ============================================================
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
+
+function computePeriods(students){
+  const cnt={};
+  for(const s of students){if(s.sd)cnt[s.sd]=(cnt[s.sd]||0)+1;}
+  const dates=Object.keys(cnt).sort();
+  const clusters=[];
+  const CN=['一期','二期','三期','四期','五期','六期','七期','八期'];
+  for(const d of dates){
+    const last=clusters[clusters.length-1];
+    if(last&&daysBetween(last.dates[last.dates.length-1],d)<=2){last.dates.push(d);last.count+=cnt[d];}
+    else clusters.push({dates:[d],count:cnt[d]});
+  }
+  clusters.forEach((c,i)=>c.label=CN[i]||('第'+(i+1)+'期'));
+  return clusters;
+}
+
+function applyPeriodFilter(pool){
+  if(activePeriod==='all'||!periodClusters.length)return pool;
+  const c=periodClusters.find(p=>p.label===activePeriod);
+  if(!c)return pool;
+  const set=new Set(c.dates);
+  return pool.filter(s=>s.sd&&set.has(s.sd));
+}
+
+function switchPeriod(p){
+  activePeriod=p;
+  activeStatus='all';
+  selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();
+  keyFollowFilter=false;activeSubjectFilter='';trendSubjectFilter='';trendTab='overall';
+  render();
+}
+
 function render(){
   const app=document.getElementById('app');
   const students=getFilteredStudents();
@@ -1493,7 +1538,8 @@ function render(){
   if(DASHBOARD.all_students)DASHBOARD.all_students.forEach(s=>{if(s.s)subjectSet.add(s.s)});
   const subjects=[...subjectSet].sort();
 
-  const ss=DASHBOARD.meta.status_stats;
+  let ss=DASHBOARD.meta.status_stats;
+  if(activePeriod!=='all'){const fp=applyPeriodFilter(DASHBOARD.all_students||[]);const sc={};for(const s of fp){if(!sc[s.cs])sc[s.cs]={count:0,original:0,renewal:0};sc[s.cs].count++;if(s.io==='是')sc[s.cs].original++;if(s.ir==='是')sc[s.cs].renewal++;}for(const k in sc){sc[k].renewal_rate=sc[k].original>0?(sc[k].renewal/sc[k].original*100).toFixed(1):0;const scores=fp.filter(s=>s.cs===k&&s.ts!=null).map(s=>s.ts);sc[k].avg_score=scores.length?(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1):0;}ss=sc;}
   const totalAll=DASHBOARD.meta.total_records;
 
   let html=`
@@ -1508,8 +1554,16 @@ function render(){
     </div>
   </div>
 
+  <!-- Period Filter -->
+  ${periodClusters.length>1?`<div class="status-bar period-bar">
+    <span class="label">期数</span>
+    <div class="status-pills">
+      <button class="spill ${activePeriod==='all'?'active':''}" onclick="switchPeriod('all')">全部期数 <span class="cnt">${DASHBOARD.meta.total_records}</span></button>
+      ${periodClusters.map(p=>`<button class="spill ${activePeriod===p.label?'active':''}" onclick="switchPeriod('${p.label}')">${p.label} <span class="cnt">${p.count}</span></button>`).join('')}
+    </div>
+  </div>`:''}
   <!-- Status Filter (Top) -->
-  <div class="status-bar">
+  <div class="status-bar"
     <span class="label">班级状态</span>
     <div class="status-pills">
       <button class="spill ${activeStatus==='all'?'active':''}" onclick="switchStatus('all')">全部 <span class="cnt">${totalAll}</span></button>
@@ -1524,12 +1578,13 @@ function render(){
   <div class="kpi-row">${renderKPIs(students)}</div>
   `;
 
-  // 日数据趋势
-  html+=renderTrends();
+  // 日数据趋势（选期数时隐藏）
+  if(activePeriod==='all')html+=renderTrends();
 
   // 未开课单独页面（不显示分档图表，因为未开课班级不参与续班率计算）
   if(activeStatus==='未开课班级'){
     html+=renderNotStartedTab();
+    html+=`<div class="contact-footer">如有问题，钉钉联系 zhurongcheng@xdf.cn</div>`;
     app.innerHTML=html;
     return;
   }
@@ -1572,7 +1627,7 @@ function render(){
   html+=renderRules();
 
   // 统计公式评级与系统评级不一致的数量
-  html+=`<div class="formula-note" id="saFormulaRow" onclick="onSAFormulaClick()">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分。当前显示以系统评分为准。</div>`;
+  html+=`<div class="formula-note" id="saFormulaRow" onclick="onSAFormulaClick()">SA评级公式：进度比例 = max(0, min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0))，未开课进度比例为0 → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分。当前显示以系统评分为准。</div>`;
 
   if(adminVerified){
     html+=`<div class="admin-footer"><button class="admin-btn" onclick="openAdminPanel()">⚙️ 后台管理 · 下载重点跟进名单</button></div>`;
@@ -1580,6 +1635,7 @@ function render(){
     html+=`<div class="admin-footer"><button class="admin-btn locked" onclick="openAdminLocked()">🔒 后台管理</button></div>`;
   }
 
+  html+=`<div class="contact-footer">如有问题，钉钉联系 zhurongcheng@xdf.cn</div>`;
   app.innerHTML=html;
   renderCharts(students);
   renderBinnedCharts(binnedStudents);
@@ -2792,7 +2848,8 @@ async function init(){
     // 并行加载日数据历史（失败不阻塞主看板）
     try{DAILY_HISTORY=await loadHistory();}catch(e){console.warn('日数据历史加载失败:',e);}
     // 默认班级状态优先级：已开窗 → 已开课 → 已结课
-    const ss=DASHBOARD.meta.status_stats;
+    let ss=DASHBOARD.meta.status_stats;
+  if(activePeriod!=='all'){const fp=applyPeriodFilter(DASHBOARD.all_students||[]);const sc={};for(const s of fp){if(!sc[s.cs])sc[s.cs]={count:0,original:0,renewal:0};sc[s.cs].count++;if(s.io==='是')sc[s.cs].original++;if(s.ir==='是')sc[s.cs].renewal++;}for(const k in sc){sc[k].renewal_rate=sc[k].original>0?(sc[k].renewal/sc[k].original*100).toFixed(1):0;const scores=fp.filter(s=>s.cs===k&&s.ts!=null).map(s=>s.ts);sc[k].avg_score=scores.length?(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1):0;}ss=sc;}
     if((ss['已开窗班级']||{}).count>0)activeStatus='已开窗班级';
     else if((ss['已开课班级']||{}).count>0)activeStatus='已开课班级';
     else if((ss['已结课班级']||{}).count>0)activeStatus='已结课班级';

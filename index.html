@@ -22,6 +22,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue'
 .stat{text-align:center;flex:1}
 .stat-val{font-size:1.3rem;font-weight:700;color:#667eea}
 .stat-label{font-size:.7rem;color:#999;margin-top:2px}
+.center-card{background:rgba(255,255,255,.15);backdrop-filter:blur(20px);border-radius:20px;padding:28px;text-decoration:none;color:#fff;transition:all .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.15);border:2px solid rgba(255,255,255,.3);position:relative;overflow:hidden;margin-bottom:24px;display:flex;align-items:center;gap:20px}
+.center-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.25);background:rgba(255,255,255,.22)}
+.center-icon{font-size:2.5rem}
+.center-info h2{font-size:1.3rem;font-weight:700;margin-bottom:4px}
+.center-info p{font-size:.85rem;opacity:.85}
 .footer{text-align:center;margin-top:48px;color:rgba(255,255,255,.6);font-size:.8rem}
 </style>
 </head>
@@ -31,6 +36,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue'
     <h1>多城市数据看板</h1>
     <p>学员分层续班潜力 · 数据日期 2026-07-26</p>
   </div>
+  <a class="center-card" href="center_dashboard.html">
+    <div class="center-icon">📊</div>
+    <div class="center-info">
+      <h2>中心管理者总看板</h2>
+      <p>全量核心数据汇总 · 各校对比 · 一键进入各校看板</p>
+    </div>
+  </a>
   <div class="city-grid">
     <a class="city-card" href="chengdu_dashboard.html">
       <div class="city-icon">🐼</div>
@@ -68,8 +80,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue'
         <div class="stat"><div class="stat-val">30.4</div><div class="stat-label">平均总分</div></div>
       </div>
     </a>
+    <a class="city-card" href="hangzhou_dashboard.html">
+      <div class="city-icon">🍵</div>
+      <div class="city-name">杭州</div>
+      <div class="city-desc">汇总数据 · 29685名学员</div>
+      <div class="city-stats">
+        <div class="stat"><div class="stat-val">38.0%</div><div class="stat-label">续班率</div></div>
+        <div class="stat"><div class="stat-val">25.7</div><div class="stat-label">平均总分</div></div>
+      </div>
+    </a>
   </div>
-  <div class="footer">数据来源：观远BI · 学员分层续班潜力得分</div>
+  <div class="footer">数据来源：观远BI · 学员分层续班潜力得分 · 如有问题，钉钉联系 zhurongcheng@xdf.cn</div>
 </div>
 </body>
 </html>

@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>中心管理者总看板 · 全校核心数据汇总</title>
+<style>
+@font-face{font-family:'FZDaBiaoSong';src:local('方正大标宋简体'),local('FZDaBiaoSongJianTi'),local('FZDBSJW--GB1-0'),url('FZDBSJW.woff') format('woff');font-display:swap}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-0:#f0f2f8;--bg-1:#ffffff;--bg-2:#e8edf5;
+  --glass:rgba(255,255,255,.45);--glass-brd:rgba(255,255,255,.3);
+  --glass-fill:rgba(255,255,255,.35);
+  --glass-hi:rgba(0,122,255,.08);
+  --glass-shadow:rgba(0,0,0,.04);
+  --liquid-blur:blur(36px) saturate(220%);
+  --liquid-blur-sm:blur(20px) saturate(180%);
+  --liquid-blur-lg:blur(52px) saturate(250%);
+  --liquid-fill:rgba(255,255,255,.22);
+  --liquid-ripple:radial-gradient(circle,rgba(255,255,255,.4) 0%,transparent 60%);
+  --liquid-fill-strong:rgba(255,255,255,.4);
+  --liquid-stroke:1px solid rgba(255,255,255,.4);
+  --liquid-highlight:inset 0 1px 1px rgba(255,255,255,.7),inset 0 -1px 1px rgba(255,255,255,.15);
+  --liquid-specular:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.25) 48%,rgba(255,255,255,.08) 52%,transparent 65%);
+  --text-0:#1a1a2e;--text-1:#3d3d5c;--text-2:#6e6e80;--text-3:#9e9eaf;
+  --brand:#007AFF;--brand-2:#5856D6;--brand-glow:rgba(0,122,255,.22);
+  --accent:#00C7BE;--accent-2:#30D5C8;--accent-light:rgba(0,199,190,.1);
+  --green:#34C759;--green-bg:rgba(52,199,89,.12);
+  --gold:#FF9500;--gold-bg:rgba(255,149,0,.12);
+  --blue:#007AFF;--blue-bg:rgba(0,122,255,.10);
+  --red:#FF3B30;--red-bg:rgba(255,59,48,.10);
+  --gray:#8E8E93;--gray-bg:rgba(142,142,147,.12);
+  --radius:24px;--radius-sm:18px;--radius-lg:32px;--radius-xl:42px;--radius-2xl:52px;
+  --shadow:0 4px 24px rgba(0,0,0,.08),0 0 0 1px rgba(255,255,255,.15) inset,var(--liquid-highlight);
+  --shadow-lg:0 20px 56px rgba(0,0,0,.16),0 0 0 1px rgba(255,255,255,.22) inset,var(--liquid-highlight);
+  --shadow-glow:0 8px 28px rgba(0,122,255,.18);
+  --transition:cubic-bezier(.4,0,.2,1);
+  --font:'FZDaBiaoSong','方正大标宋简体',-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif;
+  --mono:'FZDaBiaoSong','方正大标宋简体',"SF Mono","PingFang SC",monospace;
+}
+html{font-size:14px;scroll-behavior:smooth}
+body{
+  font-family:var(--font);background:var(--bg-0);color:var(--text-0);
+  min-height:100vh;overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:-10%;z-index:-1;
+  background:
+    radial-gradient(ellipse 60% 50% at 12% 8%,rgba(0,122,255,.25),transparent 60%),
+    radial-gradient(ellipse 50% 40% at 88% 22%,rgba(88,86,214,.22),transparent 60%),
+    radial-gradient(ellipse 60% 45% at 50% 100%,rgba(0,199,190,.20),transparent 60%),
+    radial-gradient(ellipse 45% 35% at 80% 80%,rgba(255,149,0,.15),transparent 60%),
+    radial-gradient(ellipse 40% 30% at 18% 75%,rgba(52,199,89,.15),transparent 60%),
+    radial-gradient(ellipse 35% 25% at 65% 45%,rgba(255,94,138,.12),transparent 60%),
+    linear-gradient(135deg,#eef2fb 0%,#f5f0fa 50%,#eaf6f4 100%);
+  background-size:200% 200%,220% 220%,200% 200%,220% 220%,200% 200%,200% 200%,100% 100%;
+  animation:liquidFlow 18s ease-in-out infinite alternate;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 50%,rgba(255,255,255,.06) 100%);
+}
+@keyframes liquidFlow{
+  0%{background-position:0% 0%,100% 0%,50% 100%,100% 100%,0% 100%,30% 50%,0 0}
+  50%{background-position:30% 20%,70% 30%,60% 80%,80% 70%,20% 80%,50% 30%,0 0}
+  100%{background-position:60% 40%,40% 60%,40% 60%,60% 40%,40% 60%,70% 70%,0 0}
+}
+
+/* Liquid Glass specular + cursor highlight */
+.kpi,.chart-card,.table-wrap,.trend-section,.status-bar{
+  position:relative;
+}
+.kpi::after,.table-wrap::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;
+  background:var(--liquid-specular);background-size:300% 100%;
+  opacity:0;transition:opacity .5s var(--transition);
+  animation:specularFlow 8s ease-in-out infinite;
+}
+.kpi:hover::after,.table-wrap:hover::after{opacity:1;animation-duration:3s}
+@keyframes specularFlow{0%,100%{background-position:0% 0%}50%{background-position:100% 0%}}
+
+.kpi{--mx:50%;--my:50%;}
+.kpi::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;
+  background:radial-gradient(circle 180px at var(--mx) var(--my),rgba(255,255,255,.35) 0%,rgba(255,255,255,.08) 35%,transparent 60%);
+  opacity:0;transition:opacity .4s var(--transition);mix-blend-mode:screen;
+}
+.kpi:hover::before{opacity:1}
+
+.wrap{max-width:1680px;margin:0 auto;padding:16px 24px 60px}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;position:relative}
+.header-left{text-align:center}
+.header-left h1{
+  font-size:2rem;font-weight:900;letter-spacing:-0.5px;
+  display:inline-block;padding:14px 40px;border-radius:999px;
+  background:linear-gradient(120deg,#2b3a5c,#5b8cff 60%,#8a6cff);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  border:var(--liquid-stroke);
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow),var(--liquid-highlight);position:relative;overflow:hidden;
+  text-shadow:0 2px 8px rgba(91,140,255,.15)}
+.header-left h1::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:var(--liquid-fill)}
+.header-left h1::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:var(--liquid-specular);background-size:300% 100%;opacity:.5;
+  animation:specularFlow 8s ease-in-out infinite}
+.header-left .sub{font-size:.78rem;color:var(--text-2);margin-top:8px;font-weight:500}
+.header-right{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.data-badge{
+  padding:6px 14px;border-radius:999px;
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  font-size:.72rem;color:var(--text-1);display:flex;align-items:center;gap:6px;
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:0 2px 12px rgba(0,0,0,.06),var(--liquid-highlight);
+  transition:all .3s var(--transition);
+}
+.data-badge:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.10),var(--liquid-highlight)}
+.data-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* KPI Cards */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px}
+.kpi{
+  position:relative;overflow:hidden;
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  border-radius:var(--radius);padding:18px 20px;
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow);text-align:center;
+  transition:transform .35s var(--transition),box-shadow .35s var(--transition),border-color .35s var(--transition);
+}
+.kpi:hover{transform:translateY(-4px) scale(1.01);box-shadow:var(--shadow-lg),0 0 24px var(--brand-glow);border-color:rgba(255,255,255,.5)}
+.kpi .label{font-size:.68rem;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;text-align:center}
+.kpi .val{font-size:1.85rem;font-weight:700;font-family:var(--mono);color:var(--text-0);position:relative;z-index:1;text-align:center}
+.kpi .val.brand{color:var(--brand)}
+.kpi .val.green{color:var(--green)}
+.kpi .val.gold{color:var(--gold)}
+.kpi .val.accent{color:var(--accent)}
+.kpi .val.purple{color:var(--brand-2)}
+.kpi .sub{font-size:.68rem;color:var(--text-3);margin-top:4px;position:relative;z-index:1;text-align:center}
+.kpi .sub .up{color:var(--green)}
+.kpi .sub .down{color:var(--red)}
+
+/* Table */
+.table-wrap{
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  border-radius:var(--radius-lg);overflow:hidden;
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow);
+  transition:transform .35s var(--transition),box-shadow .35s var(--transition),border-color .35s var(--transition);
+}
+.table-scroll{overflow-x:auto;max-height:none}
+table{width:100%;border-collapse:collapse;font-size:.78rem;min-width:1100px}
+thead{position:sticky;top:0;z-index:10}
+thead th{
+  background:rgba(255,255,255,.96);backdrop-filter:var(--liquid-blur);
+  padding:12px 14px;text-align:center;font-weight:600;color:var(--text-1);
+  white-space:nowrap;border-bottom:1px solid var(--glass-brd);
+  user-select:none;transition:color .15s,background .15s;
+}
+thead th:hover{color:var(--brand);background:rgba(255,255,255,1)}
+thead th .col-sub{display:block;font-size:.58rem;font-weight:400;color:var(--text-3);margin-top:2px}
+tbody tr{border-bottom:1px solid rgba(0,0,0,.03);transition:background .2s,box-shadow .2s}
+tbody tr:hover{background:rgba(0,122,255,.06);box-shadow:inset 0 0 0 1px rgba(0,122,255,.10)}
+tbody td{padding:10px 14px;white-space:nowrap;color:var(--text-1);text-align:center;vertical-align:middle}
+tbody td.num{font-family:var(--mono);text-align:center}
+
+/* School name cell */
+.school-cell{text-align:left!important;padding-left:18px!important}
+.school-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.88rem;font-weight:700;color:var(--text-0);
+  text-decoration:none;padding:6px 14px;border-radius:12px;
+  transition:all .25s var(--transition);
+  background:rgba(255,255,255,.4);border:1px solid var(--glass-brd);
+}
+.school-link:hover{
+  background:linear-gradient(135deg,rgba(0,122,255,.12),rgba(88,86,214,.08));
+  border-color:var(--brand-glow);color:var(--brand);
+  transform:translateX(3px);box-shadow:0 4px 14px rgba(0,122,255,.12);
+}
+.school-link .arrow{font-size:.7rem;opacity:.5;transition:opacity .2s,transform .2s}
+.school-link:hover .arrow{opacity:1;transform:translateX(3px)}
+
+/* Rate value coloring */
+.rate-cell{text-align:center}
+.rate-val{font-family:var(--mono);font-size:.85rem;font-weight:700;display:block}
+.rate-val.r-green{color:var(--green)}
+.rate-val.r-gold{color:var(--gold)}
+.rate-val.r-default{color:var(--text-1)}
+.rate-val.r-dash{color:var(--text-3);font-weight:400}
+.rate-change{font-size:.62rem;font-weight:600;display:inline-flex;align-items:center;gap:1px;margin-top:2px}
+.rate-change.up{color:var(--green)}
+.rate-change.down{color:var(--red)}
+.rate-change.flat{color:var(--text-3)}
+.rate-change.dash{color:var(--text-3)}
+
+/* Progress badge */
+.progress-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 12px;border-radius:999px;font-size:.72rem;font-weight:600;
+  background:var(--blue-bg);color:var(--blue);border:1px solid rgba(0,122,255,.2);
+}
+.progress-badge .day{font-family:var(--mono)}
+
+/* Loading */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:14px}
+.spinner{width:40px;height:40px;border:3px solid var(--glass-brd);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:var(--text-2);font-size:.82rem}
+.loading .progress-text{font-size:.72rem;color:var(--text-3);margin-top:4px}
+.loading .progress-bar{width:280px;height:6px;background:rgba(0,0,0,.06);border-radius:3px;overflow:hidden;margin-top:6px}
+.loading .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-2));border-radius:3px;transition:width .4s var(--transition);width:0%}
+
+/* Hidden */
+.hidden{display:none!important}
+
+/* Footer */
+.contact-footer{text-align:center;padding:20px 0 28px;margin-top:20px;color:var(--text-3);font-size:.78rem}
+.contact-footer a{color:var(--brand);text-decoration:none;font-weight:500}
+.contact-footer a:hover{text-decoration:underline}
+
+/* ===== Password Gate ===== */
+.pwd-overlay{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.12);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  padding:20px;
+}
+.pwd-overlay.hidden{display:none!important}
+.pwd-card{
+  position:relative;overflow:hidden;
+  background:var(--liquid-fill-strong);border:var(--liquid-stroke);
+  border-radius:var(--radius-lg);padding:40px 44px;width:100%;max-width:420px;
+  box-shadow:var(--shadow-lg);
+  backdrop-filter:var(--liquid-blur-lg);-webkit-backdrop-filter:var(--liquid-blur-lg);
+  text-align:center;
+}
+.pwd-card::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.5),transparent 60%);
+  opacity:.6;
+}
+.pwd-card::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:var(--liquid-specular);background-size:300% 100%;opacity:.4;
+  animation:specularFlow 8s ease-in-out infinite;
+}
+.pwd-lock{
+  width:64px;height:64px;margin:0 auto 18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1.8rem;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff;box-shadow:0 8px 28px var(--brand-glow),inset 0 1px 2px rgba(255,255,255,.4);
+  position:relative;z-index:1;
+  animation:lockFloat 3s ease-in-out infinite;
+}
+@keyframes lockFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.pwd-card h2{
+  font-size:1.3rem;font-weight:800;color:var(--text-0);margin-bottom:6px;
+  position:relative;z-index:1;
+}
+.pwd-card .pwd-sub{
+  font-size:.76rem;color:var(--text-2);margin-bottom:24px;
+  position:relative;z-index:1;
+}
+.pwd-input-wrap{
+  position:relative;z-index:1;display:flex;gap:8px;margin-bottom:10px;
+}
+.pwd-input{
+  flex:1;padding:12px 16px;border-radius:14px;
+  border:1.5px solid var(--glass-brd);
+  background:rgba(255,255,255,.65);color:var(--text-0);
+  font-size:.92rem;font-family:var(--font);
+  backdrop-filter:var(--liquid-blur-sm);-webkit-backdrop-filter:var(--liquid-blur-sm);
+  transition:all .25s var(--transition);text-align:center;letter-spacing:4px;
+}
+.pwd-input:focus{
+  outline:none;border-color:var(--brand);
+  box-shadow:0 0 0 4px var(--brand-glow);
+  background:rgba(255,255,255,.85);
+}
+.pwd-input::placeholder{color:var(--text-3);letter-spacing:0}
+.pwd-btn{
+  padding:12px 24px;border-radius:14px;border:none;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff;font-size:.85rem;font-weight:700;font-family:var(--font);
+  cursor:pointer;transition:all .25s var(--transition);
+  box-shadow:0 4px 14px var(--brand-glow);white-space:nowrap;
+}
+.pwd-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,122,255,.3)}
+.pwd-btn:active{transform:scale(.96)}
+.pwd-error{
+  font-size:.74rem;color:var(--red);min-height:18px;margin-top:6px;
+  position:relative;z-index:1;opacity:0;transition:opacity .2s;
+}
+.pwd-error.show{opacity:1}
+.pwd-hint{
+  font-size:.68rem;color:var(--text-3);margin-top:16px;
+  position:relative;z-index:1;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  10%,30%,50%,70%,90%{transform:translateX(-8px)}
+  20%,40%,60%,80%{transform:translateX(8px)}
+}
+.pwd-card.shake{animation:shake .4s var(--transition)}
+.pwd-card.shake .pwd-input{border-color:var(--red);box-shadow:0 0 0 4px rgba(255,59,48,.12)}
+
+/* Nav switch */
+.nav-switch{
+  display:flex;gap:0;border-radius:999px;overflow:hidden;
+  background:var(--liquid-fill);border:var(--liquid-stroke);
+  backdrop-filter:var(--liquid-blur);-webkit-backdrop-filter:var(--liquid-blur);
+  box-shadow:var(--shadow),var(--shadow-glow);
+}
+.nav-switch a{
+  padding:8px 18px;font-size:.78rem;font-weight:600;text-decoration:none;
+  color:var(--text-2);transition:all .3s var(--transition);font-family:var(--font);
+  display:flex;align-items:center;gap:5px;
+}
+.nav-switch a:hover{color:var(--text-0);background:rgba(255,255,255,.15)}
+.nav-switch a.active{
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff;box-shadow:0 2px 12px var(--brand-glow);
+}
+
+/* Summary note */
+.summary-note{
+  font-size:.72rem;color:var(--text-3);margin-bottom:14px;padding:8px 16px;
+  background:rgba(255,255,255,.4);border:1px solid var(--glass-brd);
+  border-radius:var(--radius-sm);display:flex;align-items:center;gap:8px;
+  backdrop-filter:var(--liquid-blur-sm);-webkit-backdrop-filter:var(--liquid-blur-sm);
+}
+.summary-note .dot-i{color:var(--brand)}
+
+@media(max-width:768px){
+  .header-left h1{font-size:1.3rem;padding:10px 20px}
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .header{flex-direction:column;gap:10px}
+  .header-right{position:static;transform:none;justify-content:center;width:100%}
+  .pwd-card{padding:32px 28px}
+}
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div class="pwd-overlay" id="pwdOverlay">
+  <div class="pwd-card" id="pwdCard">
+    <div class="pwd-lock">&#128274;</div>
+    <h2>中心管理者总看板</h2>
+    <p class="pwd-sub">请输入访问密码以查看全校核心数据汇总</p>
+    <div class="pwd-input-wrap">
+      <input type="password" class="pwd-input" id="pwdInput" placeholder="输入密码" autocomplete="off" autofocus>
+      <button class="pwd-btn" id="pwdBtn" onclick="verifyPwd()">进入</button>
+    </div>
+    <div class="pwd-error" id="pwdError">密码错误，请重新输入</div>
+    <div class="pwd-hint">提示：请联系管理员获取访问密码</div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div class="wrap hidden" id="app">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p id="loadingText">正在加载各校数据...</p>
+    <div class="progress-bar"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <p class="progress-text" id="progressText">准备中...</p>
+  </div>
+
+  <div id="content" class="hidden">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>中心管理者总看板</h1>
+        <div class="sub">全校核心数据汇总 · 一键跳转各校看板</div>
+      </div>
+      <div class="header-right">
+        <div class="data-badge" id="dataBadge">
+          <span class="dot"></span>
+          <span id="badgeText">数据加载中</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top KPI Summary -->
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <!-- Summary Note -->
+    <div class="summary-note">
+      <span class="dot-i">&#9432;</span>
+      <span>续班率颜色：<span style="color:var(--green);font-weight:600">绿色</span> &ge;40% &nbsp;|&nbsp; <span style="color:var(--gold);font-weight:600">金色</span> &ge;20% &nbsp;|&nbsp; 环比 <span style="color:var(--green)">&#9650;</span>涨 <span style="color:var(--red)">&#9660;</span>跌</span>
+    </div>
+
+    <!-- School Comparison Table -->
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="schoolTable">
+          <thead>
+            <tr>
+              <th>学校</th>
+              <th>教师数</th>
+              <th>总人次</th>
+              <th>已开窗续班率<span class="col-sub">当期 / 环比</span></th>
+              <th>已结课续班率<span class="col-sub">当期 / 环比</span></th>
+              <th>SA续班率<span class="col-sub">当期 / 环比</span></th>
+              <th>开课进度<span class="col-sub">第几期·第几天</span></th>
+              <th>均分</th>
+              <th>学情沟通均分<span class="col-sub">满分65</span></th>
+              <th>SA占比</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Nav Switch -->
+    <div style="display:flex;justify-content:center;gap:10px;margin-top:24px;flex-wrap:wrap">
+      <div class="nav-switch" id="navSwitch"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="contact-footer">
+      如有问题，钉钉联系 <a href="#">zhurongcheng@xdf.cn</a>
+    </div>
+  </div>
+</div>
+
+<!-- SheetJS + JSZip for future export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+<script>
+/* ===== Password Gate ===== */
+const CENTER_PWD='27rk';
+let unlocked=false;
+if(new URLSearchParams(location.search).get('k')===CENTER_PWD){unlocked=true;}
+if(sessionStorage.getItem('center_unlocked')==='1'){unlocked=true;}
+
+const pwdOverlay=document.getElementById('pwdOverlay');
+const pwdCard=document.getElementById('pwdCard');
+const pwdInput=document.getElementById('pwdInput');
+const pwdError=document.getElementById('pwdError');
+
+function verifyPwd(){
+  const val=pwdInput.value.trim();
+  if(val===CENTER_PWD){
+    sessionStorage.setItem('center_unlocked','1');
+    unlocked=true;
+    pwdOverlay.classList.add('hidden');
+    initApp();
+  }else{
+    pwdError.classList.add('show');
+    pwdCard.classList.remove('shake');
+    void pwdCard.offsetWidth;
+    pwdCard.classList.add('shake');
+    pwdInput.value='';
+    pwdInput.focus();
+    setTimeout(()=>{pwdCard.classList.remove('shake');},500);
+  }
+}
+
+pwdInput.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){verifyPwd();}
+});
+
+if(unlocked){
+  pwdOverlay.classList.add('hidden');
+  initApp();
+}else{
+  pwdInput.focus();
+}
+
+/* ===== Schools Config ===== */
+const SCHOOLS=[
+  {key:'chengdu',name:'成都',json:'chengdu_dashboard.json',html:'chengdu_dashboard.html',history:'daily_history.json'},
+  {key:'guangzhou',name:'广州',json:'guangzhou_dashboard.json',html:'guangzhou_dashboard.html',history:'guangzhou_daily_history.json'},
+  {key:'lanzhou',name:'兰州',json:'lanzhou_dashboard.json',html:'lanzhou_dashboard.html',history:'lanzhou_daily_history.json'},
+  {key:'zhengzhou',name:'郑州',json:'zhengzhou_dashboard.json',html:'zhengzhou_dashboard.html',history:'zhengzhou_daily_history.json'},
+  {key:'hangzhou',name:'杭州',json:'hangzhou_dashboard.json',html:'hangzhou_dashboard.html',history:'hangzhou_daily_history.json'},
+];
+
+/* ===== Init ===== */
+async function initApp(){
+  const app=document.getElementById('app');
+  app.classList.remove('hidden');
+  const loading=document.getElementById('loading');
+  const content=document.getElementById('content');
+  const progressFill=document.getElementById('progressFill');
+  const progressText=document.getElementById('progressText');
+  const loadingText=document.getElementById('loadingText');
+
+  const rawData=[];
+  for(let i=0;i<SCHOOLS.length;i++){
+    const school=SCHOOLS[i];
+    loadingText.textContent='正在加载'+school.name+'数据...';
+    progressText.textContent='加载中 ('+(i+1)+'/'+SCHOOLS.length+')：'+school.name;
+    progressFill.style.width=((i)/SCHOOLS.length*100)+'%';
+    try{
+      const resp=await fetch(school.json+'?_t='+Date.now());
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+      const data=await resp.json();
+      let history=null;
+      try{
+        const hResp=await fetch(school.history+'?_t='+Date.now());
+        if(hResp.ok) history=await hResp.json();
+      }catch(e){/* no history */}
+      rawData.push({school,data,history});
+    }catch(e){
+      console.error('Failed to load',school.name,e);
+      rawData.push({school,data:null,history:null,error:e});
+    }
+    progressFill.style.width=((i+1)/SCHOOLS.length*100)+'%';
+  }
+
+  loadingText.textContent='正在聚合数据...';
+  progressText.textContent='计算核心指标中...';
+  progressFill.style.width='100%';
+
+  const metrics=rawData.map(({school,data,history})=>computeMetrics(school,data,history));
+  const overall=computeOverall(rawData);
+
+  renderKPIs(overall);
+  renderTable(metrics);
+  renderNav();
+
+  // Update data badge
+  const exportTime=rawData.find(r=>r.data&&r.data.meta&&r.data.meta.export_time);
+  const badgeText=document.getElementById('badgeText');
+  if(exportTime&&exportTime.data.meta.export_time){
+    badgeText.textContent='数据更新：'+exportTime.data.meta.export_time;
+  }else{
+    badgeText.textContent='数据已加载';
+  }
+
+  loading.classList.add('hidden');
+  content.classList.remove('hidden');
+}
+
+/* ===== Metrics Computation ===== */
+function computeMetrics(school,data,history){
+  const m={
+    name:school.name,
+    html:school.html,
+    teachers:null,
+    totalRecords:null,
+    openWindowRate:null,
+    openWindowChange:null,
+    finishedRate:null,
+    finishedChange:null,
+    saRenewalRate:null,
+    saRenewalChange:null,
+    courseProgress:null,
+    avgScore:null,
+    avgScoreChange:null,
+    commScore:null,
+    commScoreChange:null,
+    saPct:null,
+    saPctChange:null,
+    hasDetail:false,
+    error:false,
+  };
+  if(!data){m.error=true;return m;}
+
+  const meta=data.meta||{};
+  const summary=data.summary||{};
+  const allStudents=data.all_students||[];
+
+  m.hasDetail=allStudents.length>0;
+
+  // Teachers
+  if(summary.total_teachers!=null){
+    m.teachers=summary.total_teachers;
+  }else if(data.teachers&&data.teachers.length>0){
+    m.teachers=data.teachers.length;
+  }
+
+  // Total records
+  m.totalRecords=meta.total_records;
+
+  // Status stats
+  const ss=meta.status_stats||{};
+  const ow=ss['\u5df2\u5f00\u7a97\u73ed\u7ea7'];
+  const fin=ss['\u5df2\u7ed3\u8bfe\u73ed\u7ea7'];
+  if(ow&&ow.count>0){
+    m.openWindowRate=ow.renewal_rate;
+  }
+  if(fin&&fin.count>0){
+    m.finishedRate=fin.renewal_rate;
+  }
+
+  // SA renewal rate
+  if(m.hasDetail){
+    const saStudents=allStudents.filter(s=>s.sg==='S'||s.sg==='A');
+    const saIO=saStudents.filter(s=>s.io==='\u662f');
+    const saIR=saIO.filter(s=>s.ir==='\u662f');
+    if(saIO.length>0){
+      m.saRenewalRate=Math.round(saIR.length/saIO.length*1000)/10;
+    }
+  }else if(summary.sa_renewal_rate!=null){
+    m.saRenewalRate=summary.sa_renewal_rate;
+  }
+
+  // Course progress
+  if(m.hasDetail&&meta.data_date){
+    m.courseProgress=computeCourseProgress(allStudents,meta.data_date);
+  }
+
+  // Avg score
+  m.avgScore=summary.avg_total_score;
+
+  // Comm score (dcq+dcr+svc, max 65)
+  if(m.hasDetail){
+    const commVals=allStudents.map(s=>(s.dcq||0)+(s.dcr||0)+(s.svc||0));
+    if(commVals.length>0){
+      m.commScore=Math.round(commVals.reduce((a,b)=>a+b,0)/commVals.length*100)/100;
+    }
+  }else if(summary.comm_score!=null){
+    m.commScore=summary.comm_score;
+  }
+
+  // SA pct
+  m.saPct=summary.sa_pct;
+
+  // History-based changes (环比)
+  if(history&&history.snapshots&&history.snapshots.length>=2){
+    const snaps=history.snapshots;
+    const latest=snaps[snaps.length-1];
+    const prev=snaps[snaps.length-2];
+
+    // by_status uses short keys
+    const bs=latest.by_status||{};
+    const pbs=prev.by_status||{};
+
+    if(bs['\u5df2\u5f00\u7a97']&&pbs['\u5df2\u5f00\u7a97']&&bs['\u5df2\u5f00\u7a97'].original_count>0&&pbs['\u5df2\u5f00\u7a97'].original_count>0){
+      m.openWindowChange=Math.round((bs['\u5df2\u5f00\u7a97'].renewal_rate-pbs['\u5df2\u5f00\u7a97'].renewal_rate)*10)/10;
+    }
+    if(bs['\u5df2\u7ed3\u8bfe']&&pbs['\u5df2\u7ed3\u8bfe']){
+      m.finishedChange=Math.round((bs['\u5df2\u7ed3\u8bfe'].renewal_rate-pbs['\u5df2\u7ed3\u8bfe'].renewal_rate)*10)/10;
+    }
+
+    if(latest.overall&&prev.overall){
+      m.avgScoreChange=Math.round((latest.overall.avg_score-prev.overall.avg_score)*10)/10;
+      m.saPctChange=Math.round((latest.overall.sa_pct-prev.overall.sa_pct)*10)/10;
+
+      // Comm score change from metrics
+      const lm=latest.overall.metrics||{};
+      const pm=prev.overall.metrics||{};
+      const lComm=(lm.dcq||0)+(lm.dcr||0)+(lm.svc||0);
+      const pComm=(pm.dcq||0)+(pm.dcr||0)+(pm.svc||0);
+      m.commScoreChange=Math.round((lComm-pComm)*100)/100;
+    }
+  }
+
+  return m;
+}
+
+/* ===== Course Progress (cluster start dates) ===== */
+function computeCourseProgress(students,dataDate){
+  const startDates=[...new Set(students.map(s=>s.sd).filter(Boolean))].sort();
+  if(startDates.length===0) return null;
+
+  // Cluster dates with 5-day threshold
+  const clusters=[];
+  let currentCluster=[startDates[0]];
+  for(let i=1;i<startDates.length;i++){
+    const prevDate=new Date(currentCluster[currentCluster.length-1]);
+    const currDate=new Date(startDates[i]);
+    const diff=(currDate-prevDate)/(1000*60*60*24);
+    if(diff<=5){
+      currentCluster.push(startDates[i]);
+    }else{
+      clusters.push(currentCluster);
+      currentCluster=[startDates[i]];
+    }
+  }
+  clusters.push(currentCluster);
+
+  const periodNum=clusters.length;
+  const latestClusterStart=clusters[clusters.length-1][0];
+
+  // Calculate day
+  const start=new Date(latestClusterStart);
+  const end=new Date(dataDate);
+  const day=Math.floor((end-start)/(1000*60*60*24))+1;
+
+  if(day<1) return '第'+toCN(periodNum)+'期';
+  return '第'+toCN(periodNum)+'期·第'+day+'天';
+}
+
+function toCN(n){
+  const cn=['零','一','二','三','四','五','六','七','八','九','十'];
+  if(n<=10) return cn[n];
+  if(n<20) return '十'+cn[n-10];
+  return n.toString();
+}
+
+/* ===== Overall KPIs ===== */
+function computeOverall(rawData){
+  let totalTeachers=0;
+  let totalRecords=0;
+  let sumRenewal=0;
+  let sumOriginal=0;
+  let weightedScore=0;
+  let scoreWeight=0;
+  let sumSA=0;
+  let saTotal=0;
+
+  rawData.forEach(({data})=>{
+    if(!data) return;
+    const meta=data.meta||{};
+    const summary=data.summary||{};
+
+    if(summary.total_teachers) totalTeachers+=summary.total_teachers;
+    if(meta.total_records) totalRecords+=meta.total_records;
+
+    if(summary.total_renewal!=null) sumRenewal+=summary.total_renewal;
+    if(summary.total_original!=null) sumOriginal+=summary.total_original;
+
+    if(summary.avg_total_score!=null&&summary.total_original!=null){
+      weightedScore+=summary.avg_total_score*summary.total_original;
+      scoreWeight+=summary.total_original;
+    }
+
+    if(summary.sa_count!=null){
+      sumSA+=summary.sa_count;
+    }else if(summary.sa_pct!=null&&summary.total_original!=null){
+      sumSA+=summary.sa_pct/100*summary.total_original;
+    }
+    if(summary.total_original!=null){
+      saTotal+=summary.total_original;
+    }
+  });
+
+  return {
+    totalTeachers,
+    totalRecords,
+    overallRenewalRate:sumOriginal>0?Math.round(sumRenewal/sumOriginal*1000)/10:0,
+    overallAvgScore:scoreWeight>0?Math.round(weightedScore/scoreWeight*100)/100:0,
+    overallSAPct:saTotal>0?Math.round(sumSA/saTotal*1000)/10:0,
+  };
+}
+
+/* ===== Render KPIs ===== */
+function renderKPIs(o){
+  const row=document.getElementById('kpiRow');
+  const kpis=[
+    {label:'总教师数',val:o.totalTeachers,cls:'brand',sub:'各校教师之和'},
+    {label:'总人次',val:o.totalRecords.toLocaleString(),cls:'accent',sub:'各校总人次之和'},
+    {label:'整体续班率',val:o.overallRenewalRate+'%',cls:rateClass(o.overallRenewalRate),sub:'续班人次/原班人次'},
+    {label:'整体均分',val:o.overallAvgScore,cls:'purple',sub:'加权平均（按人次）'},
+    {label:'整体SA占比',val:o.overallSAPct+'%',cls:'gold',sub:'SA学员/总学员'},
+  ];
+  row.innerHTML=kpis.map(k=>
+    '<div class="kpi">'+
+    '<div class="label">'+k.label+'</div>'+
+    '<div class="val '+k.cls+'">'+k.val+'</div>'+
+    '<div class="sub">'+k.sub+'</div>'+
+    '</div>'
+  ).join('');
+}
+
+function rateClass(rate){
+  if(rate==null) return 'r-dash';
+  if(rate>=40) return 'r-green';
+  if(rate>=20) return 'r-gold';
+  return 'r-default';
+}
+
+/* ===== Render Table ===== */
+function renderTable(metrics){
+  const body=document.getElementById('tableBody');
+  body.innerHTML=metrics.map(m=>{
+    if(m.error){
+      return '<tr><td class="school-cell"><span class="school-link" style="background:rgba(255,59,48,.08);border-color:rgba(255,59,48,.2);color:var(--red)">'+m.name+' (加载失败)</span></td><td colspan="9" style="color:var(--text-3)">数据加载失败</td></tr>';
+    }
+    return '<tr>'+
+      // School name
+      '<td class="school-cell"><a class="school-link" href="'+m.html+(unlocked?('?'+'k='+CENTER_PWD):'')+'">'+m.name+' <span class="arrow">&#8594;</span></a></td>'+
+      // Teachers
+      '<td class="num">'+(m.teachers!=null?m.teachers:'<span style="color:var(--text-3)">&mdash;</span>')+'</td>'+
+      // Total records
+      '<td class="num">'+(m.totalRecords!=null?m.totalRecords.toLocaleString():'<span style="color:var(--text-3)">&mdash;</span>')+'</td>'+
+      // Open window renewal rate
+      renderRateCell(m.openWindowRate,m.openWindowChange)+
+      // Finished renewal rate
+      renderRateCell(m.finishedRate,m.finishedChange)+
+      // SA renewal rate
+      renderRateCell(m.saRenewalRate,m.saRenewalChange)+
+      // Course progress
+      '<td class="num">'+(m.courseProgress?'<span class="progress-badge">'+m.courseProgress+'</span>':'<span style="color:var(--text-3)">&mdash;</span>')+'</td>'+
+      // Avg score
+      '<td class="num">'+(m.avgScore!=null?m.avgScore:'<span style="color:var(--text-3)">&mdash;</span>')+(m.avgScoreChange!=null?renderChange(m.avgScoreChange):'')+'</td>'+
+      // Comm score
+      '<td class="num">'+(m.commScore!=null?m.commScore+'<span style="font-size:.62rem;color:var(--text-3)"> /65</span>':'<span style="color:var(--text-3)">&mdash;</span>')+(m.commScoreChange!=null?renderChange(m.commScoreChange):'')+'</td>'+
+      // SA pct
+      '<td class="num">'+(m.saPct!=null?m.saPct+'%':'<span style="color:var(--text-3)">&mdash;</span>')+(m.saPctChange!=null?renderChange(m.saPctChange):'')+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function renderRateCell(rate,change){
+  if(rate==null){
+    return '<td class="rate-cell"><span class="rate-val r-dash">&mdash;</span></td>';
+  }
+  var cls=rateClass(rate);
+  var html='<td class="rate-cell"><span class="rate-val '+cls+'">'+rate+'%</span>';
+  html+=renderChange(change);
+  html+='</td>';
+  return html;
+}
+
+function renderChange(change){
+  if(change==null) return '<span class="rate-change dash">&mdash;</span>';
+  if(change>0) return '<span class="rate-change up">&#9650;'+Math.abs(change)+'</span>';
+  if(change<0) return '<span class="rate-change down">&#9660;'+Math.abs(change)+'</span>';
+  return '<span class="rate-change flat">&#9644;0</span>';
+}
+
+/* ===== Render Nav Switch ===== */
+function renderNav(){
+  const nav=document.getElementById('navSwitch');
+  nav.innerHTML='<a href="center_dashboard.html'+(unlocked?('?'+'k='+CENTER_PWD):'')+'" class="active">&#127968; 总看板</a>'+
+    SCHOOLS.map(s=>'<a href="'+s.html+(unlocked?('?'+'k='+CENTER_PWD):'')+'">'+s.name+'</a>').join('');
+}
+</script>
+</body>
+</html>

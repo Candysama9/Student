@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "data_date": "2026-07-26",
+    "export_time": "2026-07-27 17:23:28",
+    "school": "杭州",
+    "data_source": "汇总数据（无明细）",
+    "has_detail": false,
+    "total_records": 29685,
+    "calc_records": 29685,
+    "not_started_records": 0,
+    "class_statuses": [],
+    "status_stats": {}
+  },
+  "summary": {
+    "total_original": 29685,
+    "total_renewal": 11130,
+    "total_renewal_rate": 38.0,
+    "avg_total_score": 25.71,
+    "sa_pct": 18.4,
+    "sa_renewal_rate": 55.5,
+    "comm_score": 16.39,
+    "comm_max": 65
+  },
+  "metrics_avg": {
+    "dcq": 7.10,
+    "dcr": 6.98,
+    "svc": 2.31,
+    "qr": 3.88,
+    "att": 3.12,
+    "pp": 1.58,
+    "cr": 0.05,
+    "cq": 0.69
+  },
+  "all_students": [],
+  "not_started_students": [],
+  "teachers": [],
+  "subjects": []
+}
