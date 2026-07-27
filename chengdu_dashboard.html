@@ -457,6 +457,23 @@ tbody td.rank .badge{
 .grade-btn.active.grade-C{background:var(--gray-bg);color:var(--gray);border-color:rgba(142,142,147,.30);box-shadow:0 2px 8px rgba(142,142,147,.12)}
 .grade-btn.active.all{background:var(--glass-hi);color:var(--brand);border-color:var(--brand-glow);box-shadow:0 2px 8px rgba(0,122,255,.10)}
 
+/* 重点跟进按钮 */
+.key-follow-btn{
+  position:relative;overflow:hidden;
+  padding:5px 14px;border-radius:10px;border:1.5px solid rgba(255,59,48,.3);
+  background:linear-gradient(135deg,rgba(255,59,48,.06),rgba(255,149,0,.06));color:var(--red);font-size:.72rem;cursor:pointer;
+  transition:all .25s var(--transition);font-family:var(--font);font-weight:600;
+  backdrop-filter:var(--liquid-blur-sm);-webkit-backdrop-filter:var(--liquid-blur-sm);
+  display:inline-flex;align-items:center;gap:4px;letter-spacing:.3px;
+}
+.key-follow-btn:hover{transform:translateY(-1px);box-shadow:0 2px 10px rgba(255,59,48,.15);border-color:rgba(255,59,48,.5)}
+.key-follow-btn.active{
+  background:linear-gradient(135deg,#FF3B30,#FF9500);color:#fff;border-color:rgba(255,59,48,.6);
+  box-shadow:0 3px 12px rgba(255,59,48,.35),inset 0 1px 1px rgba(255,255,255,.3);font-weight:700;
+  animation:keyFollowPulse 2s ease-in-out infinite;
+}
+@keyframes keyFollowPulse{0%,100%{box-shadow:0 3px 12px rgba(255,59,48,.35),inset 0 1px 1px rgba(255,255,255,.3)}50%{box-shadow:0 3px 20px rgba(255,59,48,.55),inset 0 1px 1px rgba(255,255,255,.3)}}
+
 /* Rules section */
 .rules-section{
   background:var(--liquid-fill);border:var(--liquid-stroke);
@@ -659,6 +676,7 @@ let activeStatus=''; // 初始化为空，启动时自动选择
 let activeGradeFilter='all';
 let selectedTeacher='';
 let activeTagFilters=new Set(); // 标签筛选（多选）：空集合表示"全部"
+let keyFollowFilter=false; // 重点跟进筛选：未续班且评级为B或C
 let sortCol='renewal_rate';
 let sortDir='desc';
 let chartInstances={};
@@ -1684,6 +1702,7 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
 
   let students=subjectStudents;
   if(selectedTeacher)students=students.filter(s=>s.t===selectedTeacher);
+  if(keyFollowFilter)students=students.filter(s=>s.ir!=='是'&&(s.sg==='B'||s.sg==='C'));
   if(activeGradeFilter!=='all')students=students.filter(s=>s.sg===activeGradeFilter);
 
   // 基于教师+评级筛选后的学员集合，计算各标签是否有数据（用于隐藏无数据标签）
@@ -1753,6 +1772,7 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
         ${dropdownItems}
       </div>
     </div>
+    <button class="key-follow-btn ${keyFollowFilter?'active':''}" onclick="toggleKeyFollow()" title="筛选未续班且评级为B或C的学员">⚠ 重点跟进</button>
     <span class="filter-label" style="margin-left:8px">评级</span>
     <div class="grade-filter">
       <button class="grade-btn all ${activeGradeFilter==='all'?'active':''}" onclick="filterGrade('all')">全部</button>
@@ -2475,11 +2495,17 @@ function openTeacherDetail(teacherName){
 // ============================================================
 // 交互
 // ============================================================
-function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();activeSubjectFilter='';trendSubjectFilter='';if(tab.startsWith('subject_'))trendTab='subject';else trendTab='overall';render();}
-function switchStatus(status){activeStatus=status;selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();activeSubjectFilter='';trendSubjectFilter='';trendTab='overall';render();}
+function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();keyFollowFilter=false;activeSubjectFilter='';trendSubjectFilter='';if(tab.startsWith('subject_'))trendTab='subject';else trendTab='overall';render();}
+function switchStatus(status){activeStatus=status;selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();keyFollowFilter=false;activeSubjectFilter='';trendSubjectFilter='';trendTab='overall';render();}
 function switchSubjectFilter(subject){activeSubjectFilter=subject;sortCol='renewal_rate';sortDir='desc';render();}
 function selectTeacher(t){selectedTeacher=t;closeDropdown();if(t)trendTab='teacher';render();}
-function filterGrade(g){activeGradeFilter=g;activeTagFilters=new Set();render();}
+function filterGrade(g){activeGradeFilter=g;activeTagFilters=new Set();keyFollowFilter=false;render();}
+// 重点跟进筛选切换：开启时重置评级和标签筛选
+function toggleKeyFollow(){
+  keyFollowFilter=!keyFollowFilter;
+  if(keyFollowFilter){activeGradeFilter='all';activeTagFilters=new Set();}
+  render();
+}
 // 标签筛选：多选切换。点击"全部"清空所有选中；点击具体标签切换其选中状态。
 function filterTag(t){
   if(t==='all'){activeTagFilters=new Set();}
