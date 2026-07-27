@@ -1257,6 +1257,53 @@ function exportTeacherData(){
   XLSX.writeFile(wb,fileName);
 }
 
+// 导出某学科教师排名数据为Excel
+function exportSubjectTeacherData(subjectName){
+  const subjectStudents=(DASHBOARD.all_students||[]).filter(s=>s.s===subjectName);
+  const students=applyPeriodFilter(subjectStudents);
+  if(students.length===0){alert('无数据可导出');return;}
+  let data=aggregateTeachers(students);
+  data=sortData(data,sortCol==='teacher'||sortCol==='subject_main'||sortCol==='tenure'?'renewal_rate':sortCol,sortDir);
+  if(data.length===0){alert('无教师数据可导出');return;}
+
+  const headers=['排名','教师姓名','司龄','学员人次','原班人次','续班人次','续班率(%)','平均总分','SA占比(%)','S级人数','A级人数','B级人数','C级人数'];
+  for(const m of METRICS)headers.push(m.name+'(满分'+m.max+')');
+
+  const xlsxData=[headers];
+  for(let i=0;i<data.length;i++){
+    const r=data[i];
+    const row=[i+1,r.teacher,r.tenure||'',r.total,r.original,r.renewal,
+      Number(r.renewal_rate.toFixed(1)),Number(r.avg_score.toFixed(1)),Number(r.sa_pct.toFixed(1)),
+      r.grade_counts.S||0,r.grade_counts.A||0,r.grade_counts.B||0,r.grade_counts.C||0];
+    for(const m of METRICS){row.push(r.metrics[m.short]!=null?Number(r.metrics[m.short].toFixed(1)):'');}
+    xlsxData.push(row);
+  }
+
+  const ws=XLSX.utils.aoa_to_sheet(xlsxData);
+  const colWidths=headers.map((h,i)=>{
+    let maxLen=String(h).length;
+    for(const row of xlsxData){if(row[i]!=null){const len=String(row[i]).length;if(len>maxLen)maxLen=len;}}
+    return {wch:Math.max(maxLen*2.2+4,14)};
+  });
+  ws['!cols']=colWidths;
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let R=range.s.r;R<=range.e.r;R++){
+    for(let C=range.s.c;C<=range.e.c;C++){
+      const cell=ws[XLSX.utils.encode_cell({r:R,c:C})];
+      if(!cell)continue;
+      cell.s={alignment:{horizontal:'center',vertical:'center'}};
+      if(R===0){cell.s.font={bold:true,sz:13,color:{rgb:'FFFFFF'}};cell.s.fill={fgColor:{rgb:'4240C0'}};}
+      else{cell.s.font={sz:11};}
+    }
+  }
+  ws['!rows']=[{hpt:32}];
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,subjectName+'教师数据');
+  const fileName=`${subjectName}教师数据_${CITY_NAME}_${DASHBOARD.meta.data_date}.xlsx`;
+  XLSX.writeFile(wb,fileName);
+}
+
 
 // ============================================================
 // 后台管理 - 下载重点跟进名单
@@ -1922,6 +1969,7 @@ function renderSubjectTab(students){
     const subjectStudents=students.filter(s=>s.s===activeSubjectFilter);
     let data=aggregateTeachers(subjectStudents);
     data=sortData(data,sortCol==='subject'||sortCol==='subject_main'||sortCol==='tenure'?'renewal_rate':sortCol,sortDir);
+    html+=`<div class="filter-bar" style="margin-bottom:12px"><span class="info-count" style="margin-left:auto">${activeSubjectFilter}学科 · ${data.length}位教师</span><button class="pill" style="background:var(--brand);color:#fff;border:none;padding:6px 16px;font-size:.78rem;font-weight:600;cursor:pointer;margin-left:8px" onclick="exportSubjectTeacherData('${activeSubjectFilter}')">导出Excel</button></div>`;
 
     const cols=[
       {key:'rank',label:'#',sortable:false},
@@ -2097,6 +2145,11 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
   }
 
   let teacherRankHtml=`
+  <div class="filter-bar">
+    <span class="filter-label">${subjectName}教师排名</span>
+    <span class="info-count">共 ${subjTeacherSorted.length} 位教师 · 默认按续班率降序</span>
+    <button class="pill" style="background:var(--brand);color:#fff;border:none;padding:6px 16px;font-size:.78rem;font-weight:600;cursor:pointer;margin-left:auto" onclick="exportSubjectTeacherData('${subjectName}')">导出Excel</button>
+  </div>
   <div class="chart-grid">
     <div class="chart-card"><h4>${subjectName}教师续班率 TOP 10</h4><div class="chart-box"><canvas id="chart-subj-${subjectName}-rr"></canvas></div></div>
     <div class="chart-card"><h4>${subjectName}教师平均分 TOP 10</h4><div class="chart-box"><canvas id="chart-subj-${subjectName}-score"></canvas></div></div>
