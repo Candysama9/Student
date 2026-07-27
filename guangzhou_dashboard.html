@@ -388,6 +388,23 @@ tbody td.rank .badge{
 .tag-btn.active:not(.all)::before{content:'✓ ';font-weight:700}
 /* 无数据的标签直接隐藏 */
 .tag-btn.no-data{display:none}
+/* 三级标签体系 */
+.tag-tree{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start}
+.tag-cat{position:relative;display:inline-flex;flex-direction:column}
+.tag-cat-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:.75rem;font-weight:600;border:1px solid rgba(88,86,214,.3);border-radius:8px;background:rgba(88,86,214,.06);color:var(--brand);cursor:pointer;transition:all .2s;white-space:nowrap}
+.tag-cat-btn:hover{background:rgba(88,86,214,.12)}
+.tag-cat-btn.expanded{background:rgba(88,86,214,.15);border-color:var(--brand)}
+.tag-cat-sum{font-size:.65rem;font-weight:400;color:var(--text-2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag-cat-opts{position:absolute;top:calc(100% + 4px);left:0;z-index:100;display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border:1px solid rgba(88,86,214,.2);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.08);min-width:160px}
+.tag-opt{padding:3px 10px;font-size:.72rem;font-weight:500;border:1px solid rgba(0,0,0,.1);border-radius:6px;background:rgba(255,255,255,.8);color:var(--text-1);cursor:pointer;transition:all .15s;white-space:nowrap}
+.tag-opt:hover{background:rgba(88,86,214,.1)}
+.tag-opt.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.tag-opt.all.active{background:rgba(88,86,214,.15);color:var(--brand);border-color:rgba(88,86,214,.3)}
+.tag-opt.grade-S.active{background:#ff3b30;border-color:#ff3b30}
+.tag-opt.grade-A.active{background:#ff9500;border-color:#ff9500}
+.tag-opt.grade-B.active{background:#34c759;border-color:#34c759}
+.tag-opt.grade-C.active{background:#5856d6;border-color:#5856d6}
+.tag-opt.no-data{opacity:.3;cursor:not-allowed}
 
 /* Student tags cell */
 .tags-cell{width:200px;max-width:200px;vertical-align:middle;text-align:left;white-space:normal;padding:8px 10px 8px 12px !important;border-right:2px solid rgba(0,122,255,.18);overflow:hidden}
@@ -710,9 +727,9 @@ let DASHBOARD=null;
 let DAILY_HISTORY=null;
 let activeTab='teacher';
 let activeStatus=''; // 初始化为空，启动时自动选择
-let activeGradeFilter='all';
 let selectedTeacher='';
-let activeTagFilters=new Set(); // 标签筛选（多选）：空集合表示"全部"
+let activeTagFilters={}; // 三级标签筛选：{catKey: Set(optKey)} 空Set或无key表示"全部"
+let expandedTagCat=null; // 当前展开的标签分类
 let keyFollowFilter=false; // 重点跟进筛选：未续班且评级为B或C
 let activePeriod='all'; // 期数筛选
 let periodClusters=[]; // 期数聚类结果
@@ -740,36 +757,54 @@ const METRICS=[
   {key:'consecutive_quarters',name:'连续在读季度',max:10,cat:'学员黏性',short:'cq'},
 ];
 
-// 标签筛选定义（多选）。type 表示按标签类型筛选，label 表示按具体标签名筛选。
-const TAG_FILTERS=[
-  {key:'tenure',label:'老生',cls:'tenure',mode:'type'},
-  {key:'初三曾在读',label:'初三曾在读',cls:'tenure',mode:'label'},
-  {key:'一季老生',label:'一季老生',cls:'tenure',mode:'label'},
-  {key:'两季老生',label:'两季老生',cls:'tenure',mode:'label'},
-  {key:'三季老生',label:'三季老生',cls:'tenure',mode:'label'},
-  {key:'progress',label:'进步明显',cls:'progress',mode:'type'},
-  {key:'absent',label:'缺勤',cls:'absent',mode:'type'},
-  {key:'comm',label:'家校沟通',cls:'comm',mode:'type'},
-  {key:'家校沟通S',label:'沟通S',cls:'comm',mode:'label'},
-  {key:'家校沟通A',label:'沟通A',cls:'comm',mode:'label'},
-  {key:'家校沟通B',label:'沟通B',cls:'comm',mode:'label'},
-  {key:'家校沟通C',label:'沟通C',cls:'comm',mode:'label'},
+// 三级标签体系：一级"标签" > 二级分类 > 三级选项
+const TAG_CATEGORIES=[
+  {key:'rating',label:'评级',options:[
+    {key:'S',label:'S级'},{key:'A',label:'A级'},{key:'B',label:'B级'},{key:'C',label:'C级'},
+  ]},
+  {key:'studentType',label:'生源类型',options:[
+    {key:'新生',label:'新生',mode:'notenure'},
+    {key:'初三曾在读',label:'初三曾在读',mode:'label'},
+    {key:'一季老生',label:'一季老生',mode:'label'},
+    {key:'两季老生',label:'二季老生',mode:'label'},
+    {key:'三季老生',label:'三季老生',mode:'label'},
+  ]},
+  {key:'comm',label:'家校沟通',options:[
+    {key:'家校沟通S',label:'S',mode:'label'},
+    {key:'家校沟通A',label:'A',mode:'label'},
+    {key:'家校沟通B',label:'B',mode:'label'},
+    {key:'家校沟通C',label:'C',mode:'label'},
+  ]},
+  {key:'progress',label:'进步明显',options:[
+    {key:'progress',label:'进步明显',mode:'type'},
+  ]},
+  {key:'absent',label:'缺勤',options:[
+    {key:'absent',label:'缺勤',mode:'type'},
+  ]},
 ];
 
-// 判断单个学员是否匹配某个标签筛选
-function studentMatchesTag(s,filterKey){
-  const f=TAG_FILTERS.find(t=>t.key===filterKey);
-  if(!f||!s.tags||!s.tags.length)return false;
-  if(f.mode==='type')return s.tags.some(t=>t.type===f.key);
-  return s.tags.some(t=>t.label===f.key);
+// 判断单个学员是否匹配某个标签选项
+function studentMatchesTagOption(s,catKey,optKey){
+  if(catKey==='rating')return s.sg===optKey;
+  const cat=TAG_CATEGORIES.find(c=>c.key===catKey);
+  if(!cat)return false;
+  const opt=cat.options.find(o=>o.key===optKey);
+  if(!opt)return false;
+  if(opt.mode==='notenure')return !s.tags||!s.tags.some(t=>t.type==='tenure');
+  if(opt.mode==='type')return s.tags&&s.tags.some(t=>t.type===optKey);
+  if(opt.mode==='label')return s.tags&&s.tags.some(t=>t.label===optKey);
+  return false;
 }
 
-// 计算在给定学员集合中，每个标签筛选是否有数据
-function computeAvailableTags(students){
-  const available=new Set();
-  for(const f of TAG_FILTERS){
-    for(const s of students){
-      if(studentMatchesTag(s,f.key)){available.add(f.key);break;}
+// 计算在给定学员集合中，每个标签选项是否有数据
+function computeAvailableTagOptions(students){
+  const available={};
+  for(const cat of TAG_CATEGORIES){
+    available[cat.key]=new Set();
+    for(const opt of cat.options){
+      for(const s of students){
+        if(studentMatchesTagOption(s,cat.key,opt.key)){available[cat.key].add(opt.key);break;}
+      }
     }
   }
   return available;
@@ -1085,14 +1120,22 @@ function exportSubjectStudents(subjectName){
 
   // 应用与当前页面一致的筛选逻辑（直接读取全局变量）
   if(selectedTeacher)students=students.filter(s=>s.t===selectedTeacher);
-  if(activeGradeFilter&&activeGradeFilter!=='all')students=students.filter(s=>s.sg===activeGradeFilter);
-  if(activeTagFilters&&activeTagFilters.size>0){
-    students=students.filter(s=>{
-      for(const fk of activeTagFilters){
-        if(studentMatchesTag(s,fk))return true;
-      }
-      return false;
-    });
+  if(keyFollowFilter)students=students.filter(s=>{
+    if(s.ir==='是')return false;
+    const commTag=s.tags?s.tags.find(t=>t.type==='comm'):null;
+    const comm=commTag?commTag.label.replace('家校沟通',''):null;
+    if(comm==='B'||comm==='C')return true;
+    if((s.sg==='B'||s.sg==='C')&&comm!=='S')return true;
+    return false;
+  });
+  for(const catKey of Object.keys(activeTagFilters)){
+    const sel=activeTagFilters[catKey];
+    if(sel&&sel.size>0){
+      students=students.filter(s=>{
+        for(const optKey of sel){if(studentMatchesTagOption(s,catKey,optKey))return true;}
+        return false;
+      });
+    }
   }
   if(studentSearch){
     const q=studentSearch.toLowerCase();
@@ -1104,64 +1147,114 @@ function exportSubjectStudents(subjectName){
   // 构建文件名：学科-教师名-标签1-标签2
   let nameParts=[subjectName];
   if(selectedTeacher)nameParts.push(selectedTeacher);else nameParts.push('全部教师');
-  if(activeGradeFilter&&activeGradeFilter!=='all')nameParts.push(activeGradeFilter+'级');
-  if(activeTagFilters&&activeTagFilters.size>0){
-    for(const fk of activeTagFilters){
-      const f=TAG_FILTERS.find(t=>t.key===fk);
-      if(f)nameParts.push(f.label);
+  for(const catKey of Object.keys(activeTagFilters)){
+    const sel=activeTagFilters[catKey];
+    if(sel&&sel.size>0){
+      const cat=TAG_CATEGORIES.find(c=>c.key===catKey);
+      if(cat){nameParts.push(cat.label+':'+[...sel].map(k=>{const o=cat.options.find(o=>o.key===k);return o?o.label:k;}).join(','));}
     }
   }
-  const fileName=nameParts.join('-')+'.csv';
+  // filename will be set as xlsx below
 
-  // CSV表头
   const headers=['标签','学员姓名','教师','班级编码','班级状态','开课日期','结课日期','总分','评级',
     '深聊质量','深聊轮次','服务卡','题目回收','出勤率','进步感知','课次报告','连续在读','原班','续班'];
 
-  // 转义CSV单元格
-  function esc(v){
-    if(v==null)return '';
-    const s=String(v);
-    if(s.includes(',')||s.includes('"')||s.includes('\n'))return '"'+s.replace(/"/g,'""')+'"';
-    return s;
-  }
-
-  // 构建CSV行
-  let csv='\ufeff'+headers.map(esc).join(',')+'\n'; // BOM for Excel
+  // 下载为XLSX（带样式）
+  const xlsxData=[headers];
   for(const s of students){
     const tagsStr=(s.tags||[]).map(t=>t.label).join('、');
     const grade=s.sg||s.fg||'';
-    const row=[
-      tagsStr,
-      s.n||'',
-      s.t||'',
-      s.cc||'',
-      s.cs||'',
-      s.sd||'',
-      s.ed||'',
-      s.ts!=null?s.ts.toFixed(1):'',
+    xlsxData.push([
+      tagsStr, s.n||'', s.t||'', s.cc||'', s.cs||'', s.sd||'', s.ed||'',
+      s.ts!=null?Number(s.ts.toFixed(1)):'',
       grade,
-      s.dcq!=null?s.dcq.toFixed(1):'',
-      s.dcr!=null?s.dcr.toFixed(1):'',
-      s.svc!=null?s.svc.toFixed(1):'',
-      s.qr!=null?s.qr.toFixed(1):'',
-      s.att!=null?s.att.toFixed(1):'',
-      s.pp!=null?s.pp.toFixed(1):'',
-      s.cr!=null?s.cr.toFixed(1):'',
-      s.cq!=null?s.cq.toFixed(1):'',
-      s.io||'',
-      s.ir||''
-    ];
-    csv+=row.map(esc).join(',')+'\n';
+      s.dcq!=null?Number(s.dcq.toFixed(1)):'',s.dcr!=null?Number(s.dcr.toFixed(1)):'',
+      s.svc!=null?Number(s.svc.toFixed(1)):'',s.qr!=null?Number(s.qr.toFixed(1)):'',
+      s.att!=null?Number(s.att.toFixed(1)):'',s.pp!=null?Number(s.pp.toFixed(1)):'',
+      s.cr!=null?Number(s.cr.toFixed(1)):'',s.cq!=null?Number(s.cq.toFixed(1)):'',
+      s.io||'', s.ir||''
+    ]);
+  }
+  const ws=XLSX.utils.aoa_to_sheet(xlsxData);
+  const colWidths=headers.map((h,i)=>{
+    let maxLen=String(h).length;
+    for(const row of xlsxData){if(row[i]!=null){const len=String(row[i]).length;if(len>maxLen)maxLen=len;}}
+    return {wch:Math.max(maxLen*2.2+4,12)};
+  });
+  ws['!cols']=colWidths;
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let R=range.s.r;R<=range.e.r;R++){
+    for(let C=range.s.c;C<=range.e.c;C++){
+      const cell=ws[XLSX.utils.encode_cell({r:R,c:C})];
+      if(!cell)continue;
+      cell.s={alignment:{horizontal:'center',vertical:'center'}};
+      if(R===0){cell.s.font={bold:true,sz:13,color:{rgb:'FFFFFF'}};cell.s.fill={fgColor:{rgb:'4240C0'}};}
+      else{cell.s.font={sz:11};}
+    }
+  }
+  ws['!rows']=[{hpt:32}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'学情数据');
+  const xlsxFileName=nameParts.join('-')+'.xlsx';
+  XLSX.writeFile(wb,xlsxFileName);
+}
+
+// ============================================================
+// 教师数据导出为Excel
+// ============================================================
+function exportTeacherData(){
+  let students=getFilteredStudents();
+  if(students.length===0){alert('当前筛选条件下无数据可导出');return;}
+  let data=aggregateTeachers(students);
+  if(teacherSearch){
+    const q=teacherSearch.toLowerCase();
+    data=data.filter(t=>t.teacher.toLowerCase().includes(q)||t.subject_main.toLowerCase().includes(q));
+  }
+  data=sortData(data,sortCol,sortDir);
+  if(data.length===0){alert('无教师数据可导出');return;}
+
+  const headers=['排名','教师姓名','主教学科','司龄','学员人次','原班人次','续班人次','续班率(%)','平均总分','SA占比(%)','S级人数','A级人数','B级人数','C级人数'];
+  for(const m of METRICS)headers.push(m.name+'(满分'+m.max+')');
+
+  const xlsxData=[headers];
+  for(let i=0;i<data.length;i++){
+    const r=data[i];
+    const row=[i+1,r.teacher,r.subject_main,r.tenure||'',r.total,r.original,r.renewal,
+      Number(r.renewal_rate.toFixed(1)),Number(r.avg_score.toFixed(1)),Number(r.sa_pct.toFixed(1)),
+      r.grade_counts.S||0,r.grade_counts.A||0,r.grade_counts.B||0,r.grade_counts.C||0];
+    for(const m of METRICS){row.push(r.metrics[m.short]!=null?Number(r.metrics[m.short].toFixed(1)):'');}
+    xlsxData.push(row);
   }
 
-  // 下载
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=fileName;
-  document.body.appendChild(a);a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const ws=XLSX.utils.aoa_to_sheet(xlsxData);
+  // Auto-width columns (wider than before)
+  const colWidths=headers.map((h,i)=>{
+    let maxLen=String(h).length;
+    for(const row of xlsxData){if(row[i]!=null){const len=String(row[i]).length;if(len>maxLen)maxLen=len;}}
+    return {wch:Math.max(maxLen*2.2+4,14)};
+  });
+  ws['!cols']=colWidths;
+  // Style all cells: centered, header bold+colored+taller
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let R=range.s.r;R<=range.e.r;R++){
+    for(let C=range.s.c;C<=range.e.c;C++){
+      const cell=ws[XLSX.utils.encode_cell({r:R,c:C})];
+      if(!cell)continue;
+      cell.s={alignment:{horizontal:'center',vertical:'center'}};
+      if(R===0){
+        cell.s.font={bold:true,sz:13,color:{rgb:'FFFFFF'}};
+        cell.s.fill={fgColor:{rgb:'4240C0'}};
+      }else{
+        cell.s.font={sz:11};
+      }
+    }
+  }
+  ws['!rows']=[{hpt:32}];
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'教师数据');
+  const fileName=`教师数据_${CITY_NAME}_${DASHBOARD.meta.data_date}.xlsx`;
+  XLSX.writeFile(wb,fileName);
 }
 
 
@@ -1322,11 +1415,25 @@ async function downloadFollowUpLists(){
       data.push(['汇总','','',subject,'','',students.length+'人','','','','','','','','','','','',renewed+'人/'+students.length+'人',renewalRate+'%','续班率:'+renewalRate+'%']);
       
       const ws=XLSX.utils.aoa_to_sheet(data);
-      ws['!cols']=[
-        {wch:5},{wch:10},{wch:14},{wch:6},{wch:10},{wch:12},{wch:12},
-        {wch:7},{wch:8},{wch:8},{wch:8},{wch:7},{wch:8},{wch:7},
-        {wch:8},{wch:8},{wch:8},{wch:5},{wch:5},{wch:25}
-      ];
+      // Auto-width columns (wider, centered, styled headers)
+      const adminHeaders=data[0];
+      const colWidths=adminHeaders.map((h,i)=>{
+        let maxLen=String(h||'').length;
+        for(const row of data){if(row[i]!=null){const len=String(row[i]).length;if(len>maxLen)maxLen=len;}}
+        return {wch:Math.max(maxLen*2.2+4,12)};
+      });
+      ws['!cols']=colWidths;
+      const adminRange=XLSX.utils.decode_range(ws['!ref']);
+      for(let R=adminRange.s.r;R<=adminRange.e.r;R++){
+        for(let C=adminRange.s.c;C<=adminRange.e.c;C++){
+          const cell=ws[XLSX.utils.encode_cell({r:R,c:C})];
+          if(!cell)continue;
+          cell.s={alignment:{horizontal:'center',vertical:'center'}};
+          if(R===0){cell.s.font={bold:true,sz:13,color:{rgb:'FFFFFF'}};cell.s.fill={fgColor:{rgb:'4240C0'}};}
+          else{cell.s.font={sz:11};}
+        }
+      }
+      ws['!rows']=[{hpt:32}];
       
       const wb=XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb,ws,'重点跟进');
@@ -1524,7 +1631,7 @@ function applyPeriodFilter(pool){
 function switchPeriod(p){
   activePeriod=p;
   activeStatus='all';
-  selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();
+  selectedTeacher='';activeTagFilters={};expandedTagCat=null;
   keyFollowFilter=false;activeSubjectFilter='';trendSubjectFilter='';trendTab='overall';
   render();
 }
@@ -1641,6 +1748,43 @@ function render(){
   renderBinnedCharts(binnedStudents);
 }
 
+// 计算重点跟进学员数量
+function countKeyFollow(students){
+  return students.filter(s=>{
+    if(s.ir==='是')return false;
+    const commTag=s.tags?s.tags.find(t=>t.type==='comm'):null;
+    const comm=commTag?commTag.label.replace('家校沟通',''):null;
+    if(comm==='B'||comm==='C')return true;
+    if((s.sg==='B'||s.sg==='C')&&comm!=='S')return true;
+    return false;
+  }).length;
+}
+
+// 获取重点跟进日变化（排除课程开课/结课导致的大幅变化）
+function getKeyFollowChange(currentCount,totalStudents){
+  try{
+    const today=DASHBOARD.meta.data_date||'';
+    const stored=localStorage.getItem('kf_history_'+CITY_NAME);
+    if(!stored){
+      localStorage.setItem('kf_history_'+CITY_NAME,JSON.stringify({date:today,count:currentCount,total:totalStudents}));
+      return null;
+    }
+    const hist=JSON.parse(stored);
+    if(hist.date===today)return null; // same day, no change
+    // Check if total students changed dramatically (>5% = course start/end)
+    if(hist.total>0&&Math.abs(totalStudents-hist.total)/hist.total>0.05){
+      // Save new baseline
+      localStorage.setItem('kf_history_'+CITY_NAME,JSON.stringify({date:today,count:currentCount,total:totalStudents}));
+      return null;
+    }
+    const diff=currentCount-hist.count;
+    // Save new history
+    localStorage.setItem('kf_history_'+CITY_NAME,JSON.stringify({date:today,count:currentCount,total:totalStudents}));
+    if(Math.abs(diff)<1)return null;
+    return diff;
+  }catch(e){return null;}
+}
+
 function renderKPIs(students){
   const orig=students.filter(s=>s.io==='是').length;
   const ren=students.filter(s=>s.ir==='是').length;
@@ -1652,11 +1796,16 @@ function renderKPIs(students){
   const saPct=grades.length?sa/grades.length*100:0;
   const teachers=new Set(students.map(s=>s.t)).size;
 
+  const kfCount=countKeyFollow(students);
+  const kfChange=getKeyFollowChange(kfCount,students.length);
+  const kfChangeStr=kfChange!=null?(kfChange>0?`<span style="color:#ff3b30">+${kfChange}</span>`:kfChange<0?`<span style="color:#34c759">${kfChange}</span>`:''):'—';
+
   return `
     <div class="kpi"><div class="label">入口教师人数</div><div class="val brand">${teachers}</div><div class="sub">人</div></div>
     <div class="kpi"><div class="label">学员人次</div><div class="val accent">${students.length}</div><div class="sub">原班 ${orig} · 续班 ${ren}</div></div>
     <div class="kpi"><div class="label">续班率</div><div class="val ${rr>=30?'green':rr>=15?'gold':'brand'}">${rr.toFixed(1)}%</div><div class="sub">续班${ren}/原班${orig}</div></div>
     <div class="kpi"><div class="label">平均总分</div><div class="val brand">${avg.toFixed(1)}</div><div class="sub">满分100</div></div>
+    <div class="kpi"><div class="label">重点跟进</div><div class="val" style="color:#ff3b30">${kfCount}</div><div class="sub">日变化 ${kfChangeStr}</div></div>
     <div class="kpi"><div class="label">SA占比</div><div class="val ${saPct>=20?'green':saPct>=10?'gold':'brand'}">${saPct.toFixed(1)}%</div><div class="sub">S+A ${sa}人 / ${grades.length}人</div></div>
     <div class="kpi"><div class="label">S级学员</div><div class="val gold">${grades.filter(s=>s.sg==='S').length}</div><div class="sub">A级 ${grades.filter(s=>s.sg==='A').length}人</div></div>
   `;
@@ -1700,7 +1849,8 @@ function renderTeacherTab(students){
   <div class="filter-bar">
     <span class="filter-label">教师搜索</span>
     <input class="search-box" type="text" placeholder="输入教师姓名或科目..." value="${teacherSearch}" oninput="onTeacherSearch(this.value)">
-    <span class="info-count" style="margin-left:auto">共 ${data.length} 位教师 · 默认按续班率降序</span>
+    <button class="pill" style="background:var(--brand);color:#fff;border:none;padding:6px 16px;font-size:.78rem;font-weight:600;cursor:pointer;margin-left:auto" onclick="exportTeacherData()">导出Excel</button>
+    <span class="info-count">共 ${data.length} 位教师 · 默认按续班率降序</span>
   </div>
 
   <div class="chart-grid">
@@ -2000,21 +2150,19 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
     if((s.sg==='B'||s.sg==='C')&&comm!=='S')return true; // 评级BC且家校沟通非S
     return false;
   });
-  if(activeGradeFilter!=='all')students=students.filter(s=>s.sg===activeGradeFilter);
-
-  // 基于教师+评级筛选后的学员集合，计算各标签是否有数据（用于隐藏无数据标签）
-  // 注意：此处不应用标签筛选本身，否则多选时选一个标签会让其他标签都消失
-  const availableTags=computeAvailableTags(students);
-
-  // 标签筛选（多选，OR 逻辑）：选中任一标签即显示该学员
-  if(activeTagFilters.size>0){
-    students=students.filter(s=>{
-      for(const fk of activeTagFilters){
-        if(studentMatchesTag(s,fk))return true;
-      }
-      return false;
-    });
+  // 三级标签筛选：类别内OR，类别间AND
+  for(const catKey of Object.keys(activeTagFilters)){
+    const sel=activeTagFilters[catKey];
+    if(sel&&sel.size>0){
+      students=students.filter(s=>{
+        for(const optKey of sel){if(studentMatchesTagOption(s,catKey,optKey))return true;}
+        return false;
+      });
+    }
   }
+
+  // 基于教师+重点跟进筛选后的学员集合，计算各标签选项是否有数据
+  const availableTags=computeAvailableTagOptions(students);
   if(studentSearch){
     const q=studentSearch.toLowerCase();
     students=students.filter(s=>(s.n&&s.n.toLowerCase().includes(q))||(s.cc&&s.cc.toLowerCase().includes(q)));
@@ -2070,22 +2218,28 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
       </div>
     </div>
     <button class="key-follow-btn ${keyFollowFilter?'active':''}" onclick="toggleKeyFollow()" title="筛选未续班且评级为B或C的学员">⚠ 重点跟进</button>
-    <span class="filter-label" style="margin-left:8px">评级</span>
-    <div class="grade-filter">
-      <button class="grade-btn all ${activeGradeFilter==='all'?'active':''}" onclick="filterGrade('all')">全部</button>
-      <button class="grade-btn grade-S ${activeGradeFilter==='S'?'active':''}" onclick="filterGrade('S')">S级</button>
-      <button class="grade-btn grade-A ${activeGradeFilter==='A'?'active':''}" onclick="filterGrade('A')">A级</button>
-      <button class="grade-btn grade-B ${activeGradeFilter==='B'?'active':''}" onclick="filterGrade('B')">B级</button>
-      <button class="grade-btn grade-C ${activeGradeFilter==='C'?'active':''}" onclick="filterGrade('C')">C级</button>
-    </div>
     <span class="filter-label" style="margin-left:8px">标签</span>
-    <div class="tag-filter">
-      <button class="tag-btn all ${activeTagFilters.size===0?'active':''}" onclick="filterTag('all')">全部${activeTagFilters.size>0?` <span style="opacity:.7">(${activeTagFilters.size})</span>`:''}</button>
-      ${TAG_FILTERS.map(f=>{
-        const isActive=activeTagFilters.has(f.key);
-        const hasData=availableTags.has(f.key);
-        const cls=hasData?'':(' no-data');
-        return `<button class="tag-btn ${f.cls}${isActive?' active':''}${cls}" onclick="filterTag('${f.key}')" ${hasData?'':'disabled title="当前筛选条件下无数据"'}>${f.label}</button>`;
+    <div class="tag-tree">
+      ${TAG_CATEGORIES.map(cat=>{
+        const sel=activeTagFilters[cat.key];
+        const selCount=sel?sel.size:0;
+        const isExpanded=expandedTagCat===cat.key;
+        const avail=availableTags[cat.key]||new Set();
+        const summary=selCount>0?cat.options.filter(o=>sel.has(o.key)).map(o=>o.label).join('、'):'全部';
+        return `<div class="tag-cat">
+          <button class="tag-cat-btn ${isExpanded?'expanded':''}" onclick="toggleTagCat('${cat.key}')">${cat.label}<span class="tag-cat-sum">${summary}</span><span class="arrow">${isExpanded?'▲':'▼'}</span></button>
+          ${isExpanded?`<div class="tag-cat-opts">
+            <button class="tag-opt all ${selCount===0?'active':''}" onclick="selectTagAll('${cat.key}')">全部</button>
+            ${cat.options.map(opt=>{
+              const isActive=sel&&sel.has(opt.key);
+              const hasData=avail.has(opt.key);
+              const cls=hasData?'':(' no-data');
+              const gradeCls=cat.key==='rating'?' grade-'+opt.key:'';
+              const tagCls=cat.key==='studentType'?' tag-tenure':cat.key==='comm'?' tag-comm':'';
+              return `<button class="tag-opt${gradeCls}${tagCls}${isActive?' active':''}${cls}" onclick="toggleTag('${cat.key}','${opt.key}')" ${hasData?'':'disabled title="当前筛选条件下无数据"'}>${opt.label}</button>`;
+            }).join('')}
+          </div>`:''}
+        </div>`;
       }).join('')}
     </div>
     <input class="search-box" type="text" placeholder="搜索学员姓名/班级编码..." value="${studentSearch}" oninput="onStudentSearch(this.value)" style="max-width:200px">
@@ -2792,22 +2946,33 @@ function openTeacherDetail(teacherName){
 // ============================================================
 // 交互
 // ============================================================
-function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();keyFollowFilter=false;activeSubjectFilter='';trendSubjectFilter='';if(tab.startsWith('subject_'))trendTab='subject';else trendTab='overall';render();}
-function switchStatus(status){activeStatus=status;selectedTeacher='';activeGradeFilter='all';activeTagFilters=new Set();keyFollowFilter=false;activeSubjectFilter='';trendSubjectFilter='';trendTab='overall';render();}
+function switchTab(tab){activeTab=tab;sortCol='renewal_rate';sortDir='desc';teacherSearch='';studentSearch='';selectedTeacher='';activeTagFilters={};expandedTagCat=null;keyFollowFilter=false;activeSubjectFilter='';trendSubjectFilter='';if(tab.startsWith('subject_'))trendTab='subject';else trendTab='overall';render();}
+function switchStatus(status){activeStatus=status;selectedTeacher='';activeTagFilters={};expandedTagCat=null;keyFollowFilter=false;activeSubjectFilter='';trendSubjectFilter='';trendTab='overall';render();}
 function switchSubjectFilter(subject){activeSubjectFilter=subject;sortCol='renewal_rate';sortDir='desc';render();}
 function selectTeacher(t){selectedTeacher=t;closeDropdown();if(t)trendTab='teacher';render();}
-function filterGrade(g){activeGradeFilter=g;activeTagFilters=new Set();keyFollowFilter=false;render();}
 // 重点跟进筛选切换：开启时重置评级和标签筛选
 function toggleKeyFollow(){
   keyFollowFilter=!keyFollowFilter;
-  if(keyFollowFilter){activeGradeFilter='all';activeTagFilters=new Set();}
+  if(keyFollowFilter){activeTagFilters={};expandedTagCat=null;}
   render();
 }
-// 标签筛选：多选切换。点击"全部"清空所有选中；点击具体标签切换其选中状态。
-function filterTag(t){
-  if(t==='all'){activeTagFilters=new Set();}
-  else if(activeTagFilters.has(t)){activeTagFilters.delete(t);}
-  else{activeTagFilters.add(t);}
+// 展开/折叠标签分类
+function toggleTagCat(catKey){
+  expandedTagCat=expandedTagCat===catKey?null:catKey;
+  render();
+}
+// 选择"全部"（清除该分类下所有选择）
+function selectTagAll(catKey){
+  if(activeTagFilters[catKey])delete activeTagFilters[catKey];
+  render();
+}
+// 切换标签选项（多选，类别内OR，"全部"互斥）
+function toggleTag(catKey,optKey){
+  if(!activeTagFilters[catKey])activeTagFilters[catKey]=new Set();
+  const sel=activeTagFilters[catKey];
+  if(sel.has(optKey))sel.delete(optKey);
+  else sel.add(optKey);
+  if(sel.size===0)delete activeTagFilters[catKey];
   render();
 }
 function toggleDropdown(){
