@@ -635,6 +635,15 @@ tbody td.rank .badge{
 .admin-btn{position:relative;overflow:hidden;display:inline-flex;padding:10px 28px;border-radius:999px;font-size:.82rem;font-weight:700;font-family:var(--font);color:#fff;align-items:center;gap:6px;background:linear-gradient(135deg,#5856D6 0%,#4240C0 100%);box-shadow:0 4px 14px rgba(88,86,214,.35),inset 0 1px 2px rgba(255,255,255,.4);transition:all .3s var(--transition);cursor:pointer;border:none;letter-spacing:.3px}
 .admin-btn:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 8px 24px rgba(88,86,214,.45),inset 0 1px 2px rgba(255,255,255,.5)}
 .admin-btn:active{transform:translateY(-1px) scale(1.02)}
+.admin-btn.locked{background:linear-gradient(135deg,#8e8e93 0%,#636366 100%);box-shadow:0 4px 14px rgba(142,142,147,.3);cursor:not-allowed}
+.admin-btn.locked:hover{transform:none;box-shadow:0 4px 14px rgba(142,142,147,.3)}
+#saFormulaRow{cursor:pointer;transition:all .2s}
+#saFormulaRow:hover{background:rgba(88,86,214,.08);border-color:var(--accent)}
+#pinyinVerifyBox{display:flex;gap:8px;align-items:center;margin-top:8px;animation:fadeIn .3s}
+#pinyinVerifyBox input{flex:1;padding:6px 10px;border:1.5px solid var(--accent);border-radius:8px;font-size:.78rem;font-family:var(--font);outline:none}
+#pinyinVerifyBox input:focus{box-shadow:0 0 0 3px rgba(88,86,214,.15)}
+#pinyinVerifyBox .verify-btn{padding:6px 16px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap}
+#pinyinVerifyBox .verify-btn:hover{opacity:.85}
 /* 后台模态框 */
 .admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
 .admin-overlay.show{opacity:1;pointer-events:auto}
@@ -1153,6 +1162,59 @@ function exportSubjectStudents(subjectName){
 // 后台管理 - 下载重点跟进名单
 // ============================================================
 const CITY_NAME='广州';
+const CITY_PINYIN='guangzhou';
+let saFormulaClickCount=0;
+let adminVerified=false;
+
+function onSAFormulaClick(){
+  if(adminVerified)return;
+  saFormulaClickCount++;
+  const el=document.getElementById('saFormulaRow');
+  if(!el)return;
+  if(saFormulaClickCount===1){el.style.borderColor='var(--accent)';el.style.background='rgba(88,86,214,.06)';}
+  else if(saFormulaClickCount===2){el.style.borderColor='var(--gold)';el.style.background='rgba(255,149,0,.08)';}
+  else if(saFormulaClickCount>=3){
+    saFormulaClickCount=0;
+    el.style.borderColor='';el.style.background='';
+    // Show pinyin input
+    const existing=document.getElementById('pinyinVerifyBox');
+    if(existing){existing.remove();return;}
+    const box=document.createElement('div');
+    box.id='pinyinVerifyBox';
+    box.className='formula-note';
+    box.style.cssText='border-color:var(--accent);background:rgba(88,86,214,.05)';
+    box.innerHTML=`<span style="font-size:.72rem;color:var(--accent);font-weight:600;white-space:nowrap">🔑 管理员验证</span><input type="text" id="pinyinInput" placeholder="请输入学校拼音（如 guangzhou" autocomplete="off" onkeydown="verifyPinyin(event)"><button class="verify-btn" onclick="confirmPinyin()">验证</button>`;
+    el.after(box);
+    document.getElementById('pinyinInput').focus();
+  }
+}
+
+function confirmPinyin(){
+  const input=document.getElementById('pinyinInput');
+  if(!input)return;
+  const value=input.value.trim().toLowerCase();
+  if(value===CITY_PINYIN){
+    adminVerified=true;
+    const box=document.getElementById('pinyinVerifyBox');
+    if(box)box.remove();
+    const row=document.getElementById('saFormulaRow');
+    if(row){row.style.borderColor='';row.style.background='';}
+    render();
+  }else{
+    input.value='';
+    input.placeholder='拼音错误，请重新输入';
+    input.style.borderColor='#ff3b30';
+    input.focus();
+  }
+}
+
+function verifyPinyin(event){
+  if(event.key==='Enter')confirmPinyin();
+}
+
+function openAdminLocked(){
+  alert('请先点击3次SA评级公式并输入学校拼音完成验证');
+}
 
 function openAdminPanel(){
   const active=(DASHBOARD.all_students||[]).filter(s=>s.cs==='已开课班级'||s.cs==='已开窗班级');
@@ -1512,16 +1574,13 @@ function render(){
   html+=renderRules();
 
   // 统计公式评级与系统评级不一致的数量
-  const gradeMismatches=students.filter(s=>s.fg&&s.sg&&s.fg!==s.sg);
-  const gradeTotal=students.filter(s=>s.fg&&s.sg).length;
-  const mismatchHtml=gradeTotal>0
-    ?`<div class="formula-note" style="color:var(--gold)">评级对比：公式评级与系统评级共 ${gradeTotal} 人有评级，其中 ${gradeMismatches.length} 人不一致（${(gradeMismatches.length/gradeTotal*100).toFixed(1)}%）。当前显示以系统评分为准。</div>`
-    :'';
+  html+=`<div class="formula-note" id="saFormulaRow" onclick="onSAFormulaClick()">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分。当前显示以系统评分为准。</div>`;
 
-  html+=`<div class="formula-note">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分。当前显示以系统评分为准。</div>`;
-  if(mismatchHtml)html+=mismatchHtml;
-
-  html+=`<div class="admin-footer"><button class="admin-btn" onclick="openAdminPanel()">⚙️ 后台管理 · 下载重点跟进名单</button></div>`;
+  if(adminVerified){
+    html+=`<div class="admin-footer"><button class="admin-btn" onclick="openAdminPanel()">⚙️ 后台管理 · 下载重点跟进名单</button></div>`;
+  }else{
+    html+=`<div class="admin-footer"><button class="admin-btn locked" onclick="openAdminLocked()">🔒 后台管理（需验证）</button></div>`;
+  }
 
   app.innerHTML=html;
   renderCharts(students);
