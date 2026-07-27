@@ -629,6 +629,29 @@ tbody td.rank .badge{
 .library-link:hover{transform:translateY(-3px) scale(1.06);box-shadow:0 12px 32px rgba(255,149,0,.5),inset 0 1px 2px rgba(255,255,255,.6)}
 .library-link:hover::before{background-position:-200% 0}
 .library-link:active{transform:translateY(-1px) scale(1.02)}
+
+/* 后台管理按钮 */
+.admin-footer{text-align:center;padding:32px 0 24px;margin-top:16px;}
+.admin-btn{position:relative;overflow:hidden;display:inline-flex;padding:10px 28px;border-radius:999px;font-size:.82rem;font-weight:700;font-family:var(--font);color:#fff;align-items:center;gap:6px;background:linear-gradient(135deg,#5856D6 0%,#4240C0 100%);box-shadow:0 4px 14px rgba(88,86,214,.35),inset 0 1px 2px rgba(255,255,255,.4);transition:all .3s var(--transition);cursor:pointer;border:none;letter-spacing:.3px}
+.admin-btn:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 8px 24px rgba(88,86,214,.45),inset 0 1px 2px rgba(255,255,255,.5)}
+.admin-btn:active{transform:translateY(-1px) scale(1.02)}
+/* 后台模态框 */
+.admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.admin-overlay.show{opacity:1;pointer-events:auto}
+.admin-modal{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:24px;padding:32px;max-width:460px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.6);transform:translateY(20px) scale(.96);transition:transform .3s;position:relative}
+.admin-overlay.show .admin-modal{transform:translateY(0) scale(1)}
+.admin-modal h3{font-family:var(--font);font-size:1.15rem;font-weight:800;color:var(--text-1);margin-bottom:6px}
+.admin-modal p{font-size:.82rem;color:var(--text-2);line-height:1.6;margin-bottom:16px}
+.admin-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.admin-stat{background:rgba(88,86,214,.06);border-radius:12px;padding:12px;text-align:center}
+.admin-stat .num{font-size:1.4rem;font-weight:800;color:#5856D6;font-family:var(--font)}
+.admin-stat .lbl{font-size:.68rem;color:var(--text-3);margin-top:2px}
+.admin-download-btn{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#5856D6 0%,#4240C0 100%);color:#fff;font-size:.92rem;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .3s;box-shadow:0 6px 20px rgba(88,86,214,.35)}
+.admin-download-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(88,86,214,.45)}
+.admin-download-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.admin-close{position:absolute;top:16px;right:20px;font-size:1.4rem;color:var(--text-3);cursor:pointer;background:none;border:none;line-height:1;transition:color .2s;padding:4px}
+.admin-close:hover{color:var(--text-1)}
+
 .library-link .lib-icon{font-size:1.15rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
 
 /* Liquid Glass hover effects — 更强形变+发光+涟漪 */
@@ -665,6 +688,8 @@ tbody td.rank .badge{
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 // ============================================================
 // 全局状态
@@ -775,7 +800,7 @@ async function loadData(){
 
 async function loadHistory(){
   const ver=Date.now();
-  const paths=[`daily_history.json?v=${ver}`,`./daily_history.json?v=${ver}`];
+  const paths=[`guangzhou_daily_history.json?v=${ver}`,`./guangzhou_daily_history.json?v=${ver}`];
   for(const p of paths){
     try{const r=await fetch(p,{cache:'no-store'});if(r.ok)return await r.json();}catch(e){}
   }
@@ -1123,6 +1148,154 @@ function exportSubjectStudents(subjectName){
   URL.revokeObjectURL(url);
 }
 
+
+// ============================================================
+// 后台管理 - 下载重点跟进名单
+// ============================================================
+const CITY_NAME='广州';
+
+function openAdminPanel(){
+  const active=(DASHBOARD.all_students||[]).filter(s=>s.cs==='已开课班级'||s.cs==='已开窗班级');
+  const teacherSet=new Set(active.map(s=>s.t));
+  const notRenewed=active.filter(s=>s.ir==='否').length;
+  
+  const overlay=document.createElement('div');
+  overlay.className='admin-overlay';
+  overlay.innerHTML=`
+    <div class="admin-modal">
+      <button class="admin-close" onclick="closeAdminPanel()">&times;</button>
+      <h3>⚙️ 后台管理 · 重点跟进名单</h3>
+      <p>下载已开课+已开窗老师的重点跟进名单，以老师为单位，每个老师一个Excel文件，打包为ZIP下载。</p>
+      <div class="admin-stats">
+        <div class="admin-stat"><div class="num">${teacherSet.size}</div><div class="lbl">涉及老师</div></div>
+        <div class="admin-stat"><div class="num">${active.length}</div><div class="lbl">学生总数</div></div>
+        <div class="admin-stat"><div class="num">${notRenewed}</div><div class="lbl">未续班</div></div>
+        <div class="admin-stat"><div class="num">${active.length-notRenewed}</div><div class="lbl">已续班</div></div>
+      </div>
+      <button class="admin-download-btn" id="adminDownloadBtn" onclick="downloadFollowUpLists()">
+        📥 下载重点跟进名单（ZIP）
+      </button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('show'));
+}
+
+function closeAdminPanel(){
+  const overlay=document.querySelector('.admin-overlay');
+  if(overlay){overlay.classList.remove('show');setTimeout(()=>overlay.remove(),300);}
+}
+
+async function downloadFollowUpLists(){
+  const btn=document.getElementById('adminDownloadBtn');
+  btn.disabled=true;
+  btn.textContent='⏳ 正在生成Excel文件...';
+  
+  try{
+    const allStudents=DASHBOARD.all_students||[];
+    const active=allStudents.filter(s=>s.cs==='已开课班级'||s.cs==='已开窗班级');
+    
+    // 按老师分组
+    const teacherGroups={};
+    for(const s of active){
+      if(!teacherGroups[s.t])teacherGroups[s.t]=[];
+      teacherGroups[s.t].push(s);
+    }
+    
+    const teacherNames=Object.keys(teacherGroups).sort();
+    const zip=new JSZip();
+    let processed=0;
+    
+    for(const teacherName of teacherNames){
+      const students=teacherGroups[teacherName];
+      // 按总分升序排列（低分优先关注）
+      students.sort((a,b)=>(a.ts||0)-(b.ts||0));
+      
+      const subject=students[0]?.s||'';
+      const renewed=students.filter(s=>s.ir==='是').length;
+      const renewalRate=students.length>0?(renewed/students.length*100).toFixed(1):0;
+      
+      // 构建Excel数据
+      const headers=['序号','学员姓名','班级编码','学科','班级状态','开课日期','结课日期','总分','系统评级','深聊质量','深聊轮次','服务卡','题目回收','出勤率','进步感知','课次报告','连续在读','原班','续班','标签'];
+      const data=[headers];
+      
+      for(let i=0;i<students.length;i++){
+        const s=students[i];
+        const tagsStr=(s.tags||[]).map(t=>t.label).join('、');
+        const grade=s.sg||s.fg||'';
+        data.push([
+          i+1,
+          s.n||'',
+          s.cc||'',
+          s.s||'',
+          s.cs||'',
+          s.sd||'',
+          s.ed||'',
+          s.ts!=null?Number(s.ts.toFixed(1)):'',
+          grade,
+          s.dcq!=null?Number(s.dcq.toFixed(1)):'',
+          s.dcr!=null?Number(s.dcr.toFixed(1)):'',
+          s.svc!=null?Number(s.svc.toFixed(1)):'',
+          s.qr!=null?Number(s.qr.toFixed(1)):'',
+          s.att!=null?Number(s.att.toFixed(1)):'',
+          s.pp!=null?Number(s.pp.toFixed(1)):'',
+          s.cr!=null?Number(s.cr.toFixed(1)):'',
+          s.cq!=null?Number(s.cq.toFixed(1)):'',
+          s.io||'',
+          s.ir||'',
+          tagsStr
+        ]);
+      }
+      
+      // 添加汇总行
+      data.push([]);
+      data.push(['','','','','','','','','','','','','','','','','','','','']);
+      data.push(['汇总','','',subject,'','',students.length+'人','','','','','','','','','','','',renewed+'人/'+students.length+'人',renewalRate+'%','续班率:'+renewalRate+'%']);
+      
+      const ws=XLSX.utils.aoa_to_sheet(data);
+      ws['!cols']=[
+        {wch:5},{wch:10},{wch:14},{wch:6},{wch:10},{wch:12},{wch:12},
+        {wch:7},{wch:8},{wch:8},{wch:8},{wch:7},{wch:8},{wch:7},
+        {wch:8},{wch:8},{wch:8},{wch:5},{wch:5},{wch:25}
+      ];
+      
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,'重点跟进');
+      const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+      
+      const fileName=`${teacherName}_${subject}_重点跟进名单.xlsx`;
+      zip.file(fileName,wbout);
+      
+      processed++;
+      if(processed%10===0){
+        btn.textContent=`⏳ 正在生成... ${processed}/${teacherNames.length}`;
+      }
+    }
+    
+    btn.textContent='⏳ 正在打包ZIP文件...';
+    const zipBlob=await zip.generateAsync({type:'blob'});
+    
+    const url=URL.createObjectURL(zipBlob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`重点跟进名单_${CITY_NAME}_${DASHBOARD.meta.data_date}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    btn.disabled=false;
+    btn.textContent='✅ 下载完成！点击可重新下载';
+    setTimeout(()=>{closeAdminPanel();},2500);
+    
+  }catch(e){
+    console.error('下载失败:',e);
+    btn.disabled=false;
+    btn.textContent='❌ 下载失败，请重试';
+    alert('下载失败: '+e.message);
+  }
+}
+
 // ============================================================
 // 数据过滤
 // ============================================================
@@ -1345,6 +1518,8 @@ function render(){
 
   html+=`<div class="formula-note">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分。当前显示以系统评分为准。</div>`;
   if(mismatchHtml)html+=mismatchHtml;
+
+  html+=`<div class="admin-footer"><button class="admin-btn" onclick="openAdminPanel()">⚙️ 后台管理 · 下载重点跟进名单</button></div>`;
 
   app.innerHTML=html;
   renderCharts(students);
