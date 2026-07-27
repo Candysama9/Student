@@ -1069,7 +1069,7 @@ function exportSubjectStudents(subjectName){
   let csv='\ufeff'+headers.map(esc).join(',')+'\n'; // BOM for Excel
   for(const s of students){
     const tagsStr=(s.tags||[]).map(t=>t.label).join('、');
-    const grade=s.fg||s.sg||'';
+    const grade=s.sg||s.fg||'';
     const row=[
       tagsStr,
       s.n||'',
@@ -1321,10 +1321,10 @@ function render(){
   const gradeMismatches=students.filter(s=>s.fg&&s.sg&&s.fg!==s.sg);
   const gradeTotal=students.filter(s=>s.fg&&s.sg).length;
   const mismatchHtml=gradeTotal>0
-    ?`<div class="formula-note" style="color:var(--gold)">评级对比：公式评级与系统评级共 ${gradeTotal} 人有评级，其中 ${gradeMismatches.length} 人不一致（${(gradeMismatches.length/gradeTotal*100).toFixed(1)}%）。当前显示以公式评级为准。</div>`
+    ?`<div class="formula-note" style="color:var(--gold)">评级对比：公式评级与系统评级共 ${gradeTotal} 人有评级，其中 ${gradeMismatches.length} 人不一致（${(gradeMismatches.length/gradeTotal*100).toFixed(1)}%）。当前显示以系统评分为准。</div>`
     :'';
 
-  html+=`<div class="formula-note">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分</div>`;
+  html+=`<div class="formula-note">SA评级公式：进度比例 = min((数据日期-开课日期+1)/(结课日期-开课日期+1), 1.0) → 当天满分 = 进度比例×70+30 → S≥60%满分, A≥45%满分, B≥30%满分, C<30%满分。当前显示以系统评分为准。</div>`;
   if(mismatchHtml)html+=mismatchHtml;
 
   app.innerHTML=html;
@@ -1779,7 +1779,7 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
     <thead><tr>${cols.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead>
     <tbody>
       ${students.length?students.map(s=>{
-        const gradeHtml=s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:(s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:'-');
+        const gradeHtml=s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:(s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:'-');
         return `<tr>
           <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
           <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
@@ -2440,7 +2440,7 @@ function openTeacherDetail(teacherName){
             </tr></thead>
             <tbody>
               ${students.map(s=>{
-                const gh=s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:(s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:'-');
+                const gh=s.sg?`<span class="grade grade-${s.sg}">${s.sg}</span>`:(s.fg?`<span class="grade grade-${s.fg}">${s.fg}</span>`:'-');
                 return `<tr>
                   <td class="tags-cell"><div class="tag-row">${renderTags(s.tags)}</div></td>
                   <td class="name-cell" style="font-weight:500">${s.n||'-'}</td>
