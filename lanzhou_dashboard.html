@@ -1165,7 +1165,7 @@ function openAdminPanel(){
     <div class="admin-modal">
       <button class="admin-close" onclick="closeAdminPanel()">&times;</button>
       <h3>⚙️ 后台管理 · 重点跟进名单</h3>
-      <p>下载已开课+已开窗老师的重点跟进名单，以老师为单位，每个老师一个Excel文件，打包为ZIP下载。</p>
+      <p>下载已开课+已开窗老师的重点跟进名单，以老师为单位，按学科分文件夹，每个老师一个Excel文件，打包为ZIP下载。</p>
       <div class="admin-stats">
         <div class="admin-stat"><div class="num">${teacherSet.size}</div><div class="lbl">涉及老师</div></div>
         <div class="admin-stat"><div class="num">${active.length}</div><div class="lbl">学生总数</div></div>
@@ -1195,23 +1195,25 @@ async function downloadFollowUpLists(){
     const allStudents=DASHBOARD.all_students||[];
     const active=allStudents.filter(s=>s.cs==='已开课班级'||s.cs==='已开窗班级');
     
-    // 按老师分组
-    const teacherGroups={};
+    // 按老师+学科分组
+    const teacherSubjectGroups={};
     for(const s of active){
-      if(!teacherGroups[s.t])teacherGroups[s.t]=[];
-      teacherGroups[s.t].push(s);
+      const subject=s.s||'未分科';
+      const key=s.t+'|||'+subject;
+      if(!teacherSubjectGroups[key])teacherSubjectGroups[key]=[];
+      teacherSubjectGroups[key].push(s);
     }
     
-    const teacherNames=Object.keys(teacherGroups).sort();
+    const groupKeys=Object.keys(teacherSubjectGroups).sort();
     const zip=new JSZip();
     let processed=0;
     
-    for(const teacherName of teacherNames){
-      const students=teacherGroups[teacherName];
+    for(const groupKey of groupKeys){
+      const [teacherName,subject]=groupKey.split('|||');
+      const students=teacherSubjectGroups[groupKey];
       // 按总分升序排列（低分优先关注）
       students.sort((a,b)=>(a.ts||0)-(b.ts||0));
       
-      const subject=students[0]?.s||'';
       const renewed=students.filter(s=>s.ir==='是').length;
       const renewalRate=students.length>0?(renewed/students.length*100).toFixed(1):0;
       
@@ -1263,12 +1265,12 @@ async function downloadFollowUpLists(){
       XLSX.utils.book_append_sheet(wb,ws,'重点跟进');
       const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
       
-      const fileName=`${teacherName}_${subject}_重点跟进名单.xlsx`;
-      zip.file(fileName,wbout);
+      const fileName=`${teacherName}_重点跟进名单.xlsx`;
+      zip.folder(subject).file(fileName,wbout);
       
       processed++;
       if(processed%10===0){
-        btn.textContent=`⏳ 正在生成... ${processed}/${teacherNames.length}`;
+        btn.textContent=`⏳ 正在生成... ${processed}/${groupKeys.length}`;
       }
     }
     
