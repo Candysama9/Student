@@ -1702,7 +1702,14 @@ function renderSubjectStudentTab(subjectName,subjectStudents){
 
   let students=subjectStudents;
   if(selectedTeacher)students=students.filter(s=>s.t===selectedTeacher);
-  if(keyFollowFilter)students=students.filter(s=>s.ir!=='是'&&(s.sg==='B'||s.sg==='C'));
+  if(keyFollowFilter)students=students.filter(s=>{
+    if(s.ir==='是')return false; // 未续班
+    const commTag=s.tags?s.tags.find(t=>t.type==='comm'):null;
+    const comm=commTag?commTag.label.replace('家校沟通',''):null;
+    if(comm==='B'||comm==='C')return true; // 家校沟通BC：无论总分都重点跟进
+    if((s.sg==='B'||s.sg==='C')&&comm!=='S')return true; // 评级BC且家校沟通非S
+    return false;
+  });
   if(activeGradeFilter!=='all')students=students.filter(s=>s.sg===activeGradeFilter);
 
   // 基于教师+评级筛选后的学员集合，计算各标签是否有数据（用于隐藏无数据标签）
