@@ -12,7 +12,8 @@
   var EMAIL_REGEX=/^[a-zA-Z0-9._-]+@xdf\.cn$/;
   var DINGTALK_CORP_ID='';                  // 钉钉企业corpId（留空=仅邮箱）
   var AUTH_EXPIRY=8*3600*1000;              // 8小时
-  var DATA_WORKER_URL='https://xdf-dashboard-data.xdf-dashboard.workers.dev'; // Cloudflare Worker地址
+  // 数据API地址：Pages上同源加载（_worker.js保护），GitHub走Cloudflare Pages跨域加载
+  var DATA_WORKER_URL=(location.hostname.endsWith('.pages.dev')?'':'https://xdf-dashboard.pages.dev');
   // =================================================
 
   var AUTH_KEY='xdf_authed';
@@ -62,7 +63,7 @@
     isAuthed:isAuthed,
     getToken:getToken,
     getWorkerUrl:function(){return DATA_WORKER_URL;},
-    hasWorker:function(){return !!DATA_WORKER_URL;},
+    hasWorker:function(){return true;},
     getEmail:function(){return sessionStorage.getItem(AUTH_EMAIL_KEY)||'';}
   };
 

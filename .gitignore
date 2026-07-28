@@ -10,3 +10,5 @@ cloudflare-worker/.wrangler/
 
 # 依赖
 node_modules/
+.DS_Store
+.wrangler/
