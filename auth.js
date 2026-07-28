@@ -12,8 +12,9 @@
   var EMAIL_REGEX=/^[a-zA-Z0-9._-]+@xdf\.cn$/;
   var DINGTALK_CORP_ID='';                  // 钉钉企业corpId（留空=仅邮箱）
   var AUTH_EXPIRY=8*3600*1000;              // 8小时
-  // 数据API地址：Pages上同源加载（_worker.js保护），GitHub走Cloudflare Pages跨域加载
-  var DATA_WORKER_URL=(location.hostname.endsWith('.pages.dev')?'':'https://xdf-dashboard.pages.dev');
+  // 数据API地址：Pages同源加载，GitHub走Pages跨域加载，本地直接加载JSON
+  var IS_LOCAL=(location.hostname==='127.0.0.1'||location.hostname==='localhost'||location.hostname==='');
+  var DATA_WORKER_URL=(IS_LOCAL?'':(location.hostname.endsWith('.pages.dev')?'/api':'https://xdf-dashboard.pages.dev/api'));
   // =================================================
 
   var AUTH_KEY='xdf_authed';
@@ -63,7 +64,7 @@
     isAuthed:isAuthed,
     getToken:getToken,
     getWorkerUrl:function(){return DATA_WORKER_URL;},
-    hasWorker:function(){return true;},
+    hasWorker:function(){return !IS_LOCAL;},
     getEmail:function(){return sessionStorage.getItem(AUTH_EMAIL_KEY)||'';}
   };
 
@@ -77,13 +78,12 @@
   50%{background-position:30% 20%,70% 30%,60% 80%,80% 70%,20% 80%,50% 30%,0 0}
   100%{background-position:60% 40%,40% 60%,40% 60%,60% 40%,40% 60%,70% 70%,0 0}
 }
-@keyframes xdfFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes xdfShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-7px)}20%,40%,60%,80%{transform:translateX(7px)}}
+@keyframes xdfShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-6px)}20%,40%,60%,80%{transform:translateX(6px)}}
 @keyframes xdfSpin{to{transform:rotate(360deg)}}
 @keyframes xdfSpecular{0%,100%{background-position:0% 0%}50%{background-position:100% 0%}}
-@keyframes xdfFadeIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes xdfPulseRing{0%{transform:scale(.95);opacity:.7}50%{transform:scale(1.05);opacity:.3}100%{transform:scale(.95);opacity:.7}}
+@keyframes xdfFadeIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes xdfGradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes xdfPulse{0%,100%{box-shadow:0 2px 16px rgba(0,122,255,.25)}50%{box-shadow:0 4px 28px rgba(0,122,255,.45)}}
 
 #xdf-auth-gate{
   position:fixed;inset:0;z-index:2147483647;
@@ -94,89 +94,69 @@
 #xdf-auth-gate .xdf-bg{
   position:absolute;inset:-10%;z-index:-1;
   background:
-    radial-gradient(ellipse 60% 50% at 12% 8%,rgba(0,122,255,.28),transparent 60%),
-    radial-gradient(ellipse 50% 40% at 88% 22%,rgba(88,86,214,.25),transparent 60%),
-    radial-gradient(ellipse 60% 45% at 50% 100%,rgba(0,199,190,.22),transparent 60%),
-    radial-gradient(ellipse 45% 35% at 80% 80%,rgba(255,149,0,.15),transparent 60%),
-    radial-gradient(ellipse 40% 30% at 18% 75%,rgba(52,199,89,.15),transparent 60%),
-    radial-gradient(ellipse 35% 25% at 65% 45%,rgba(255,94,138,.12),transparent 60%),
+    radial-gradient(ellipse 60% 50% at 12% 8%,rgba(0,122,255,.22),transparent 60%),
+    radial-gradient(ellipse 50% 40% at 88% 22%,rgba(88,86,214,.20),transparent 60%),
+    radial-gradient(ellipse 60% 45% at 50% 100%,rgba(0,199,190,.18),transparent 60%),
+    radial-gradient(ellipse 45% 35% at 80% 80%,rgba(255,149,0,.10),transparent 60%),
+    radial-gradient(ellipse 40% 30% at 18% 75%,rgba(52,199,89,.10),transparent 60%),
     linear-gradient(135deg,#eef2fb 0%,#f5f0fa 50%,#eaf6f4 100%);
-  background-size:200% 200%,220% 220%,200% 200%,220% 220%,200% 200%,200% 200%,100% 100%;
+  background-size:200% 200%,220% 220%,200% 200%,220% 220%,200% 200%,100% 100%;
   animation:xdfBgFlow 18s ease-in-out infinite alternate;
 }
 #xdf-auth-gate *{margin:0;padding:0;box-sizing:border-box}
 .xdf-card{
-  position:relative;overflow:hidden;width:100%;max-width:360px;padding:44px 36px 36px;
-  border-radius:28px;text-align:center;
-  background:rgba(255,255,255,.28);
-  border:1px solid rgba(255,255,255,.55);
-  box-shadow:0 24px 64px rgba(0,0,0,.12),0 0 0 1px rgba(255,255,255,.2) inset,inset 0 1px 2px rgba(255,255,255,.8);
-  backdrop-filter:blur(44px) saturate(240%);-webkit-backdrop-filter:blur(44px) saturate(240%);
-  animation:xdfFadeIn .6s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;width:100%;max-width:340px;padding:40px 32px 32px;
+  border-radius:24px;text-align:center;
+  background:rgba(255,255,255,.35);
+  border:1px solid rgba(255,255,255,.6);
+  box-shadow:0 20px 50px rgba(0,0,0,.10),0 0 0 1px rgba(255,255,255,.15) inset,inset 0 1px 2px rgba(255,255,255,.7);
+  backdrop-filter:blur(40px) saturate(220%);-webkit-backdrop-filter:blur(40px) saturate(220%);
+  animation:xdfFadeIn .5s cubic-bezier(.4,0,.2,1);
 }
 .xdf-card::before{
   content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.6),transparent 65%);opacity:.6;
+  background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.5),transparent 60%);opacity:.5;
 }
 .xdf-card::after{
   content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.25) 45%,rgba(255,255,255,.05) 55%,transparent 70%);
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.2) 45%,rgba(255,255,255,.04) 55%,transparent 70%);
   background-size:300% 100%;animation:xdfSpecular 8s ease-in-out infinite;
 }
-.xdf-logo{
-  width:56px;height:56px;margin:0 auto 16px;position:relative;z-index:1;
-  animation:xdfFloat 3.5s ease-in-out infinite;
-}
-.xdf-logo-ring{
-  position:absolute;inset:0;border-radius:50%;
-  background:linear-gradient(135deg,#007AFF,#5856D6,#00C7BE);
-  opacity:.2;animation:xdfPulseRing 3s ease-in-out infinite;
-}
-.xdf-logo-inner{
-  position:absolute;inset:6px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,#007AFF 0%,#5856D6 50%,#00C7BE 100%);
-  background-size:200% 200%;animation:xdfGradShift 6s ease infinite;
-  box-shadow:0 6px 22px rgba(0,122,255,.35),inset 0 1px 3px rgba(255,255,255,.5);
-}
-.xdf-logo-inner svg{width:26px;height:26px;fill:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.15))}
 .xdf-card h2{
-  font-size:1.3rem;font-weight:800;color:#1a1a2e;margin-bottom:4px;
-  position:relative;z-index:1;letter-spacing:1px;
+  font-size:1.4rem;font-weight:800;color:#1a1a2e;margin-bottom:28px;
+  position:relative;z-index:1;letter-spacing:2px;
 }
-.xdf-sub{font-size:.78rem;color:#6e6e80;margin-bottom:18px;position:relative;z-index:1;font-weight:500}
-.xdf-input-wrap{display:block;margin-bottom:36px;position:relative;z-index:1}
+.xdf-input-wrap{display:block;position:relative;z-index:1}
 .xdf-input{
-  width:100%;padding:16px 20px;border-radius:14px;
-  border:2px solid rgba(255,255,255,.6);
-  background:rgba(255,255,255,.45);
-  font-size:1.05rem;font-weight:700;color:#1a1a2e;outline:none;
-  backdrop-filter:blur(10px);
+  width:100%;padding:14px 18px;border-radius:12px;
+  border:1.5px solid rgba(255,255,255,.5);
+  background:rgba(255,255,255,.4);
+  font-size:1rem;font-weight:700;color:#1a1a2e;outline:none;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   transition:border-color .25s,box-shadow .25s,background .25s;
-  font-family:inherit;text-align:center;
+  font-family:inherit;text-align:center;letter-spacing:.5px;
 }
 .xdf-input:focus{
   border-color:#007AFF;
-  background:rgba(255,255,255,.65);
-  box-shadow:0 0 0 4px rgba(0,122,255,.12);
+  background:rgba(255,255,255,.6);
+  box-shadow:0 0 0 3px rgba(0,122,255,.1);
 }
 .xdf-input::placeholder{color:#9e9eaf;font-weight:400}
+.xdf-btn-wrap{display:flex;justify-content:center;margin-top:28px;position:relative;z-index:1}
 .xdf-btn{
-  display:inline-block;width:auto;padding:12px 56px;border-radius:999px;border:none;cursor:pointer;
+  display:inline-block;width:auto;padding:10px 48px;border-radius:999px;border:none;cursor:pointer;
   background:linear-gradient(135deg,#007AFF,#5856D6);
-  background-size:200% 200%;animation:xdfGradShift 6s ease infinite;
-  color:#fff;font-size:.95rem;font-weight:700;
+  background-size:200% 200%;animation:xdfGradShift 6s ease infinite,xdfPulse 3s ease-in-out infinite;
+  color:#fff;font-size:.9rem;font-weight:700;
   transition:transform .15s,box-shadow .25s;white-space:nowrap;
-  font-family:inherit;letter-spacing:3px;
-  box-shadow:0 4px 20px rgba(0,122,255,.3);
+  font-family:inherit;letter-spacing:4px;
+  box-shadow:0 2px 16px rgba(0,122,255,.25);
 }
-.xdf-btn:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,122,255,.4)}
+.xdf-btn:hover{transform:translateY(-1px);box-shadow:0 4px 22px rgba(0,122,255,.4)}
 .xdf-btn:active{transform:translateY(0)}
-.xdf-error{color:#FF3B30;font-size:.76rem;height:20px;margin-bottom:6px;opacity:0;transition:opacity .2s;position:relative;z-index:1;font-weight:500}
+.xdf-error{color:#FF3B30;font-size:.76rem;height:20px;margin-top:14px;opacity:0;transition:opacity .2s;position:relative;z-index:1;font-weight:500}
 .xdf-error.show{opacity:1}
 .xdf-card.shake{animation:xdfShake .4s}
-.xdf-hint{font-size:.72rem;color:#9e9eaf;margin-top:18px;position:relative;z-index:1;line-height:1.6}
-.xdf-hint a{color:#007AFF;text-decoration:none;font-weight:500}
 .xdf-dt-status{
   display:flex;align-items:center;justify-content:center;gap:10px;
   padding:20px 0;font-size:.85rem;color:#5856D6;position:relative;z-index:1;font-weight:600;
@@ -184,17 +164,6 @@
 .xdf-dt-spinner{
   width:22px;height:22px;border:2.5px solid rgba(88,86,214,.2);
   border-top-color:#5856D6;border-radius:50%;animation:xdfSpin .7s linear infinite;
-}
-.xdf-footer{
-  margin-top:22px;padding-top:18px;
-  border-top:1px solid rgba(255,255,255,.3);
-  font-size:.7rem;color:#9e9eaf;position:relative;z-index:1;
-}
-.xdf-footer a{color:#007AFF;text-decoration:none;font-weight:500}
-.xdf-badge{
-  display:inline-flex;align-items:center;gap:4px;padding:3px 12px;border-radius:100px;
-  font-size:.65rem;font-weight:600;background:rgba(0,199,190,.12);color:#00C7BE;
-  margin-bottom:16px;position:relative;z-index:1;
 }
 `;
   document.head.appendChild(styleEl);
@@ -205,19 +174,14 @@
   overlay.innerHTML=`
     <div class="xdf-bg"></div>
     <div class="xdf-card" id="xdfCard">
-      <div class="xdf-logo">
-        <div class="xdf-logo-ring"></div>
-        <div class="xdf-logo-inner">
-          <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-        </div>
-      </div>
       <h2>身份验证</h2>
-      <p class="xdf-sub" id="xdfSub">请输入邮箱</p>
       <div id="xdfPwdForm">
         <div class="xdf-input-wrap">
           <input type="text" class="xdf-input" id="xdfPwdInput" autocomplete="off">
         </div>
-        <button class="xdf-btn" id="xdfPwdBtn">进 入</button>
+        <div class="xdf-btn-wrap">
+          <button class="xdf-btn" id="xdfPwdBtn">进 入</button>
+        </div>
         <div class="xdf-error" id="xdfError"></div>
       </div>
     </div>
