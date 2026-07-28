@@ -1,0 +1,12 @@
+# JSON数据文件（已迁移至Cloudflare KV，不再提交到仓库）
+*_dashboard.json
+*_daily_history.json
+daily_history.json
+dashboard.json
+data.json
+
+# Cloudflare Wrangler本地缓存
+cloudflare-worker/.wrangler/
+
+# 依赖
+node_modules/

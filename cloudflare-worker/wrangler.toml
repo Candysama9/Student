@@ -5,7 +5,7 @@ compatibility_date = "2024-01-01"
 # KV命名空间绑定（创建后自动填入id）
 [[kv_namespaces]]
 binding = "DASHBOARD_KV"
-id = ""  # 运行 wrangler kv:namespace create DASHBOARD_KV 后填入
+id = "a9a4517010094107b4502cc688b2c2a1"
 
 # 环境变量
 [vars]

@@ -11,7 +11,7 @@
   var PASSWORD='27rk';
   var DINGTALK_CORP_ID='';                  // 钉钉企业corpId（留空=仅密码）
   var AUTH_EXPIRY=8*3600*1000;              // 8小时
-  var DATA_WORKER_URL='';                   // Cloudflare Worker地址（留空=不启用数据保护）
+  var DATA_WORKER_URL='https://xdf-dashboard-data.xdf-dashboard.workers.dev'; // Cloudflare Worker地址
   // =================================================
 
   var AUTH_KEY='xdf_authed';
