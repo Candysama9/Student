@@ -427,7 +427,7 @@ tbody td.num{font-family:var(--mono);text-align:center}
 
     <!-- Footer -->
     <div class="contact-footer">
-      如有问题，钉钉联系 <a href="#">zhurongcheng@xdf.cn</a>
+      如有问题，钉钉联系 <a href="mailto:zhurongcheng@xdf.cn">zhurongcheng@xdf.cn</a>
     </div>
   </div>
 </div>
@@ -649,6 +649,11 @@ function computeMetrics(school,data,history){
       m.avgScoreChange=Math.round((latest.overall.avg_score-prev.overall.avg_score)*10)/10;
       m.saPctChange=Math.round((latest.overall.sa_pct-prev.overall.sa_pct)*10)/10;
 
+      // SA续班率环比
+      if(latest.overall.sa_renewal_rate!=null&&prev.overall.sa_renewal_rate!=null){
+        m.saRenewalChange=Math.round((latest.overall.sa_renewal_rate-prev.overall.sa_renewal_rate)*10)/10;
+      }
+
       // Comm score change from metrics
       const lm=latest.overall.metrics||{};
       const pm=prev.overall.metrics||{};
@@ -711,11 +716,19 @@ function computeOverall(rawData){
   let scoreWeight=0;
   let sumSA=0;
   let saTotal=0;
+  // 已开窗/已结课续班率汇总
+  let owRenewal=0,owOriginal=0;
+  let finRenewal=0,finOriginal=0;
+  // SA续班率汇总
+  let saRenewal=0,saOriginal=0;
+  // 学情沟通均分汇总
+  let commWeighted=0,commWeight=0;
 
   rawData.forEach(({data})=>{
     if(!data) return;
     const meta=data.meta||{};
     const summary=data.summary||{};
+    const allStudents=data.all_students||[];
 
     if(summary.total_teachers) totalTeachers+=summary.total_teachers;
     if(meta.total_records) totalRecords+=meta.total_records;
@@ -736,6 +749,45 @@ function computeOverall(rawData){
     if(summary.total_original!=null){
       saTotal+=summary.total_original;
     }
+
+    // 已开窗/已结课续班率（从status_stats或明细计算）
+    const ss=meta.status_stats||{};
+    const ow=ss['已开窗班级'];
+    const fin=ss['已结课班级'];
+    if(ow&&ow.count>0){
+      if(ow.renewal_count!=null){owRenewal+=ow.renewal_count;owOriginal+=ow.original_count||ow.count;}
+      else if(ow.renewal_rate!=null&&ow.count){owRenewal+=ow.renewal_rate/100*ow.count;owOriginal+=ow.count;}
+    }
+    if(fin&&fin.count>0){
+      if(fin.renewal_count!=null){finRenewal+=fin.renewal_count;finOriginal+=fin.original_count||fin.count;}
+      else if(fin.renewal_rate!=null&&fin.count){finRenewal+=fin.renewal_rate/100*fin.count;finOriginal+=fin.count;}
+    }
+
+    // SA续班率（从明细或summary计算）
+    if(allStudents.length>0){
+      const saStu=allStudents.filter(s=>s.sg==='S'||s.sg==='A');
+      const saIO=saStu.filter(s=>s.io==='是');
+      const saIR=saIO.filter(s=>s.ir==='是');
+      saRenewal+=saIR.length;
+      saOriginal+=saIO.length;
+
+      // 学情沟通均分
+      const commVals=allStudents.map(s=>(s.dcq||0)+(s.dcr||0)+(s.svc||0));
+      if(commVals.length>0){
+        commWeighted+=commVals.reduce((a,b)=>a+b,0);
+        commWeight+=commVals.length;
+      }
+    }else{
+      // 无明细时从summary取
+      if(summary.sa_renewal_rate!=null&&summary.sa_count!=null){
+        saRenewal+=summary.sa_renewal_rate/100*summary.sa_count;
+        saOriginal+=summary.sa_count;
+      }
+      if(summary.comm_score!=null&&summary.total_original!=null){
+        commWeighted+=summary.comm_score*summary.total_original;
+        commWeight+=summary.total_original;
+      }
+    }
   });
 
   return {
@@ -744,6 +796,10 @@ function computeOverall(rawData){
     overallRenewalRate:sumOriginal>0?Math.round(sumRenewal/sumOriginal*1000)/10:0,
     overallAvgScore:scoreWeight>0?Math.round(weightedScore/scoreWeight*100)/100:0,
     overallSAPct:saTotal>0?Math.round(sumSA/saTotal*1000)/10:0,
+    overallOWRate:owOriginal>0?Math.round(owRenewal/owOriginal*1000)/10:0,
+    overallFinRate:finOriginal>0?Math.round(finRenewal/finOriginal*1000)/10:0,
+    overallSARR:saOriginal>0?Math.round(saRenewal/saOriginal*1000)/10:0,
+    overallComm:commWeight>0?Math.round(commWeighted/commWeight*100)/100:0,
   };
 }
 
@@ -754,7 +810,11 @@ function renderKPIs(o){
     {label:'总教师数',val:o.totalTeachers,cls:'brand',sub:'各校教师之和'},
     {label:'总人次',val:o.totalRecords.toLocaleString(),cls:'accent',sub:'各校总人次之和'},
     {label:'整体续班率',val:o.overallRenewalRate+'%',cls:rateClass(o.overallRenewalRate),sub:'续班人次/原班人次'},
+    {label:'已开窗续班率',val:o.overallOWRate!=null?o.overallOWRate+'%':'—',cls:rateClass(o.overallOWRate),sub:'已开窗班级汇总'},
+    {label:'已结课续班率',val:o.overallFinRate!=null?o.overallFinRate+'%':'—',cls:rateClass(o.overallFinRate),sub:'已结课班级汇总'},
+    {label:'SA续班率',val:o.overallSARR!=null?o.overallSARR+'%':'—',cls:rateClass(o.overallSARR),sub:'SA学员续班率'},
     {label:'整体均分',val:o.overallAvgScore,cls:'purple',sub:'加权平均（按人次）'},
+    {label:'学情沟通均分',val:o.overallComm!=null?o.overallComm:'—',cls:'accent',sub:'满分65'},
     {label:'整体SA占比',val:o.overallSAPct+'%',cls:'gold',sub:'SA学员/总学员'},
   ];
   row.innerHTML=kpis.map(k=>
@@ -767,7 +827,7 @@ function renderKPIs(o){
 }
 
 function rateClass(rate){
-  if(rate==null) return 'r-dash';
+  if(rate==null||isNaN(rate)) return 'r-dash';
   if(rate>=40) return 'r-green';
   if(rate>=20) return 'r-gold';
   return 'r-default';
@@ -806,21 +866,21 @@ function renderTable(metrics){
 }
 
 function renderRateCell(rate,change){
-  if(rate==null){
+  if(rate==null||isNaN(rate)){
     return '<td class="rate-cell"><span class="rate-val r-dash">&mdash;</span></td>';
   }
   var cls=rateClass(rate);
-  var html='<td class="rate-cell"><span class="rate-val '+cls+'">'+rate+'%</span>';
+  var html='<td class="rate-cell"><span class="rate-val '+cls+'">'+rate.toFixed(1)+'%</span>';
   html+=renderChange(change);
   html+='</td>';
   return html;
 }
 
 function renderChange(change){
-  if(change==null) return '<span class="rate-change dash">&mdash;</span>';
-  if(change>0) return '<span class="rate-change up">&#9650;'+Math.abs(change)+'</span>';
-  if(change<0) return '<span class="rate-change down">&#9660;'+Math.abs(change)+'</span>';
-  return '<span class="rate-change flat">&#9644;0</span>';
+  if(change==null||isNaN(change)) return '';
+  if(change>0) return '<span class="rate-change up">&#9650;'+Math.abs(change).toFixed(1)+'</span>';
+  if(change<0) return '<span class="rate-change down">&#9660;'+Math.abs(change).toFixed(1)+'</span>';
+  return '<span class="rate-change flat">&#9644;0.0</span>';
 }
 
 /* ===== Render Nav Switch ===== */
