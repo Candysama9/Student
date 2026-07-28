@@ -816,7 +816,7 @@ function computeAvailableTagOptions(students){
 // ============================================================
 async function loadData(){
   const ver=Date.now();
-  var paths;if(window.XDF_AUTH&&XDF_AUTH.hasWorker()){var _t=XDF_AUTH.getToken();paths=[XDF_AUTH.getWorkerUrl()+'/lanzhou_dashboard.json?k='+_t+'&v='+ver];}else{paths=[`lanzhou_dashboard.json?v=${ver}`,`./lanzhou_dashboard.json?v=${ver}`];}
+  var paths;if(window.XDF_AUTH&&XDF_AUTH.hasWorker()){var _t=XDF_AUTH.getToken();paths=[XDF_AUTH.getWorkerUrl()+'/lanzhou_dashboard.json?k='+encodeURIComponent(_t)+'&v='+ver];}else{paths=[`lanzhou_dashboard.json?v=${ver}`,`./lanzhou_dashboard.json?v=${ver}`];}
   // 添加超时和进度提示
   const loadingText=document.getElementById('loadingText');
   let progressTimer=setTimeout(()=>{
@@ -850,7 +850,7 @@ async function loadData(){
 
 async function loadHistory(){
   const ver=Date.now();
-  var paths;if(window.XDF_AUTH&&XDF_AUTH.hasWorker()){var _t=XDF_AUTH.getToken();paths=[XDF_AUTH.getWorkerUrl()+'/lanzhou_daily_history.json?k='+_t+'&v='+ver];}else{paths=[`lanzhou_daily_history.json?v=${ver}`,`./lanzhou_daily_history.json?v=${ver}`];}
+  var paths;if(window.XDF_AUTH&&XDF_AUTH.hasWorker()){var _t=XDF_AUTH.getToken();paths=[XDF_AUTH.getWorkerUrl()+'/lanzhou_daily_history.json?k='+encodeURIComponent(_t)+'&v='+ver];}else{paths=[`lanzhou_daily_history.json?v=${ver}`,`./lanzhou_daily_history.json?v=${ver}`];}
   for(const p of paths){
     try{const r=await fetch(p,{cache:'no-store'});if(r.ok)return await r.json();}catch(e){}
   }
@@ -1364,7 +1364,7 @@ function onSAFormulaClick(){
     box.id='pinyinVerifyBox';
     box.className='formula-note';
     box.style.cssText='border-color:var(--accent);background:rgba(88,86,214,.05)';
-    box.innerHTML=`<input type="text" id="pinyinInput" placeholder=" " autocomplete="off" onkeydown="verifyPinyin(event)"><button class="verify-btn" onclick="confirmPinyin()">验证</button>`;
+    box.innerHTML=`<input type="text" id="pinyinInput" placeholder="输入管理密码" autocomplete="off" onkeydown="verifyPinyin(event)"><button class="verify-btn" onclick="confirmPinyin()">验证</button>`;
     el.after(box);
     document.getElementById('pinyinInput').focus();
   }
@@ -1374,7 +1374,7 @@ function confirmPinyin(){
   const input=document.getElementById('pinyinInput');
   if(!input)return;
   const value=input.value.trim().toLowerCase();
-  if(value===CITY_PINYIN){
+  if(value==='27'+CITY_PINYIN){
     adminVerified=true;
     const box=document.getElementById('pinyinVerifyBox');
     if(box)box.remove();

@@ -1,15 +1,16 @@
 /**
- * XDF数据看板 - 统一身付认证模块 v2
- * 液态玻璃设计 · 密码验证 · 钉钉免登(可选)
+ * XDF数据看板 - 统一身付认证模块 v3
+ * 液态玻璃设计 · 邮箱验证（@xdf.cn）· 钉钉免登(可选)
  *
- * 部署Cloudflare Worker后，修改 DATA_WORKER_URL 即可启用数据保护
+ * 登录方式：输入任意 @xdf.cn 邮箱即可进入
+ * 邮箱会通过Cloudflare Worker留存后台供查验
  */
 (function(){
   'use strict';
 
   // ==================== 配置区 ====================
-  var PASSWORD='27rk';
-  var DINGTALK_CORP_ID='';                  // 钉钉企业corpId（留空=仅密码）
+  var EMAIL_REGEX=/^[a-zA-Z0-9._-]+@xdf\.cn$/;
+  var DINGTALK_CORP_ID='';                  // 钉钉企业corpId（留空=仅邮箱）
   var AUTH_EXPIRY=8*3600*1000;              // 8小时
   var DATA_WORKER_URL='https://xdf-dashboard-data.xdf-dashboard.workers.dev'; // Cloudflare Worker地址
   // =================================================
@@ -17,12 +18,17 @@
   var AUTH_KEY='xdf_authed';
   var AUTH_TS_KEY='xdf_auth_ts';
   var AUTH_METHOD_KEY='xdf_auth_method';
+  var AUTH_EMAIL_KEY='xdf_auth_email';
+
+  function isValidEmail(val){
+    return EMAIL_REGEX.test(val.trim());
+  }
 
   function isAuthed(){
     try{
       var urlK=new URLSearchParams(location.search).get('k');
-      if(urlK===PASSWORD){
-        setAuth('url');
+      if(urlK&&isValidEmail(urlK)){
+        setAuth('url',urlK.trim());
         var url=new URL(location.href);
         url.searchParams.delete('k');
         history.replaceState(null,'',url.toString());
@@ -33,20 +39,22 @@
       if(ts>0 && Date.now()-ts>AUTH_EXPIRY){
         sessionStorage.removeItem(AUTH_KEY);
         sessionStorage.removeItem(AUTH_TS_KEY);
+        sessionStorage.removeItem(AUTH_EMAIL_KEY);
         return false;
       }
       return true;
     }catch(e){return false;}
   }
 
-  function setAuth(method){
+  function setAuth(method,email){
     sessionStorage.setItem(AUTH_KEY,'1');
     sessionStorage.setItem(AUTH_TS_KEY,String(Date.now()));
-    sessionStorage.setItem(AUTH_METHOD_KEY,method||'password');
+    sessionStorage.setItem(AUTH_METHOD_KEY,method||'email');
+    sessionStorage.setItem(AUTH_EMAIL_KEY,(email||'').trim());
   }
 
   function getToken(){
-    return sessionStorage.getItem(AUTH_KEY)==='1'?PASSWORD:'';
+    return sessionStorage.getItem(AUTH_EMAIL_KEY)||'';
   }
 
   // 暴露给全局，供看板加载数据时使用
@@ -54,7 +62,8 @@
     isAuthed:isAuthed,
     getToken:getToken,
     getWorkerUrl:function(){return DATA_WORKER_URL;},
-    hasWorker:function(){return !!DATA_WORKER_URL;}
+    hasWorker:function(){return !!DATA_WORKER_URL;},
+    getEmail:function(){return sessionStorage.getItem(AUTH_EMAIL_KEY)||'';}
   };
 
   if(isAuthed())return;
@@ -202,19 +211,19 @@
         </div>
       </div>
       <h2>新东方数据看板</h2>
-      <p class="xdf-sub" id="xdfSub">请输入访问密码以继续</p>
+      <p class="xdf-sub" id="xdfSub">请输入新东方邮箱以继续</p>
       <div id="xdfDtStatus" style="display:none" class="xdf-dt-status">
         <div class="xdf-dt-spinner"></div>
         <span>正在验证钉钉身份...</span>
       </div>
       <div id="xdfPwdForm">
         <div class="xdf-input-wrap">
-          <input type="password" class="xdf-input" id="xdfPwdInput" placeholder="输入访问密码" autocomplete="off">
+          <input type="text" class="xdf-input" id="xdfPwdInput" placeholder="姓名拼音@xdf.cn" autocomplete="off">
           <button class="xdf-btn" id="xdfPwdBtn">进入</button>
         </div>
-        <div class="xdf-error" id="xdfError">密码错误，请重新输入</div>
+        <div class="xdf-error" id="xdfError">请输入有效的 @xdf.cn 邮箱</div>
       </div>
-      <div class="xdf-hint" id="xdfHint"></div>
+      <div class="xdf-hint" id="xdfHint">使用新东方内部邮箱验证身份</div>
       <div class="xdf-footer">如有问题，钉钉联系 <a href="mailto:zhurongcheng@xdf.cn">zhurongcheng@xdf.cn</a></div>
     </div>
   `;
@@ -232,17 +241,18 @@
   function showPwdForm(){
     dtStatus.style.display='none';
     pwdForm.style.display='block';
-    sub.textContent='请输入访问密码以继续';
-    hint.textContent='';
+    sub.textContent='请输入新东方邮箱以继续';
+    hint.textContent='使用新东方内部邮箱验证身份';
     setTimeout(function(){pwdInput.focus();},100);
   }
 
   function verifyPwd(){
     var val=pwdInput.value.trim();
-    if(val===PASSWORD){
-      setAuth('password');
+    if(isValidEmail(val)){
+      setAuth('email',val);
       location.reload();
     }else{
+      errorEl.textContent='请输入有效的 @xdf.cn 邮箱';
       errorEl.classList.add('show');
       card.classList.remove('shake');
       void card.offsetWidth;
@@ -277,16 +287,16 @@
       dd.ready(function(){
         dd.runtime.permission.requestAuthCode({
           corpId:DINGTALK_CORP_ID,
-          onSuccess:function(){setAuth('dingtalk');location.reload();},
-          onFail:function(){showPwdForm();hint.textContent='钉钉验证失败，请使用密码';}
+          onSuccess:function(){setAuth('dingtalk','');location.reload();},
+          onFail:function(){showPwdForm();hint.textContent='钉钉验证失败，请使用邮箱';}
         });
       });
-      dd.error(function(){showPwdForm();hint.textContent='钉钉验证失败，请使用密码';});
+      dd.error(function(){showPwdForm();hint.textContent='钉钉验证失败，请使用邮箱';});
     };
     s.onerror=function(){showPwdForm();hint.textContent='钉钉SDK加载失败';};
     document.head.appendChild(s);
     setTimeout(function(){
-      if(dtStatus.style.display!=='none'){showPwdForm();hint.textContent='验证超时，请使用密码';}
+      if(dtStatus.style.display!=='none'){showPwdForm();hint.textContent='验证超时，请使用邮箱';}
     },5000);
   }
 
