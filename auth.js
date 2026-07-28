@@ -1,47 +1,33 @@
 /**
- * XDF数据看板 - 统一身付认证模块
+ * XDF数据看板 - 统一身付认证模块 v2
+ * 液态玻璃设计 · 密码验证 · 钉钉免登(可选)
  *
- * 使用方式：在所有HTML页面的 <head> 最前面添加 <script src="auth.js"></script>
- *
- * 认证流程：
- * 1. 在钉钉客户端内打开 → 自动验证（需配置corpId并注册微应用）
- * 2. 非钉钉客户端 → 密码验证
- * 3. 验证通过后 8小时内免重新验证（sessionStorage）
- *
- * 钉钉配置步骤（可选，配置后启用自动验证）：
- * 1. 登录 钉钉开放平台 https://open-dev.dingtalk.com/
- * 2. 创建「企业内部应用」→「H5微应用」
- * 3. 应用首页地址填：https://candysama9.github.io/Student/index.html
- * 4. 在「安全域名」中添加：candysama9.github.io
- * 5. 在「企业信息」中找到 corpId
- * 6. 将下方 DINGTALK_CORP_ID 填入
+ * 部署Cloudflare Worker后，修改 DATA_WORKER_URL 即可启用数据保护
  */
 (function(){
   'use strict';
 
   // ==================== 配置区 ====================
-  var PASSWORD='27rk';                      // 访问密码
-  var DINGTALK_CORP_ID='';                  // 钉钉企业corpId（留空=不启用钉钉自动验证，仅用密码）
-  var AUTH_EXPIRY=8*3600*1000;              // 认证有效期：8小时
+  var PASSWORD='27rk';
+  var DINGTALK_CORP_ID='';                  // 钉钉企业corpId（留空=仅密码）
+  var AUTH_EXPIRY=8*3600*1000;              // 8小时
+  var DATA_WORKER_URL='';                   // Cloudflare Worker地址（留空=不启用数据保护）
   // =================================================
 
-  var AUTH_KEY='center_unlocked';
+  var AUTH_KEY='xdf_authed';
   var AUTH_TS_KEY='xdf_auth_ts';
+  var AUTH_METHOD_KEY='xdf_auth_method';
 
-  // 检查是否已认证
   function isAuthed(){
     try{
-      // 方式1：URL参数 ?k=密码（兼容中心看板跳转链接）
       var urlK=new URLSearchParams(location.search).get('k');
       if(urlK===PASSWORD){
         setAuth('url');
-        // 清除URL中的密码参数
         var url=new URL(location.href);
         url.searchParams.delete('k');
         history.replaceState(null,'',url.toString());
         return true;
       }
-      // 方式2：sessionStorage
       if(sessionStorage.getItem(AUTH_KEY)!=='1')return false;
       var ts=parseInt(sessionStorage.getItem(AUTH_TS_KEY)||'0');
       if(ts>0 && Date.now()-ts>AUTH_EXPIRY){
@@ -56,105 +42,165 @@
   function setAuth(method){
     sessionStorage.setItem(AUTH_KEY,'1');
     sessionStorage.setItem(AUTH_TS_KEY,String(Date.now()));
+    sessionStorage.setItem(AUTH_METHOD_KEY,method||'password');
   }
 
-  function inDingTalk(){
-    return /DingTalk/i.test(navigator.userAgent);
+  function getToken(){
+    return sessionStorage.getItem(AUTH_KEY)==='1'?PASSWORD:'';
   }
 
-  // 已认证 → 直接放行
+  // 暴露给全局，供看板加载数据时使用
+  window.XDF_AUTH={
+    isAuthed:isAuthed,
+    getToken:getToken,
+    getWorkerUrl:function(){return DATA_WORKER_URL;},
+    hasWorker:function(){return !!DATA_WORKER_URL;}
+  };
+
   if(isAuthed())return;
+
+  // ==================== 注入样式 ====================
+  var styleEl=document.createElement('style');
+  styleEl.textContent=`
+@keyframes xdfBgFlow{
+  0%{background-position:0% 0%,100% 0%,50% 100%,100% 100%,0% 100%,30% 50%,0 0}
+  50%{background-position:30% 20%,70% 30%,60% 80%,80% 70%,20% 80%,50% 30%,0 0}
+  100%{background-position:60% 40%,40% 60%,40% 60%,60% 40%,40% 60%,70% 70%,0 0}
+}
+@keyframes xdfFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes xdfShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-7px)}20%,40%,60%,80%{transform:translateX(7px)}}
+@keyframes xdfSpin{to{transform:rotate(360deg)}}
+@keyframes xdfSpecular{0%,100%{background-position:0% 0%}50%{background-position:100% 0%}}
+@keyframes xdfFadeIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes xdfPulseRing{0%{transform:scale(.95);opacity:.7}50%{transform:scale(1.05);opacity:.3}100%{transform:scale(.95);opacity:.7}}
+@keyframes xdfGradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+#xdf-auth-gate{
+  position:fixed;inset:0;z-index:2147483647;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'FZDaBiaoSong','方正大标宋简体',-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif;
+  padding:20px;overflow:hidden;
+}
+#xdf-auth-gate .xdf-bg{
+  position:absolute;inset:-10%;z-index:-1;
+  background:
+    radial-gradient(ellipse 60% 50% at 12% 8%,rgba(0,122,255,.28),transparent 60%),
+    radial-gradient(ellipse 50% 40% at 88% 22%,rgba(88,86,214,.25),transparent 60%),
+    radial-gradient(ellipse 60% 45% at 50% 100%,rgba(0,199,190,.22),transparent 60%),
+    radial-gradient(ellipse 45% 35% at 80% 80%,rgba(255,149,0,.15),transparent 60%),
+    radial-gradient(ellipse 40% 30% at 18% 75%,rgba(52,199,89,.15),transparent 60%),
+    radial-gradient(ellipse 35% 25% at 65% 45%,rgba(255,94,138,.12),transparent 60%),
+    linear-gradient(135deg,#eef2fb 0%,#f5f0fa 50%,#eaf6f4 100%);
+  background-size:200% 200%,220% 220%,200% 200%,220% 220%,200% 200%,200% 200%,100% 100%;
+  animation:xdfBgFlow 18s ease-in-out infinite alternate;
+}
+#xdf-auth-gate *{margin:0;padding:0;box-sizing:border-box}
+.xdf-card{
+  position:relative;overflow:hidden;width:100%;max-width:380px;padding:48px 40px 36px;
+  border-radius:32px;text-align:center;
+  background:rgba(255,255,255,.25);
+  border:1px solid rgba(255,255,255,.5);
+  box-shadow:0 24px 64px rgba(0,0,0,.12),0 0 0 1px rgba(255,255,255,.2) inset,inset 0 1px 2px rgba(255,255,255,.8);
+  backdrop-filter:blur(44px) saturate(240%);-webkit-backdrop-filter:blur(44px) saturate(240%);
+  animation:xdfFadeIn .6s cubic-bezier(.4,0,.2,1);
+}
+.xdf-card::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.6),transparent 65%);opacity:.6;
+}
+.xdf-card::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.25) 45%,rgba(255,255,255,.05) 55%,transparent 70%);
+  background-size:300% 100%;animation:xdfSpecular 8s ease-in-out infinite;
+}
+.xdf-logo{
+  width:72px;height:72px;margin:0 auto 22px;position:relative;z-index:1;
+  animation:xdfFloat 3.5s ease-in-out infinite;
+}
+.xdf-logo-ring{
+  position:absolute;inset:0;border-radius:50%;
+  background:linear-gradient(135deg,#007AFF,#5856D6,#00C7BE);
+  opacity:.2;animation:xdfPulseRing 3s ease-in-out infinite;
+}
+.xdf-logo-inner{
+  position:absolute;inset:8px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#007AFF 0%,#5856D6 50%,#00C7BE 100%);
+  background-size:200% 200%;animation:xdfGradShift 6s ease infinite;
+  box-shadow:0 8px 28px rgba(0,122,255,.35),inset 0 1px 3px rgba(255,255,255,.5);
+}
+.xdf-logo-inner svg{width:32px;height:32px;fill:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.15))}
+.xdf-card h2{
+  font-size:1.4rem;font-weight:900;color:#1a1a2e;margin-bottom:4px;
+  position:relative;z-index:1;letter-spacing:-.3px;
+}
+.xdf-sub{font-size:.78rem;color:#6e6e80;margin-bottom:28px;position:relative;z-index:1;font-weight:500}
+.xdf-input-wrap{display:flex;gap:8px;margin-bottom:10px;position:relative;z-index:1}
+.xdf-input{
+  flex:1;padding:13px 18px;border-radius:16px;
+  border:1.5px solid rgba(255,255,255,.5);
+  background:rgba(255,255,255,.4);
+  font-size:.92rem;color:#1a1a2e;outline:none;
+  backdrop-filter:blur(10px);
+  transition:border-color .25s,box-shadow .25s,background .25s;
+  font-family:inherit;
+}
+.xdf-input:focus{
+  border-color:#007AFF;
+  background:rgba(255,255,255,.6);
+  box-shadow:0 0 0 4px rgba(0,122,255,.12);
+}
+.xdf-input::placeholder{color:#9e9eaf;font-weight:400}
+.xdf-btn{
+  padding:13px 26px;border-radius:16px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#007AFF,#5856D6);
+  background-size:200% 200%;animation:xdfGradShift 6s ease infinite;
+  color:#fff;font-size:.9rem;font-weight:700;
+  transition:transform .15s,box-shadow .25s;white-space:nowrap;
+  font-family:inherit;
+  box-shadow:0 4px 16px rgba(0,122,255,.3);
+}
+.xdf-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,122,255,.4)}
+.xdf-btn:active{transform:translateY(0)}
+.xdf-error{color:#FF3B30;font-size:.76rem;height:20px;margin-bottom:6px;opacity:0;transition:opacity .2s;position:relative;z-index:1;font-weight:500}
+.xdf-error.show{opacity:1}
+.xdf-card.shake{animation:xdfShake .4s}
+.xdf-hint{font-size:.72rem;color:#9e9eaf;margin-top:18px;position:relative;z-index:1;line-height:1.6}
+.xdf-hint a{color:#007AFF;text-decoration:none;font-weight:500}
+.xdf-dt-status{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:20px 0;font-size:.85rem;color:#5856D6;position:relative;z-index:1;font-weight:600;
+}
+.xdf-dt-spinner{
+  width:22px;height:22px;border:2.5px solid rgba(88,86,214,.2);
+  border-top-color:#5856D6;border-radius:50%;animation:xdfSpin .7s linear infinite;
+}
+.xdf-footer{
+  margin-top:22px;padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.3);
+  font-size:.7rem;color:#9e9eaf;position:relative;z-index:1;
+}
+.xdf-footer a{color:#007AFF;text-decoration:none;font-weight:500}
+.xdf-badge{
+  display:inline-flex;align-items:center;gap:4px;padding:3px 12px;border-radius:100px;
+  font-size:.65rem;font-weight:600;background:rgba(0,199,190,.12);color:#00C7BE;
+  margin-bottom:16px;position:relative;z-index:1;
+}
+`;
+  document.head.appendChild(styleEl);
 
   // ==================== 创建遮罩层 ====================
   var overlay=document.createElement('div');
   overlay.id='xdf-auth-gate';
-  overlay.style.cssText=[
-    'position:fixed','inset:0','z-index:2147483647',
-    'display:flex','align-items:center','justify-content:center',
-    'background:rgba(20,25,45,.35)',
-    'backdrop-filter:blur(28px) saturate(200%)','-webkit-backdrop-filter:blur(28px) saturate(200%)',
-    'font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif',
-    'padding:20px'
-  ].join(';');
-
-  // 注入动画样式
-  var styleEl=document.createElement('style');
-  styleEl.textContent=`
-    @keyframes xdfFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-    @keyframes xdfShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-6px)}20%,40%,60%,80%{transform:translateX(6px)}}
-    @keyframes xdfSpin{to{transform:rotate(360deg)}}
-    @keyframes xdfPulse{0%,100%{opacity:1}50%{opacity:.4}}
-    @keyframes xdfFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-    #xdf-auth-gate *{margin:0;padding:0;box-sizing:border-box}
-    .xdf-card{
-      position:relative;overflow:hidden;width:100%;max-width:400px;padding:44px 40px 36px;
-      border-radius:28px;text-align:center;
-      background:rgba(255,255,255,.35);
-      border:1px solid rgba(255,255,255,.45);
-      box-shadow:0 24px 64px rgba(0,0,0,.18),inset 0 1px 2px rgba(255,255,255,.6);
-      backdrop-filter:blur(40px) saturate(220%);-webkit-backdrop-filter:blur(40px) saturate(220%);
-    }
-    .xdf-card::before{
-      content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-      background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.5),transparent 60%);opacity:.5;
-    }
-    .xdf-card::after{
-      content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-      background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.2) 45%,rgba(255,255,255,.05) 55%,transparent 70%);
-      background-size:300% 100%;animation:xdfFlow 8s ease-in-out infinite;
-    }
-    .xdf-lock{
-      width:68px;height:68px;margin:0 auto 20px;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;font-size:2rem;
-      background:linear-gradient(135deg,#007AFF,#5856D6);color:#fff;
-      box-shadow:0 10px 30px rgba(0,122,255,.3),inset 0 1px 2px rgba(255,255,255,.4);
-      position:relative;z-index:1;animation:xdfFloat 3s ease-in-out infinite;
-    }
-    .xdf-card h2{font-size:1.35rem;font-weight:800;color:#1a1a2e;margin-bottom:6px;position:relative;z-index:1}
-    .xdf-sub{font-size:.82rem;color:#6e6e80;margin-bottom:24px;position:relative;z-index:1}
-    .xdf-input-wrap{display:flex;gap:8px;margin-bottom:12px;position:relative;z-index:1}
-    .xdf-input{
-      flex:1;padding:12px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.4);
-      background:rgba(255,255,255,.5);font-size:.95rem;color:#1a1a2e;outline:none;
-      backdrop-filter:blur(10px);transition:border-color .2s;
-    }
-    .xdf-input:focus{border-color:#007AFF;box-shadow:0 0 0 3px rgba(0,122,255,.15)}
-    .xdf-input::placeholder{color:#9e9eaf}
-    .xdf-btn{
-      padding:12px 24px;border-radius:14px;border:none;cursor:pointer;
-      background:linear-gradient(135deg,#007AFF,#5856D6);color:#fff;font-size:.9rem;font-weight:700;
-      transition:transform .15s,box-shadow .2s;white-space:nowrap;
-    }
-    .xdf-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,122,255,.3)}
-    .xdf-btn:active{transform:translateY(0)}
-    .xdf-error{color:#FF3B30;font-size:.78rem;height:18px;margin-bottom:8px;opacity:0;transition:opacity .2s;position:relative;z-index:1}
-    .xdf-error.show{opacity:1}
-    .xdf-card.shake{animation:xdfShake .4s}
-    .xdf-hint{font-size:.72rem;color:#9e9eaf;margin-top:16px;position:relative;z-index:1}
-    .xdf-dt-status{
-      display:flex;align-items:center;justify-content:center;gap:8px;
-      padding:16px 0;font-size:.85rem;color:#5856D6;position:relative;z-index:1;
-    }
-    .xdf-dt-spinner{
-      width:20px;height:20px;border:2.5px solid rgba(88,86,214,.2);
-      border-top-color:#5856D6;border-radius:50%;animation:xdfSpin .7s linear infinite;
-    }
-    .xdf-footer{
-      margin-top:20px;font-size:.7rem;color:#9e9eaf;position:relative;z-index:1;
-    }
-    .xdf-footer a{color:#007AFF;text-decoration:none}
-    .xdf-dt-badge{
-      display:inline-flex;align-items:center;gap:4px;padding:3px 12px;border-radius:100px;
-      font-size:.68rem;font-weight:600;background:rgba(0,199,190,.12);color:#00C7BE;
-      margin-bottom:16px;position:relative;z-index:1;
-    }
-  `;
-  document.head.appendChild(styleEl);
-
-  // 构建卡片HTML
   overlay.innerHTML=`
+    <div class="xdf-bg"></div>
     <div class="xdf-card" id="xdfCard">
-      <div class="xdf-lock">&#128274;</div>
+      <div class="xdf-logo">
+        <div class="xdf-logo-ring"></div>
+        <div class="xdf-logo-inner">
+          <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+        </div>
+      </div>
       <h2>新东方数据看板</h2>
       <p class="xdf-sub" id="xdfSub">请输入访问密码以继续</p>
       <div id="xdfDtStatus" style="display:none" class="xdf-dt-status">
@@ -183,20 +229,18 @@
   var dtStatus=document.getElementById('xdfDtStatus');
   var hint=document.getElementById('xdfHint');
 
-  // ==================== 密码验证 ====================
   function showPwdForm(){
     dtStatus.style.display='none';
     pwdForm.style.display='block';
     sub.textContent='请输入访问密码以继续';
     hint.textContent='';
-    setTimeout(function(){pwdInput.focus();},50);
+    setTimeout(function(){pwdInput.focus();},100);
   }
 
   function verifyPwd(){
     var val=pwdInput.value.trim();
     if(val===PASSWORD){
       setAuth('password');
-      // 刷新页面，让所有脚本读取新的认证状态
       location.reload();
     }else{
       errorEl.classList.add('show');
@@ -216,69 +260,35 @@
 
   // ==================== 钉钉自动验证 ====================
   function tryDingTalkAuth(){
-    // 未配置corpId → 直接显示密码
-    if(!DINGTALK_CORP_ID){
+    if(!DINGTALK_CORP_ID){showPwdForm();return;}
+    if(!/DingTalk/i.test(navigator.userAgent)){
       showPwdForm();
+      hint.innerHTML='💡 在<a href="https://im.dingtalk.com/">钉钉客户端</a>中打开可自动验证';
       return;
     }
-
-    // 不在钉钉客户端 → 显示密码+提示
-    if(!inDingTalk()){
-      showPwdForm();
-      hint.innerHTML='💡 在<a href="https://im.dingtalk.com/" style="color:#007AFF">钉钉客户端</a>中打开本页面可自动验证身份，无需输入密码';
-      return;
-    }
-
-    // 在钉钉客户端内 → 尝试JSSDK免登
     dtStatus.style.display='flex';
     pwdForm.style.display='none';
     sub.textContent='正在通过钉钉验证身份...';
-
-    var script=document.createElement('script');
-    script.src='https://g.alicdn.com/dingding/dingtalk-jsapi/2.15.2/dingtalk.open.js';
-    script.onload=function(){
+    var s=document.createElement('script');
+    s.src='https://g.alicdn.com/dingding/dingtalk-jsapi/2.15.2/dingtalk.open.js';
+    s.onload=function(){
       var dd=window.dd;
-      if(!dd){
-        showPwdForm();
-        hint.textContent='钉钉SDK加载失败，请使用密码登录';
-        return;
-      }
-
+      if(!dd){showPwdForm();hint.textContent='钉钉SDK加载失败';return;}
       dd.ready(function(){
         dd.runtime.permission.requestAuthCode({
           corpId:DINGTALK_CORP_ID,
-          onSuccess:function(info){
-            // 获取到authCode → 说明是XDF组织成员
-            setAuth('dingtalk');
-            location.reload();
-          },
-          onFail:function(){
-            showPwdForm();
-            hint.textContent='钉钉验证失败，请使用密码登录';
-          }
+          onSuccess:function(){setAuth('dingtalk');location.reload();},
+          onFail:function(){showPwdForm();hint.textContent='钉钉验证失败，请使用密码';}
         });
       });
-
-      dd.error(function(){
-        showPwdForm();
-        hint.textContent='钉钉验证失败，请使用密码登录';
-      });
+      dd.error(function(){showPwdForm();hint.textContent='钉钉验证失败，请使用密码';});
     };
-    script.onerror=function(){
-      showPwdForm();
-      hint.textContent='钉钉SDK加载失败，请使用密码登录';
-    };
-    document.head.appendChild(script);
-
-    // 5秒超时
+    s.onerror=function(){showPwdForm();hint.textContent='钉钉SDK加载失败';};
+    document.head.appendChild(s);
     setTimeout(function(){
-      if(dtStatus.style.display!=='none'){
-        showPwdForm();
-        hint.textContent='验证超时，请使用密码登录';
-      }
+      if(dtStatus.style.display!=='none'){showPwdForm();hint.textContent='验证超时，请使用密码';}
     },5000);
   }
 
-  // 启动验证流程
   tryDingTalkAuth();
 })();

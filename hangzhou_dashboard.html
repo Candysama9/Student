@@ -816,7 +816,7 @@ function computeAvailableTagOptions(students){
 // ============================================================
 async function loadData(){
   const ver=Date.now();
-  const paths=[`hangzhou_dashboard.json?v=${ver}`,`./hangzhou_dashboard.json?v=${ver}`];
+  var paths;if(window.XDF_AUTH&&XDF_AUTH.hasWorker()){var _t=XDF_AUTH.getToken();paths=[XDF_AUTH.getWorkerUrl()+'/hangzhou_dashboard.json?k='+_t+'&v='+ver];}else{paths=[`hangzhou_dashboard.json?v=${ver}`,`./hangzhou_dashboard.json?v=${ver}`];}
   // 添加超时和进度提示
   const loadingText=document.getElementById('loadingText');
   let progressTimer=setTimeout(()=>{
@@ -850,7 +850,7 @@ async function loadData(){
 
 async function loadHistory(){
   const ver=Date.now();
-  const paths=[`hangzhou_daily_history.json?v=${ver}`,`./hangzhou_daily_history.json?v=${ver}`];
+  var paths;if(window.XDF_AUTH&&XDF_AUTH.hasWorker()){var _t=XDF_AUTH.getToken();paths=[XDF_AUTH.getWorkerUrl()+'/hangzhou_daily_history.json?k='+_t+'&v='+ver];}else{paths=[`hangzhou_daily_history.json?v=${ver}`,`./hangzhou_daily_history.json?v=${ver}`];}
   for(const p of paths){
     try{const r=await fetch(p,{cache:'no-store'});if(r.ok)return await r.json();}catch(e){}
   }

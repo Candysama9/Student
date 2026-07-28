@@ -574,12 +574,12 @@ async function initApp(){
     progressText.textContent='加载中 ('+(i+1)+'/'+SCHOOLS.length+')：'+school.name;
     progressFill.style.width=((i)/SCHOOLS.length*100)+'%';
     try{
-      const resp=await fetch(school.json+'?_t='+Date.now());
+      var _durl=school.json+'?_t='+Date.now();if(window.XDF_AUTH&&XDF_AUTH.hasWorker())_durl=XDF_AUTH.getWorkerUrl()+'/'+school.json+'?k='+XDF_AUTH.getToken()+'&_t='+Date.now();const resp=await fetch(_durl);
       if(!resp.ok) throw new Error('HTTP '+resp.status);
       const data=await resp.json();
       let history=null;
       try{
-        const hResp=await fetch(school.history+'?_t='+Date.now());
+        var _hurl=school.history+'?_t='+Date.now();if(window.XDF_AUTH&&XDF_AUTH.hasWorker())_hurl=XDF_AUTH.getWorkerUrl()+'/'+school.history+'?k='+XDF_AUTH.getToken()+'&_t='+Date.now();const hResp=await fetch(_hurl);
         if(hResp.ok) history=await hResp.json();
       }catch(e){/* no history */}
       rawData.push({school,data,history});
