@@ -962,8 +962,8 @@ function renderChange(change){
 /* ===== Render Nav Switch ===== */
 function renderNav(){
   const nav=document.getElementById('navSwitch');
-  nav.innerHTML='<a href="center_dashboard.html'+(unlocked?('?'+'k='+CENTER_PWD):'')+'" class="active">&#127968; 总看板</a>'+
-    SCHOOLS.map(s=>'<a href="'+s.html+(unlocked?('?'+'k='+CENTER_PWD):'')+'">'+s.name+'</a>').join('');
+  nav.innerHTML='<a href="center_dashboard.html'+(unlocked?('?'+'k='+encodeURIComponent(centerEmail)):'')+'" class="active">&#127968; 总看板</a>'+
+    SCHOOLS.map(s=>'<a href="'+s.html+(unlocked?('?'+'k='+encodeURIComponent(centerEmail)):'')+'">'+s.name+'</a>').join('');
 }
 </script>
 
