@@ -1783,9 +1783,14 @@ function render(){
   <div class="tabs">
     <button class="tab ${activeTab==='teacher'?'active':''}" onclick="switchTab('teacher')">教师排名</button>
     <button class="tab ${activeTab==='subject'?'active':''}" onclick="switchTab('subject')">学科组排名</button>
-    ${subjects.map(s=>`<button class="tab ${activeTab==='subject_'+s?'active':''}" onclick="switchTab('subject_${s}')">${s}学情</button>`).join('')}
+    ${adminVerified?subjects.map(s=>`<button class="tab ${activeTab==='subject_'+s?'active':''}" onclick="switchTab('subject_${s}')">${s}学情</button>`).join(''):''}
   </div>
   `;
+
+  // 非管理员试图访问学员详表时，重定向到教师排名
+  if(!adminVerified&&activeTab.startsWith('subject_')){
+    activeTab='teacher';
+  }
 
   // 分档图表（紧跟标签栏下方，跟随学科筛选）
   const binnedStudents=activeTab.startsWith('subject_')?getSubjectStudents(activeTab.replace('subject_','')):students;

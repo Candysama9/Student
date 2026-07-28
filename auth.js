@@ -144,16 +144,16 @@
   font-size:1.4rem;font-weight:900;color:#1a1a2e;margin-bottom:4px;
   position:relative;z-index:1;letter-spacing:-.3px;
 }
-.xdf-sub{font-size:.78rem;color:#6e6e80;margin-bottom:28px;position:relative;z-index:1;font-weight:500}
-.xdf-input-wrap{display:flex;gap:8px;margin-bottom:10px;position:relative;z-index:1}
+.xdf-sub{font-size:.82rem;color:#6e6e80;margin-bottom:28px;position:relative;z-index:1;font-weight:500}
+.xdf-input-wrap{display:block;margin-bottom:24px;position:relative;z-index:1}
 .xdf-input{
-  flex:1;padding:13px 18px;border-radius:16px;
+  width:100%;padding:14px 18px;border-radius:16px;
   border:1.5px solid rgba(255,255,255,.5);
   background:rgba(255,255,255,.4);
-  font-size:.92rem;color:#1a1a2e;outline:none;
+  font-size:.95rem;color:#1a1a2e;outline:none;
   backdrop-filter:blur(10px);
   transition:border-color .25s,box-shadow .25s,background .25s;
-  font-family:inherit;
+  font-family:inherit;text-align:center;
 }
 .xdf-input:focus{
   border-color:#007AFF;
@@ -162,13 +162,13 @@
 }
 .xdf-input::placeholder{color:#9e9eaf;font-weight:400}
 .xdf-btn{
-  padding:13px 26px;border-radius:16px;border:none;cursor:pointer;
+  display:block;width:100%;padding:16px;border-radius:18px;border:none;cursor:pointer;
   background:linear-gradient(135deg,#007AFF,#5856D6);
   background-size:200% 200%;animation:xdfGradShift 6s ease infinite;
-  color:#fff;font-size:.9rem;font-weight:700;
+  color:#fff;font-size:1.05rem;font-weight:800;
   transition:transform .15s,box-shadow .25s;white-space:nowrap;
-  font-family:inherit;
-  box-shadow:0 4px 16px rgba(0,122,255,.3);
+  font-family:inherit;letter-spacing:2px;
+  box-shadow:0 6px 24px rgba(0,122,255,.35);
 }
 .xdf-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,122,255,.4)}
 .xdf-btn:active{transform:translateY(0)}
@@ -215,8 +215,8 @@
       <div id="xdfPwdForm">
         <div class="xdf-input-wrap">
           <input type="text" class="xdf-input" id="xdfPwdInput" placeholder="姓名拼音@xdf.cn" autocomplete="off">
-          <button class="xdf-btn" id="xdfPwdBtn">进入</button>
         </div>
+        <button class="xdf-btn" id="xdfPwdBtn">进 入</button>
         <div class="xdf-error" id="xdfError"></div>
       </div>
     </div>
