@@ -345,6 +345,45 @@ tbody td.num{font-family:var(--mono);text-align:center}
   .header-right{position:static;transform:none;justify-content:center;width:100%}
   .pwd-card{padding:32px 28px}
 }
+
+/* ===== Visit Stats Section ===== */
+.visit-stats-section{margin-top:28px}
+.visit-stats-section .section-title{
+  font-size:1.05rem;font-weight:700;color:var(--text-0);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.visit-stats-section .section-title .icon{font-size:1.2rem}
+.stats-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.stats-table th{
+  background:rgba(0,122,255,.08);color:var(--text-1);font-weight:600;
+  padding:10px 14px;text-align:center;white-space:nowrap;
+  border-bottom:2px solid rgba(0,122,255,.15);
+}
+.stats-table td{
+  padding:10px 14px;text-align:center;border-bottom:1px solid rgba(0,0,0,.05);
+  color:var(--text-1);
+}
+.stats-table tr:hover td{background:rgba(0,122,255,.03)}
+.stats-table .page-name{text-align:left;font-weight:600;color:var(--text-0)}
+.stats-table .view-count{font-size:1rem;font-weight:700;color:var(--brand);font-family:var(--mono)}
+.stats-table .cat-tag{display:inline-block;padding:2px 10px;border-radius:100px;font-size:.68rem;font-weight:600}
+.stats-table .cat-入口{background:rgba(255,149,0,.12);color:var(--gold)}
+.stats-table .cat-看板{background:rgba(0,122,255,.1);color:var(--brand)}
+.stats-table .cat-话术库{background:rgba(52,199,89,.12);color:var(--green)}
+.stats-table{min-width:auto!important}
+.stats-table .loading-cell{color:var(--text-3);font-size:.78rem}
+.stats-summary{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.stats-summary .item{padding:8px 20px;border-radius:14px;background:var(--glass);backdrop-filter:var(--liquid-blur-sm);border:1px solid var(--glass-brd)}
+.stats-summary .item .label{font-size:.7rem;color:var(--text-3);margin-bottom:2px}
+.stats-summary .item .val{font-size:1.3rem;font-weight:700;color:var(--brand);font-family:var(--mono)}
+.stats-refresh-btn{
+  margin-left:auto;padding:6px 16px;border:1px solid var(--glass-brd);
+  background:var(--glass);backdrop-filter:var(--liquid-blur-sm);
+  border-radius:100px;font-size:.78rem;font-weight:600;color:var(--brand);
+  cursor:pointer;transition:all .3s var(--transition);
+}
+.stats-refresh-btn:hover{background:var(--brand);color:#fff}
+
 </style>
 </head>
 <body>
@@ -420,6 +459,37 @@ tbody td.num{font-family:var(--mono);text-align:center}
       </div>
     </div>
 
+    
+    <!-- Visit Statistics -->
+    <div class="visit-stats-section" id="visitStatsSection">
+      <div class="section-title">
+        <span class="icon">&#128202;</span>
+        <span>各页面访问统计</span>
+        <button class="stats-refresh-btn" onclick="loadVisitStats()">&#x1F504; 刷新</button>
+      </div>
+      <div class="stats-summary" id="statsSummary">
+        <div class="item"><div class="label">总浏览次数</div><div class="val" id="totalViews">—</div></div>
+        <div class="item"><div class="label">统计页面数</div><div class="val" id="totalPages">—</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table class="stats-table">
+            <thead>
+              <tr>
+                <th>页面</th>
+                <th>分类</th>
+                <th>浏览次数</th>
+                <th>占比</th>
+              </tr>
+            </thead>
+            <tbody id="statsTableBody">
+              <tr><td colspan="4" class="loading-cell">加载中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
     <!-- Nav Switch -->
     <div style="display:flex;justify-content:center;gap:10px;margin-top:24px;flex-wrap:wrap">
       <div class="nav-switch" id="navSwitch"></div>
@@ -447,6 +517,15 @@ const pwdOverlay=document.getElementById('pwdOverlay');
 const pwdCard=document.getElementById('pwdCard');
 const pwdInput=document.getElementById('pwdInput');
 const pwdError=document.getElementById('pwdError');
+
+/* ===== Schools Config ===== */
+const SCHOOLS=[
+  {key:'chengdu',name:'成都',json:'chengdu_dashboard.json',html:'chengdu_dashboard.html',history:'daily_history.json'},
+  {key:'guangzhou',name:'广州',json:'guangzhou_dashboard.json',html:'guangzhou_dashboard.html',history:'guangzhou_daily_history.json'},
+  {key:'lanzhou',name:'兰州',json:'lanzhou_dashboard.json',html:'lanzhou_dashboard.html',history:'lanzhou_daily_history.json'},
+  {key:'zhengzhou',name:'郑州',json:'zhengzhou_dashboard.json',html:'zhengzhou_dashboard.html',history:'zhengzhou_daily_history.json'},
+  {key:'hangzhou',name:'杭州',json:'hangzhou_dashboard.json',html:'hangzhou_dashboard.html',history:'hangzhou_daily_history.json'},
+];
 
 function verifyPwd(){
   const val=pwdInput.value.trim();
@@ -476,15 +555,6 @@ if(unlocked){
 }else{
   pwdInput.focus();
 }
-
-/* ===== Schools Config ===== */
-const SCHOOLS=[
-  {key:'chengdu',name:'成都',json:'chengdu_dashboard.json',html:'chengdu_dashboard.html',history:'daily_history.json'},
-  {key:'guangzhou',name:'广州',json:'guangzhou_dashboard.json',html:'guangzhou_dashboard.html',history:'guangzhou_daily_history.json'},
-  {key:'lanzhou',name:'兰州',json:'lanzhou_dashboard.json',html:'lanzhou_dashboard.html',history:'lanzhou_daily_history.json'},
-  {key:'zhengzhou',name:'郑州',json:'zhengzhou_dashboard.json',html:'zhengzhou_dashboard.html',history:'zhengzhou_daily_history.json'},
-  {key:'hangzhou',name:'杭州',json:'hangzhou_dashboard.json',html:'hangzhou_dashboard.html',history:'hangzhou_daily_history.json'},
-];
 
 /* ===== Init ===== */
 async function initApp(){
@@ -890,5 +960,81 @@ function renderNav(){
     SCHOOLS.map(s=>'<a href="'+s.html+(unlocked?('?'+'k='+CENTER_PWD):'')+'">'+s.name+'</a>').join('');
 }
 </script>
+
+<script>
+// ===== Per-page visit tracking (CounterAPI) =====
+(function(){
+  var ns='candysama9.github.io',key='student-dashboard-portal-center';
+  fetch('https://api.counterapi.dev/v1/'+ns+'/'+key+'/up').catch(function(){});
+})();
+
+// ===== Visit Stats =====
+var VISIT_PAGES=[{key:'student-dashboard-portal',name:'多城市入口页',cat:'入口',file:'index.html'},{key:'student-dashboard-portal-center',name:'中心管理者总看板',cat:'看板',file:'center_dashboard.html'},{key:'student-dashboard-portal-chengdu',name:'成都看板',cat:'看板',file:'chengdu_dashboard.html'},{key:'student-dashboard-portal-guangzhou',name:'广州看板',cat:'看板',file:'guangzhou_dashboard.html'},{key:'student-dashboard-portal-lanzhou',name:'兰州看板',cat:'看板',file:'lanzhou_dashboard.html'},{key:'student-dashboard-portal-zhengzhou',name:'郑州看板',cat:'看板',file:'zhengzhou_dashboard.html'},{key:'student-dashboard-portal-hangzhou',name:'杭州看板',cat:'看板',file:'hangzhou_dashboard.html'},{key:'student-dashboard-portal-cd-scripts',name:'成都话术总库',cat:'话术库',file:'index-standalone.html'},{key:'student-dashboard-portal-gz-scripts',name:'广州话术总库',cat:'话术库',file:'guangzhou_scripts.html'},{key:'student-dashboard-portal-lz-scripts',name:'兰州话术总库',cat:'话术库',file:'lanzhou_scripts.html'},{key:'student-dashboard-portal-zz-scripts',name:'郑州话术总库',cat:'话术库',file:'zhengzhou_scripts.html'},];
+function loadVisitStats(){
+  var tbody=document.getElementById('statsTableBody');
+  tbody.innerHTML='<tr><td colspan="4" class="loading-cell">正在获取各页面访问数据...</td></tr>';
+  var results=[];
+  var completed=0;
+  var total=VISIT_PAGES.length;
+  
+  VISIT_PAGES.forEach(function(p){
+    var url='https://api.counterapi.dev/v1/candysama9.github.io/'+p.key+'/';
+    fetch(url)
+      .then(function(r){return r.json();})
+      .then(function(data){
+        var count=(data&&data.count!==undefined)?data.count:0;
+        results.push({name:p.name,cat:p.cat,count:count,file:p.file});
+      })
+      .catch(function(){
+        results.push({name:p.name,cat:p.cat,count:0,file:p.file,error:true});
+      })
+      .finally(function(){
+        completed++;
+        if(completed===total)renderVisitStats(results);
+      });
+  });
+}
+
+function renderVisitStats(results){
+  // Sort by count descending
+  results.sort(function(a,b){return b.count-a.count;});
+  
+  var total=results.reduce(function(s,r){return s+r.count;},0);
+  document.getElementById('totalViews').textContent=total.toLocaleString();
+  document.getElementById('totalPages').textContent=results.length;
+  
+  var tbody=document.getElementById('statsTableBody');
+  tbody.innerHTML=results.map(function(r){
+    var pct=total>0?(r.count/total*100).toFixed(1):'0.0';
+    var countDisplay=r.error?'<span style="color:var(--text-3)">—</span>':r.count.toLocaleString();
+    return '<tr>'+
+      '<td class="page-name">'+r.name+'</td>'+
+      '<td><span class="cat-tag cat-'+r.cat+'">'+r.cat+'</span></td>'+
+      '<td class="view-count">'+countDisplay+'</td>'+
+      '<td>'+pct+'%</td>'+
+    '</tr>';
+  }).join('');
+}
+
+// Load stats after page content is shown
+setTimeout(function(){
+  if(!document.getElementById('content').classList.contains('hidden')){
+    loadVisitStats();
+  }else{
+    // Watch for content becoming visible
+    var observer=new MutationObserver(function(mutations){
+      mutations.forEach(function(m){
+        if(!document.getElementById('content').classList.contains('hidden')){
+          loadVisitStats();
+          observer.disconnect();
+        }
+      });
+    });
+    observer.observe(document.getElementById('content'),{attributes:true,attributeFilter:['class']});
+  }
+},1000);
+
+</script>
+
 </body>
 </html>

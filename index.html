@@ -108,10 +108,10 @@ const COUNTER_NS='candysama9.github.io';
 const COUNTER_KEY='student-dashboard-portal';
 
 function trackVisit(){
-  fetch('https://counterapi.com/api/'+COUNTER_NS+'/view/'+COUNTER_KEY)
+  fetch('https://api.counterapi.dev/v1/'+COUNTER_NS+'/'+COUNTER_KEY+'/up')
     .then(r=>r.json())
     .then(data=>{
-      if(data&&data.value!==undefined)document.getElementById('visitCount').textContent=data.value;
+      if(data&&data.count!==undefined)document.getElementById('visitCount').textContent=data.count;
     })
     .catch(()=>{
       let vc=parseInt(localStorage.getItem('dashboard_visit_count')||'0')+1;
@@ -121,11 +121,13 @@ function trackVisit(){
   const uniqueKey='dashboard_unique_tracked';
   const isUnique=!localStorage.getItem(uniqueKey);
   if(isUnique)localStorage.setItem(uniqueKey,'1');
-  const uniqueUrl='https://counterapi.com/api/'+COUNTER_NS+'/view/'+COUNTER_KEY+'-unique'+(isUnique?'':'?readOnly=true');
+  const uniqueUrl=isUnique
+    ?'https://api.counterapi.dev/v1/'+COUNTER_NS+'/'+COUNTER_KEY+'-unique/up'
+    :'https://api.counterapi.dev/v1/'+COUNTER_NS+'/'+COUNTER_KEY+'-unique/';
   fetch(uniqueUrl)
     .then(r=>r.json())
     .then(data=>{
-      if(data&&data.value!==undefined)document.getElementById('visitorCount').textContent=data.value;
+      if(data&&data.count!==undefined)document.getElementById('visitorCount').textContent=data.count;
     })
     .catch(()=>{
       let uv=parseInt(localStorage.getItem('dashboard_visitor_count')||'0');
@@ -135,5 +137,6 @@ function trackVisit(){
 }
 trackVisit();
 </script>
+
 </body>
 </html>

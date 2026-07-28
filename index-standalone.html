@@ -1241,5 +1241,14 @@ async function init() {
 
 init();
 </script>
+
+<script>
+// ===== Per-page visit tracking (CounterAPI) =====
+(function(){
+  var ns='candysama9.github.io',key='student-dashboard-portal-cd-scripts';
+  fetch('https://api.counterapi.dev/v1/'+ns+'/'+key+'/up').catch(function(){});
+})();
+</script>
+
 </body>
 </html>
