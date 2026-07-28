@@ -211,39 +211,26 @@
           <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
         </div>
       </div>
-      <h2>新东方数据看板</h2>
-      <p class="xdf-sub" id="xdfSub">请输入新东方邮箱以继续</p>
-      <div id="xdfDtStatus" style="display:none" class="xdf-dt-status">
-        <div class="xdf-dt-spinner"></div>
-        <span>正在验证钉钉身份...</span>
-      </div>
+      <p class="xdf-sub" id="xdfSub">请输入邮箱</p>
       <div id="xdfPwdForm">
         <div class="xdf-input-wrap">
           <input type="text" class="xdf-input" id="xdfPwdInput" placeholder="姓名拼音@xdf.cn" autocomplete="off">
           <button class="xdf-btn" id="xdfPwdBtn">进入</button>
         </div>
-        <div class="xdf-error" id="xdfError">请输入有效的 @xdf.cn 邮箱</div>
+        <div class="xdf-error" id="xdfError"></div>
       </div>
-      <div class="xdf-hint" id="xdfHint">使用新东方内部邮箱验证身份</div>
-      <div class="xdf-footer">如有问题，钉钉联系 <a href="mailto:zhurongcheng@xdf.cn">zhurongcheng@xdf.cn</a></div>
     </div>
   `;
   document.documentElement.appendChild(overlay);
 
-  var sub=document.getElementById('xdfSub');
   var pwdForm=document.getElementById('xdfPwdForm');
   var pwdInput=document.getElementById('xdfPwdInput');
   var pwdBtn=document.getElementById('xdfPwdBtn');
   var errorEl=document.getElementById('xdfError');
   var card=document.getElementById('xdfCard');
-  var dtStatus=document.getElementById('xdfDtStatus');
-  var hint=document.getElementById('xdfHint');
 
   function showPwdForm(){
-    dtStatus.style.display='none';
     pwdForm.style.display='block';
-    sub.textContent='请输入新东方邮箱以继续';
-    hint.textContent='使用新东方内部邮箱验证身份';
     setTimeout(function(){pwdInput.focus();},100);
   }
 
@@ -269,37 +256,5 @@
     if(e.key==='Enter')verifyPwd();
   });
 
-  // ==================== 钉钉自动验证 ====================
-  function tryDingTalkAuth(){
-    if(!DINGTALK_CORP_ID){showPwdForm();return;}
-    if(!/DingTalk/i.test(navigator.userAgent)){
-      showPwdForm();
-      hint.innerHTML='💡 在<a href="https://im.dingtalk.com/">钉钉客户端</a>中打开可自动验证';
-      return;
-    }
-    dtStatus.style.display='flex';
-    pwdForm.style.display='none';
-    sub.textContent='正在通过钉钉验证身份...';
-    var s=document.createElement('script');
-    s.src='https://g.alicdn.com/dingding/dingtalk-jsapi/2.15.2/dingtalk.open.js';
-    s.onload=function(){
-      var dd=window.dd;
-      if(!dd){showPwdForm();hint.textContent='钉钉SDK加载失败';return;}
-      dd.ready(function(){
-        dd.runtime.permission.requestAuthCode({
-          corpId:DINGTALK_CORP_ID,
-          onSuccess:function(){setAuth('dingtalk','');location.reload();},
-          onFail:function(){showPwdForm();hint.textContent='钉钉验证失败，请使用邮箱';}
-        });
-      });
-      dd.error(function(){showPwdForm();hint.textContent='钉钉验证失败，请使用邮箱';});
-    };
-    s.onerror=function(){showPwdForm();hint.textContent='钉钉SDK加载失败';};
-    document.head.appendChild(s);
-    setTimeout(function(){
-      if(dtStatus.style.display!=='none'){showPwdForm();hint.textContent='验证超时，请使用邮箱';}
-    },5000);
-  }
-
-  tryDingTalkAuth();
+  showPwdForm();
 })();
