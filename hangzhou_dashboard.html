@@ -893,7 +893,7 @@ function renderTrends(){
   // 通用指标列
   const metricKeys=[
     {k:'dcq',n:'深聊质量'},{k:'dcr',n:'深聊轮次'},{k:'svc',n:'服务卡'},
-    {k:'qr',n:'题目回收'},{k:'att',n:'出勤率'},{k:'pp',n:'进步感知'},
+    {k:'qr',n:'题目回收'},
     {k:'cr',n:'课次报告'},{k:'cq',n:'连续在读'}
   ];
 
@@ -932,12 +932,16 @@ function renderTrends(){
     const chgRR=calcChange(curData.renewal_rate,prevData?prevData.renewal_rate:null);
     const chgScore=calcChange(curData.avg_score,prevData?prevData.avg_score:null);
     const chgSA=calcChange(curData.sa_pct,prevData?prevData.sa_pct:null);
+    const chgKFC=calcChange(curData.key_follow_count||0,prevData?(prevData.key_follow_count||0):null);
+    const chgSARR=calcChange(curData.sa_renewal_rate||0,prevData?(prevData.sa_renewal_rate||0):null);
 
     html+=`
       <div class="trend-grid">
         <div class="trend-card"><div class="tc-label">续班率</div><div class="tc-val">${curData.renewal_rate.toFixed(1)}%</div><div class="tc-change ${chgRR?chgRR.type:'flat'}">${formatChange(chgRR)}</div></div>
         <div class="trend-card"><div class="tc-label">平均总分</div><div class="tc-val">${curData.avg_score.toFixed(1)}</div><div class="tc-change ${chgScore?chgScore.type:'flat'}">${formatChange(chgScore,'')}</div></div>
         <div class="trend-card"><div class="tc-label">SA占比</div><div class="tc-val">${curData.sa_pct.toFixed(1)}%</div><div class="tc-change ${chgSA?chgSA.type:'flat'}">${formatChange(chgSA)}</div></div>
+        ${sk==='已开课'?`<div class="trend-card"><div class="tc-label">重点跟进</div><div class="tc-val" style="color:var(--red)">${curData.key_follow_count||0}</div><div class="tc-change ${chgKFC?chgKFC.type:'flat'}">${formatChange(chgKFC,'')}</div></div>`:''}
+        ${(sk==='已开窗'||sk==='已结课')?`<div class="trend-card"><div class="tc-label">SA学员续班率</div><div class="tc-val">${(curData.sa_renewal_rate||0).toFixed(1)}%</div><div class="tc-change ${chgSARR?chgSARR.type:'flat'}">${formatChange(chgSARR)}</div></div>`:''}
         <div class="trend-card"><div class="tc-label">学员人次</div><div class="tc-val">${curData.student_count}</div><div class="tc-change flat">原班${curData.original_count} · 续班${curData.renewal_count}</div></div>
       </div>
       ${curData.metrics?renderTrendMetricTable(curData,prevData,metricKeys):''}
@@ -949,7 +953,7 @@ function renderTrends(){
     const subjNames=Object.keys(curSubjects).filter(k=>curSubjects[k]&&curSubjects[k].student_count>0);
     if(subjNames.length===0){html+='<div class="trend-nodata">暂无学科数据</div></div></div>';return html;}
 
-    html+=renderTrendComparisonTable(subjNames,curSubjects,prevSubjects,'学科',metricKeys);
+    html+=renderTrendComparisonTable(subjNames,curSubjects,prevSubjects,'学科',metricKeys,sk);
     html+=renderTrendFooter(snaps,latest);
   }else if(trendTab==='teacher'){
     // 教师维度：所有教师对比表
@@ -979,7 +983,7 @@ function renderTrends(){
       </div>`;
     }
 
-    html+=renderTrendComparisonTable(teacherNames,curTeachers,prevTeachers,'教师',metricKeys);
+    html+=renderTrendComparisonTable(teacherNames,curTeachers,prevTeachers,'教师',metricKeys,sk);
     html+=renderTrendFooter(snaps,latest);
   }
 
@@ -1012,7 +1016,7 @@ function sortByTrend(col){
   render();
 }
 
-function renderTrendComparisonTable(names,curMap,prevMap,dimLabel,metricKeys){
+function renderTrendComparisonTable(names,curMap,prevMap,dimLabel,metricKeys,sk){
   const hasPrev=Object.keys(prevMap).length>0;
 
   // 排序字段映射
@@ -1025,8 +1029,8 @@ function renderTrendComparisonTable(names,curMap,prevMap,dimLabel,metricKeys){
     {key:'avg_score_chg',label:'均分环比'},
     {key:'dcq',label:'深聊质量'},
     {key:'dcr',label:'深聊轮次'},
-    {key:'att',label:'出勤率'},
-    {key:'pp',label:'进步感知'},
+    {key:'key_follow_count',label:'重点跟进'},
+    {key:'sa_renewal_rate',label:'SA续班率'},
   ];
 
   // 获取排序值
@@ -1040,8 +1044,10 @@ function renderTrendComparisonTable(names,curMap,prevMap,dimLabel,metricKeys){
     }else if(trendSortCol==='avg_score_chg'){
       const chg=calcChange(c.avg_score,p?p.avg_score:null);
       val=chg?chg.val:0;
-    }else if(trendSortCol==='dcq'||trendSortCol==='dcr'||trendSortCol==='att'||trendSortCol==='pp'){
+    }else if(trendSortCol==='dcq'||trendSortCol==='dcr'){
       val=c.metrics?(c.metrics[trendSortCol]||0):0;
+    }else if(trendSortCol==='key_follow_count'||trendSortCol==='sa_renewal_rate'){
+      val=c[trendSortCol]||0;
     }else{
       val=c[trendSortCol]||0;
     }
@@ -1075,8 +1081,8 @@ function renderTrendComparisonTable(names,curMap,prevMap,dimLabel,metricKeys){
       ${hasPrev?`<th style="cursor:pointer" onclick="sortByTrend('renewal_rate_chg')">续班率环比${sortIndicator('renewal_rate_chg')}</th><th style="cursor:pointer" onclick="sortByTrend('avg_score_chg')">均分环比${sortIndicator('avg_score_chg')}</th>`:''}
       <th style="cursor:pointer" onclick="sortByTrend('dcq')">深聊质量${sortIndicator('dcq')}</th>
       <th style="cursor:pointer" onclick="sortByTrend('dcr')">深聊轮次${sortIndicator('dcr')}</th>
-      <th style="cursor:pointer" onclick="sortByTrend('att')">出勤率${sortIndicator('att')}</th>
-      <th style="cursor:pointer" onclick="sortByTrend('pp')">进步感知${sortIndicator('pp')}</th>
+      ${sk==='已开课'?`<th style="cursor:pointer" onclick="sortByTrend('key_follow_count')">重点跟进${sortIndicator('key_follow_count')}</th>`:''}
+      ${(sk==='已开窗'||sk==='已结课')?`<th style="cursor:pointer" onclick="sortByTrend('sa_renewal_rate')">SA续班率${sortIndicator('sa_renewal_rate')}</th>`:''}
     </tr></thead>
     <tbody>`;
   for(const name of sortedNames){
@@ -1095,8 +1101,8 @@ function renderTrendComparisonTable(names,curMap,prevMap,dimLabel,metricKeys){
       ${hasPrev?`<td class="num ${chgRR?chgRR.type:'flat'}">${formatChange(chgRR)}</td><td class="num ${chgScore?chgScore.type:'flat'}">${formatChange(chgScore,'')}</td>`:''}
       <td class="num">${c.metrics?(c.metrics.dcq||0).toFixed(1):'-'}</td>
       <td class="num">${c.metrics?(c.metrics.dcr||0).toFixed(1):'-'}</td>
-      <td class="num">${c.metrics?(c.metrics.att||0).toFixed(1):'-'}</td>
-      <td class="num">${c.metrics?(c.metrics.pp||0).toFixed(1):'-'}</td>
+      ${sk==='已开课'?`<td class="num" style="color:var(--red);font-weight:600">${c.key_follow_count||0}</td>`:''}
+      ${(sk==='已开窗'||sk==='已结课')?`<td class="num" style="font-weight:600">${(c.sa_renewal_rate||0).toFixed(1)}%</td>`:''}
     </tr>`;
   }
   html+='</tbody></table></div>';
@@ -1112,6 +1118,33 @@ function renderTrendFooter(snaps,latest){
 function toggleTrend(){trendCollapsed=!trendCollapsed;render();}
 function switchTrendTab(tab){trendTab=tab;render();}
 function switchTrendSubject(subject){trendSubjectFilter=subject;render();}
+
+// 班级状态日变化指示器
+function renderStatusDailyChange(){
+  if(!DAILY_HISTORY||!DAILY_HISTORY.snapshots||DAILY_HISTORY.snapshots.length<2)return '';
+  const snaps=DAILY_HISTORY.snapshots;
+  const latest=snaps[snaps.length-1];
+  const prev=snaps[snaps.length-2];
+  if(!latest.by_status||!prev.by_status)return '';
+
+  const statusNames=['已开课','已开窗','已结课'];
+  const changes=[];
+  for(const sn of statusNames){
+    const cur=latest.by_status[sn];
+    const pre=prev.by_status[sn];
+    if(!cur&&!pre)continue;
+    const curCount=cur?cur.student_count:0;
+    const preCount=pre?pre.student_count:0;
+    const diff=curCount-preCount;
+    if(diff===0)continue;
+    // 只显示有变化的状态
+    const sign=diff>0?'+':'';
+    const color=diff>0?'var(--green)':'var(--red)';
+    changes.push('<span style="color:'+color+';font-weight:600">'+sn+sign+diff+'人</span>');
+  }
+  if(changes.length===0)return '';
+  return '<div style="font-size:.68rem;color:var(--text-3);margin-top:4px;padding-left:2px">日变化：'+changes.join(' · ')+'</div>';
+}
 
 // 导出学情标签页学员数据为CSV
 function exportSubjectStudents(subjectName){
@@ -1726,6 +1759,7 @@ function render(){
       <button class="spill ${activeStatus==='已结课班级'?'active':''}" onclick="switchStatus('已结课班级')">已结课 <span class="cnt">${(ss['已结课班级']||{}).count||0}</span></button>
       <button class="spill ${activeStatus==='未开课班级'?'active':''}" onclick="switchStatus('未开课班级')">未开课 <span class="cnt">${(ss['未开课班级']||{}).count||0}</span></button>
     </div>
+    ${renderStatusDailyChange()}
   </div>
 
   <!-- KPI -->
