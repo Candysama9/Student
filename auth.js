@@ -1,20 +1,15 @@
 /**
- * XDF数据看板 - 统一身付认证模块 v3
- * 液态玻璃设计 · 邮箱验证（@xdf.cn）· 钉钉免登(可选)
- *
- * 登录方式：输入任意 @xdf.cn 邮箱即可进入
- * 邮箱会通过Cloudflare Worker留存后台供查验
+ * XDF数据看板 - 统一身份数证模块 v5
+ * 液态玻璃设计 · 邮箱验证（@xdf.cn）· 方正大标宋简体
  */
 (function(){
   'use strict';
 
   // ==================== 配置区 ====================
   var EMAIL_REGEX=/^[a-zA-Z0-9._-]+@xdf\.cn$/;
-  var DINGTALK_CORP_ID='';                  // 钉钉企业corpId（留空=仅邮箱）
-  var AUTH_EXPIRY=8*3600*1000;              // 8小时
-  // 数据API地址：Pages同源加载，GitHub走Pages跨域加载，本地直接加载JSON
-  var IS_LOCAL=(location.hostname==='127.0.0.1'||location.hostname==='localhost'||location.hostname==='');
-  var DATA_WORKER_URL=(IS_LOCAL?'':(location.hostname.endsWith('.pages.dev')?'/api':'https://xdf-dashboard.pages.dev/api'));
+  var AUTH_EXPIRY=8*3600*1000;
+  var IS_CLOUDFLARE=location.hostname.endsWith('.pages.dev')||location.hostname.endsWith('.workers.dev');
+  var DATA_WORKER_URL=(IS_CLOUDFLARE?(location.hostname.endsWith('.pages.dev')?'/api':''):'');
   // =================================================
 
   var AUTH_KEY='xdf_authed';
@@ -22,9 +17,7 @@
   var AUTH_METHOD_KEY='xdf_auth_method';
   var AUTH_EMAIL_KEY='xdf_auth_email';
 
-  function isValidEmail(val){
-    return EMAIL_REGEX.test(val.trim());
-  }
+  function isValidEmail(val){return EMAIL_REGEX.test(val.trim());}
 
   function isAuthed(){
     try{
@@ -55,16 +48,13 @@
     sessionStorage.setItem(AUTH_EMAIL_KEY,(email||'').trim());
   }
 
-  function getToken(){
-    return sessionStorage.getItem(AUTH_EMAIL_KEY)||'';
-  }
+  function getToken(){return sessionStorage.getItem(AUTH_EMAIL_KEY)||'';}
 
-  // 暴露给全局，供看板加载数据时使用
   window.XDF_AUTH={
     isAuthed:isAuthed,
     getToken:getToken,
     getWorkerUrl:function(){return DATA_WORKER_URL;},
-    hasWorker:function(){return !IS_LOCAL;},
+    hasWorker:function(){return IS_CLOUDFLARE;},
     getEmail:function(){return sessionStorage.getItem(AUTH_EMAIL_KEY)||'';}
   };
 
@@ -73,17 +63,23 @@
   // ==================== 注入样式 ====================
   var styleEl=document.createElement('style');
   styleEl.textContent=`
-@keyframes xdfBgFlow{
-  0%{background-position:0% 0%,100% 0%,50% 100%,100% 100%,0% 100%,30% 50%,0 0}
-  50%{background-position:30% 20%,70% 30%,60% 80%,80% 70%,20% 80%,50% 30%,0 0}
-  100%{background-position:60% 40%,40% 60%,40% 60%,60% 40%,40% 60%,70% 70%,0 0}
+@font-face{
+  font-family:'FZDaBiaoSong';
+  src:local('方正大标宋简体'),local('FZDaBiaoSongJianTi'),local('FZDBSJW--GB1-0'),
+      url('FZDBSJW.woff') format('woff');
+  font-display:swap
 }
+
+@keyframes xdfOrbDrift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.08)}}
+@keyframes xdfOrbDrift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-25px,20px) scale(1.12)}}
+@keyframes xdfOrbDrift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(15px,25px) scale(.92)}}
 @keyframes xdfShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-6px)}20%,40%,60%,80%{transform:translateX(6px)}}
 @keyframes xdfSpin{to{transform:rotate(360deg)}}
-@keyframes xdfSpecular{0%,100%{background-position:0% 0%}50%{background-position:100% 0%}}
-@keyframes xdfFadeIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes xdfSpecular{0%{background-position:0% 0%}50%{background-position:100% 0%}100%{background-position:0% 0%}}
+@keyframes xdfFadeIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes xdfGradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-@keyframes xdfPulse{0%,100%{box-shadow:0 2px 16px rgba(0,122,255,.25)}50%{box-shadow:0 4px 28px rgba(0,122,255,.45)}}
+@keyframes xdfPulseRing{0%{transform:scale(.92);opacity:.5}50%{transform:scale(1.06);opacity:.15}100%{transform:scale(.92);opacity:.5}}
+@keyframes xdfFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 
 #xdf-auth-gate{
   position:fixed;inset:0;z-index:2147483647;
@@ -91,79 +87,119 @@
   font-family:'FZDaBiaoSong','方正大标宋简体',-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Segoe UI",sans-serif;
   padding:20px;overflow:hidden;
 }
-#xdf-auth-gate .xdf-bg{
-  position:absolute;inset:-10%;z-index:-1;
-  background:
-    radial-gradient(ellipse 60% 50% at 12% 8%,rgba(0,122,255,.22),transparent 60%),
-    radial-gradient(ellipse 50% 40% at 88% 22%,rgba(88,86,214,.20),transparent 60%),
-    radial-gradient(ellipse 60% 45% at 50% 100%,rgba(0,199,190,.18),transparent 60%),
-    radial-gradient(ellipse 45% 35% at 80% 80%,rgba(255,149,0,.10),transparent 60%),
-    radial-gradient(ellipse 40% 30% at 18% 75%,rgba(52,199,89,.10),transparent 60%),
-    linear-gradient(135deg,#eef2fb 0%,#f5f0fa 50%,#eaf6f4 100%);
-  background-size:200% 200%,220% 220%,200% 200%,220% 220%,200% 200%,100% 100%;
-  animation:xdfBgFlow 18s ease-in-out infinite alternate;
-}
 #xdf-auth-gate *{margin:0;padding:0;box-sizing:border-box}
+
+#xdf-auth-gate .xdf-bg{
+  position:absolute;inset:0;z-index:-2;
+  background:linear-gradient(135deg,#e8ecf6 0%,#f0ebf8 40%,#e8f0f5 70%,#f5f0fa 100%);
+}
+.xdf-orb{position:absolute;border-radius:50%;filter:blur(50px);z-index:-1}
+.xdf-orb-1{width:300px;height:300px;top:-8%;left:-3%;background:radial-gradient(circle,rgba(0,122,255,.20),transparent 70%);animation:xdfOrbDrift1 12s ease-in-out infinite}
+.xdf-orb-2{width:280px;height:280px;top:45%;right:-5%;background:radial-gradient(circle,rgba(88,86,214,.18),transparent 70%);animation:xdfOrbDrift2 15s ease-in-out infinite}
+.xdf-orb-3{width:240px;height:240px;bottom:-3%;left:25%;background:radial-gradient(circle,rgba(0,199,190,.14),transparent 70%);animation:xdfOrbDrift3 10s ease-in-out infinite}
+
 .xdf-card{
-  position:relative;overflow:hidden;width:100%;max-width:340px;padding:40px 32px 32px;
-  border-radius:24px;text-align:center;
-  background:rgba(255,255,255,.35);
-  border:1px solid rgba(255,255,255,.6);
-  box-shadow:0 20px 50px rgba(0,0,0,.10),0 0 0 1px rgba(255,255,255,.15) inset,inset 0 1px 2px rgba(255,255,255,.7);
-  backdrop-filter:blur(40px) saturate(220%);-webkit-backdrop-filter:blur(40px) saturate(220%);
+  position:relative;overflow:hidden;width:100%;max-width:250px;padding:28px 22px 18px;
+  border-radius:22px;text-align:center;
+  background:rgba(255,255,255,.32);
+  border:1px solid rgba(255,255,255,.65);
+  box-shadow:0 20px 50px rgba(0,0,0,.08),0 0 0 1px rgba(255,255,255,.12) inset,inset 0 1px 2px rgba(255,255,255,.7);
+  backdrop-filter:blur(44px) saturate(240%);-webkit-backdrop-filter:blur(44px) saturate(240%);
   animation:xdfFadeIn .5s cubic-bezier(.4,0,.2,1);
 }
 .xdf-card::before{
   content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.5),transparent 60%);opacity:.5;
+  background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(255,255,255,.5),transparent 70%);
+  opacity:.5;
 }
 .xdf-card::after{
   content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.2) 45%,rgba(255,255,255,.04) 55%,transparent 70%);
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.18) 45%,rgba(255,255,255,.03) 55%,transparent 70%);
   background-size:300% 100%;animation:xdfSpecular 8s ease-in-out infinite;
 }
-.xdf-card h2{
-  font-size:1.4rem;font-weight:800;color:#1a1a2e;margin-bottom:28px;
-  position:relative;z-index:1;letter-spacing:2px;
+
+.xdf-logo{
+  width:40px;height:40px;margin:0 auto 14px;position:relative;z-index:1;
+  animation:xdfFloat 3.5s ease-in-out infinite;
 }
-.xdf-input-wrap{display:block;position:relative;z-index:1}
+.xdf-logo-ring{
+  position:absolute;inset:-5px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(0,122,255,.25),rgba(88,86,214,.25),rgba(0,199,190,.25));
+  opacity:.4;animation:xdfPulseRing 3s ease-in-out infinite;
+}
+.xdf-logo-inner{
+  position:absolute;inset:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#007AFF 0%,#5856D6 50%,#00C7BE 100%);
+  background-size:200% 200%;animation:xdfGradShift 6s ease infinite;
+  box-shadow:0 6px 22px rgba(0,122,255,.30),inset 0 1px 3px rgba(255,255,255,.5),inset 0 -2px 5px rgba(0,0,0,.08);
+}
+.xdf-logo-inner svg{width:20px;height:20px;fill:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.12))}
+
+.xdf-input-wrap{position:relative;z-index:1}
+.xdf-input-icon{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;opacity:.35;z-index:1;pointer-events:none;
+}
 .xdf-input{
-  width:100%;padding:14px 18px;border-radius:12px;
-  border:1.5px solid rgba(255,255,255,.5);
-  background:rgba(255,255,255,.4);
-  font-size:1rem;font-weight:700;color:#1a1a2e;outline:none;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  width:100%;padding:10px 14px 10px 34px;border-radius:10px;
+  border:1.5px solid rgba(255,255,255,.55);
+  background:rgba(255,255,255,.40);
+  font-size:.85rem;font-weight:700;color:#1a1a2e;outline:none;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   transition:border-color .25s,box-shadow .25s,background .25s;
-  font-family:inherit;text-align:center;letter-spacing:.5px;
+  font-family:inherit;letter-spacing:.5px;
 }
 .xdf-input:focus{
   border-color:#007AFF;
-  background:rgba(255,255,255,.6);
-  box-shadow:0 0 0 3px rgba(0,122,255,.1);
+  background:rgba(255,255,255,.60);
+  box-shadow:0 0 0 3px rgba(0,122,255,.10);
 }
-.xdf-input::placeholder{color:#9e9eaf;font-weight:400}
-.xdf-btn-wrap{display:flex;justify-content:center;margin-top:28px;position:relative;z-index:1}
+.xdf-input::placeholder{color:#a0a0b0;font-weight:400}
+
+.xdf-btn-wrap{display:flex;justify-content:center;margin-top:14px;position:relative;z-index:1}
 .xdf-btn{
-  display:inline-block;width:auto;padding:10px 48px;border-radius:999px;border:none;cursor:pointer;
+  display:inline-block;width:100%;padding:10px;border-radius:999px;border:none;cursor:pointer;
   background:linear-gradient(135deg,#007AFF,#5856D6);
-  background-size:200% 200%;animation:xdfGradShift 6s ease infinite,xdfPulse 3s ease-in-out infinite;
-  color:#fff;font-size:.9rem;font-weight:700;
-  transition:transform .15s,box-shadow .25s;white-space:nowrap;
+  background-size:200% 200%;animation:xdfGradShift 6s ease infinite;
+  color:#fff;font-size:.82rem;font-weight:700;
+  transition:transform .15s,box-shadow .25s;
   font-family:inherit;letter-spacing:4px;
-  box-shadow:0 2px 16px rgba(0,122,255,.25);
+  box-shadow:0 3px 16px rgba(0,122,255,.30);
+  position:relative;overflow:hidden;
 }
-.xdf-btn:hover{transform:translateY(-1px);box-shadow:0 4px 22px rgba(0,122,255,.4)}
+.xdf-btn::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.22) 0%,transparent 50%);
+}
+.xdf-btn:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(0,122,255,.40)}
 .xdf-btn:active{transform:translateY(0)}
-.xdf-error{color:#FF3B30;font-size:.76rem;height:20px;margin-top:14px;opacity:0;transition:opacity .2s;position:relative;z-index:1;font-weight:500}
+
+.xdf-error{
+  color:#FF3B30;font-size:.68rem;height:16px;margin-top:8px;
+  opacity:0;transition:opacity .2s;position:relative;z-index:1;font-weight:500;
+}
 .xdf-error.show{opacity:1}
 .xdf-card.shake{animation:xdfShake .4s}
+
+.xdf-hint{
+  font-size:.65rem;color:#a8a8b8;margin-top:12px;
+  position:relative;z-index:1;letter-spacing:.5px;
+}
+
 .xdf-dt-status{
   display:flex;align-items:center;justify-content:center;gap:10px;
-  padding:20px 0;font-size:.85rem;color:#5856D6;position:relative;z-index:1;font-weight:600;
+  padding:16px 0;font-size:.82rem;color:#5856D6;position:relative;z-index:1;font-weight:600;
 }
 .xdf-dt-spinner{
-  width:22px;height:22px;border:2.5px solid rgba(88,86,214,.2);
+  width:20px;height:20px;border:2.5px solid rgba(88,86,214,.2);
   border-top-color:#5856D6;border-radius:50%;animation:xdfSpin .7s linear infinite;
+}
+
+@media(max-width:480px){
+  .xdf-card{padding:24px 20px 16px;border-radius:18px}
+  .xdf-logo{width:36px;height:36px}
+  .xdf-btn{letter-spacing:3px;padding:9px}
 }
 `;
   document.head.appendChild(styleEl);
@@ -173,17 +209,30 @@
   overlay.id='xdf-auth-gate';
   overlay.innerHTML=`
     <div class="xdf-bg"></div>
+    <div class="xdf-orb xdf-orb-1"></div>
+    <div class="xdf-orb xdf-orb-2"></div>
+    <div class="xdf-orb xdf-orb-3"></div>
     <div class="xdf-card" id="xdfCard">
-      <h2>身份验证</h2>
+      <div class="xdf-logo">
+        <div class="xdf-logo-ring"></div>
+        <div class="xdf-logo-inner">
+          <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+        </div>
+      </div>
       <div id="xdfPwdForm">
         <div class="xdf-input-wrap">
-          <input type="text" class="xdf-input" id="xdfPwdInput" autocomplete="off">
+          <svg class="xdf-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="M22 7l-10 5L2 7"/>
+          </svg>
+          <input type="text" class="xdf-input" id="xdfPwdInput" autocomplete="off" placeholder="name@xdf.cn">
         </div>
         <div class="xdf-btn-wrap">
           <button class="xdf-btn" id="xdfPwdBtn">进 入</button>
         </div>
         <div class="xdf-error" id="xdfError"></div>
       </div>
+      <div class="xdf-hint">仅限新东方内部人员访问</div>
     </div>
   `;
   document.documentElement.appendChild(overlay);
