@@ -94,9 +94,10 @@ export default {
         });
       }
 
-      // 从静态资源获取JSON文件
-      const assetResponse = await env.ASSETS.fetch(request);
-      if (!assetResponse.ok) {
+      // 从KV获取JSON数据
+      const kvKey = path.replace(/^\//, '');
+      const data = env.DASHBOARD_KV ? await env.DASHBOARD_KV.get(kvKey, 'text') : null;
+      if (!data) {
         return new Response(JSON.stringify({error: 'Not Found', path: path}), {
           status: 404,
           headers: {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
@@ -108,21 +109,20 @@ export default {
         const logKey = 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
         const logEntry = JSON.stringify({
           email: token,
-          path: path.replace(/^\//, ''),
+          path: kvKey,
           time: new Date().toISOString(),
           ip: request.headers.get('CF-Connecting-IP') || ''
         });
         ctx.waitUntil(env.DASHBOARD_KV.put(logKey, logEntry));
       }
 
-      // 返回JSON数据，添加认证头
-      const data = await assetResponse.text();
+      // 返回JSON数据
       return new Response(data, {
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
           'Access-Control-Allow-Origin': '*',
           'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'X-Data-Source': 'cloudflare-pages',
+          'X-Data-Source': 'cloudflare-kv',
           'X-Auth-Email': token
         }
       });
