@@ -106,10 +106,10 @@
 }
 #xdf-auth-gate *{margin:0;padding:0;box-sizing:border-box}
 .xdf-card{
-  position:relative;overflow:hidden;width:100%;max-width:380px;padding:48px 40px 36px;
-  border-radius:32px;text-align:center;
-  background:rgba(255,255,255,.25);
-  border:1px solid rgba(255,255,255,.5);
+  position:relative;overflow:hidden;width:100%;max-width:360px;padding:44px 36px 36px;
+  border-radius:28px;text-align:center;
+  background:rgba(255,255,255,.28);
+  border:1px solid rgba(255,255,255,.55);
   box-shadow:0 24px 64px rgba(0,0,0,.12),0 0 0 1px rgba(255,255,255,.2) inset,inset 0 1px 2px rgba(255,255,255,.8);
   backdrop-filter:blur(44px) saturate(240%);-webkit-backdrop-filter:blur(44px) saturate(240%);
   animation:xdfFadeIn .6s cubic-bezier(.4,0,.2,1);
@@ -124,7 +124,7 @@
   background-size:300% 100%;animation:xdfSpecular 8s ease-in-out infinite;
 }
 .xdf-logo{
-  width:72px;height:72px;margin:0 auto 22px;position:relative;z-index:1;
+  width:56px;height:56px;margin:0 auto 16px;position:relative;z-index:1;
   animation:xdfFloat 3.5s ease-in-out infinite;
 }
 .xdf-logo-ring{
@@ -133,44 +133,44 @@
   opacity:.2;animation:xdfPulseRing 3s ease-in-out infinite;
 }
 .xdf-logo-inner{
-  position:absolute;inset:8px;border-radius:50%;
+  position:absolute;inset:6px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,#007AFF 0%,#5856D6 50%,#00C7BE 100%);
   background-size:200% 200%;animation:xdfGradShift 6s ease infinite;
-  box-shadow:0 8px 28px rgba(0,122,255,.35),inset 0 1px 3px rgba(255,255,255,.5);
+  box-shadow:0 6px 22px rgba(0,122,255,.35),inset 0 1px 3px rgba(255,255,255,.5);
 }
-.xdf-logo-inner svg{width:32px;height:32px;fill:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.15))}
+.xdf-logo-inner svg{width:26px;height:26px;fill:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.15))}
 .xdf-card h2{
-  font-size:1.4rem;font-weight:900;color:#1a1a2e;margin-bottom:4px;
-  position:relative;z-index:1;letter-spacing:-.3px;
+  font-size:1.3rem;font-weight:800;color:#1a1a2e;margin-bottom:4px;
+  position:relative;z-index:1;letter-spacing:1px;
 }
-.xdf-sub{font-size:.82rem;color:#6e6e80;margin-bottom:28px;position:relative;z-index:1;font-weight:500}
-.xdf-input-wrap{display:block;margin-bottom:24px;position:relative;z-index:1}
+.xdf-sub{font-size:.78rem;color:#6e6e80;margin-bottom:18px;position:relative;z-index:1;font-weight:500}
+.xdf-input-wrap{display:block;margin-bottom:36px;position:relative;z-index:1}
 .xdf-input{
-  width:100%;padding:14px 18px;border-radius:16px;
-  border:1.5px solid rgba(255,255,255,.5);
-  background:rgba(255,255,255,.4);
-  font-size:.95rem;color:#1a1a2e;outline:none;
+  width:100%;padding:16px 20px;border-radius:14px;
+  border:2px solid rgba(255,255,255,.6);
+  background:rgba(255,255,255,.45);
+  font-size:1.05rem;font-weight:700;color:#1a1a2e;outline:none;
   backdrop-filter:blur(10px);
   transition:border-color .25s,box-shadow .25s,background .25s;
   font-family:inherit;text-align:center;
 }
 .xdf-input:focus{
   border-color:#007AFF;
-  background:rgba(255,255,255,.6);
+  background:rgba(255,255,255,.65);
   box-shadow:0 0 0 4px rgba(0,122,255,.12);
 }
 .xdf-input::placeholder{color:#9e9eaf;font-weight:400}
 .xdf-btn{
-  display:block;width:100%;padding:16px;border-radius:18px;border:none;cursor:pointer;
+  display:inline-block;width:auto;padding:12px 56px;border-radius:999px;border:none;cursor:pointer;
   background:linear-gradient(135deg,#007AFF,#5856D6);
   background-size:200% 200%;animation:xdfGradShift 6s ease infinite;
-  color:#fff;font-size:1.05rem;font-weight:800;
+  color:#fff;font-size:.95rem;font-weight:700;
   transition:transform .15s,box-shadow .25s;white-space:nowrap;
-  font-family:inherit;letter-spacing:2px;
-  box-shadow:0 6px 24px rgba(0,122,255,.35);
+  font-family:inherit;letter-spacing:3px;
+  box-shadow:0 4px 20px rgba(0,122,255,.3);
 }
-.xdf-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,122,255,.4)}
+.xdf-btn:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,122,255,.4)}
 .xdf-btn:active{transform:translateY(0)}
 .xdf-error{color:#FF3B30;font-size:.76rem;height:20px;margin-bottom:6px;opacity:0;transition:opacity .2s;position:relative;z-index:1;font-weight:500}
 .xdf-error.show{opacity:1}
@@ -211,10 +211,11 @@
           <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
         </div>
       </div>
+      <h2>身份验证</h2>
       <p class="xdf-sub" id="xdfSub">请输入邮箱</p>
       <div id="xdfPwdForm">
         <div class="xdf-input-wrap">
-          <input type="text" class="xdf-input" id="xdfPwdInput" placeholder="姓名拼音@xdf.cn" autocomplete="off">
+          <input type="text" class="xdf-input" id="xdfPwdInput" autocomplete="off">
         </div>
         <button class="xdf-btn" id="xdfPwdBtn">进 入</button>
         <div class="xdf-error" id="xdfError"></div>
