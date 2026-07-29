@@ -21,7 +21,7 @@
   var IS_CLOUDFLARE=true;/* 阿里云部署始终启用API */
   var DATA_WORKER_URL=(IS_CLOUDFLARE?'/api':'');
   var TOP_ADMIN_PWD='27rk';
-  var TOP_ADMIN_PAGES=['index.html','center_dashboard.html',''];
+  var TOP_ADMIN_PAGES=['center_dashboard.html'];
   // =================================================
 
   var AUTH_KEY='xdf_authed';
